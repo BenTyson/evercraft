@@ -10,6 +10,7 @@
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Heart, Leaf, TreePine, Droplets, Package } from 'lucide-react';
+import Image from 'next/image';
 
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -189,7 +190,13 @@ function NonprofitItem({ nonprofit }: NonprofitItemProps) {
       <div className="flex items-center gap-2">
         {nonprofit.logo ? (
           <div className="relative size-8 overflow-hidden rounded-full bg-white">
-            <img src={nonprofit.logo} alt={nonprofit.name} className="size-full object-cover" />
+            <Image
+              src={nonprofit.logo}
+              alt={nonprofit.name}
+              fill
+              className="object-cover"
+              sizes="32px"
+            />
           </div>
         ) : (
           <div className="bg-eco-light flex size-8 items-center justify-center rounded-full">
