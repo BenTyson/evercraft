@@ -44,38 +44,59 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --radius: 0.5rem;
+
+  /* Base colors - Evercraft eco-focused palette */
+  --background: #ffffff; /* Clean white base */
+  --foreground: #212529; /* Charcoal text */
+
+  /* Cards and surfaces */
+  --card: #ffffff;
+  --card-foreground: #212529;
+  --popover: #ffffff;
+  --popover-foreground: #212529;
+
+  /* Primary - Dark forest green (eco brand color) */
+  --primary: #1b4332;
+  --primary-foreground: #ffffff;
+
+  /* Secondary - Soft off-white */
+  --secondary: #fafaf8;
+  --secondary-foreground: #212529;
+
+  /* Muted - Light gray for subtle elements */
+  --muted: #f1f3f5;
+  --muted-foreground: #6c757d;
+
+  /* Accent - Lighter forest green */
+  --accent: #2d6a4f;
+  --accent-foreground: #ffffff;
+
+  /* Destructive - Error red */
+  --destructive: #dc3545;
+  --destructive-foreground: #ffffff;
+
+  /* Borders and inputs */
+  --border: #e9ecef;
+  --input: #ced4da;
+  --ring: #2d6a4f; /* Focus ring matches accent */
+
+  /* Eco/Success colors */
+  --chart-1: #52b788; /* Eco primary */
+  --chart-2: #95d5b2; /* Eco light */
+  --chart-3: #d8f3dc; /* Eco lightest */
+  --chart-4: #1b4332; /* Forest dark */
+  --chart-5: #2d6a4f; /* Forest light */
+
+  /* Sidebar/navigation */
+  --sidebar: #fafaf8;
+  --sidebar-foreground: #212529;
+  --sidebar-primary: #1b4332;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2d6a4f;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #e9ecef;
+  --sidebar-ring: #2d6a4f;
 }
 
 .dark {
@@ -112,11 +133,40 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Evercraft custom colors - Eco-focused palette extensions */
+@theme {
+  --color-forest-dark: #1b4332;
+  --color-forest: #2d6a4f;
+  --color-forest-light: #40916c;
+
+  --color-eco-dark: #52b788;
+  --color-eco: #95d5b2;
+  --color-eco-light: #d8f3dc;
+
+  --color-neutral-50: #fafaf8;
+  --color-neutral-100: #f1f3f5;
+  --color-neutral-200: #e9ecef;
+  --color-neutral-300: #dee2e6;
+  --color-neutral-400: #ced4da;
+  --color-neutral-500: #adb5bd;
+  --color-neutral-600: #6c757d;
+  --color-neutral-700: #495057;
+  --color-neutral-800: #212529;
+
+  --color-warning: #ffc107;
+  --color-warning-foreground: #856404;
+  --color-warning-light: #fff3cd;
+
+  --color-info: #0dcaf0;
+  --color-info-foreground: #055160;
+  --color-info-light: #cff4fc;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
 }
