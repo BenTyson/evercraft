@@ -337,37 +337,46 @@ export default function ImpactDashboardPage() {
           <h2 className="mb-6 text-2xl font-bold">Your Latest Impact</h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <ImpactWidget
-              metrics={[
-                { type: 'carbon', value: 12.5, label: 'kg CO₂ saved' },
-                { type: 'plastic', value: 0.8, label: 'kg plastic avoided' },
+              totalDonation={3.5}
+              nonprofits={[
+                {
+                  name: 'Ocean Conservancy',
+                  logo: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=200&q=80',
+                  amount: 3.5,
+                },
               ]}
-              nonprofit={{
-                name: 'Ocean Conservancy',
-                logo: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=200&q=80',
-                donationAmount: 3.5,
-              }}
+              metrics={[
+                { type: 'co2', value: '12.5 kg', label: 'CO₂ saved' },
+                { type: 'plastic', value: '0.8 kg', label: 'Plastic avoided' },
+              ]}
             />
             <ImpactWidget
-              metrics={[
-                { type: 'trees', value: 2, label: 'trees planted' },
-                { type: 'water', value: 450, label: 'liters water saved' },
+              totalDonation={2.25}
+              nonprofits={[
+                {
+                  name: 'Rainforest Alliance',
+                  logo: 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=200&q=80',
+                  amount: 2.25,
+                },
               ]}
-              nonprofit={{
-                name: 'Rainforest Alliance',
-                logo: 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=200&q=80',
-                donationAmount: 2.25,
-              }}
+              metrics={[
+                { type: 'trees', value: '2', label: 'Trees planted' },
+                { type: 'water', value: '450 L', label: 'Water saved' },
+              ]}
             />
             <ImpactWidget
-              metrics={[
-                { type: 'carbon', value: 8.3, label: 'kg CO₂ saved' },
-                { type: 'waste', value: 1.2, label: 'kg waste diverted' },
+              totalDonation={1.8}
+              nonprofits={[
+                {
+                  name: 'The Nature Conservancy',
+                  logo: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=200&q=80',
+                  amount: 1.8,
+                },
               ]}
-              nonprofit={{
-                name: 'The Nature Conservancy',
-                logo: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=200&q=80',
-                donationAmount: 1.8,
-              }}
+              metrics={[
+                { type: 'co2', value: '8.3 kg', label: 'CO₂ saved' },
+                { type: 'custom', value: '1.2 kg', label: 'Waste diverted' },
+              ]}
             />
           </div>
         </div>
