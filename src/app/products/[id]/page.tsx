@@ -423,11 +423,14 @@ export default function ProductDetailPage() {
           <div className="bg-card rounded-lg border p-6">
             <h2 className="mb-6 text-2xl font-bold">Sustainability Score</h2>
             <SustainabilityScore
-              totalScore={MOCK_PRODUCT.sustainabilityScore.total}
-              materialsScore={MOCK_PRODUCT.sustainabilityScore.materials}
-              packagingScore={MOCK_PRODUCT.sustainabilityScore.packaging}
-              carbonScore={MOCK_PRODUCT.sustainabilityScore.carbon}
-              certificationScore={MOCK_PRODUCT.sustainabilityScore.certifications}
+              score={MOCK_PRODUCT.sustainabilityScore.total}
+              showBreakdown={true}
+              breakdown={{
+                materials: MOCK_PRODUCT.sustainabilityScore.materials,
+                packaging: MOCK_PRODUCT.sustainabilityScore.packaging,
+                carbon: MOCK_PRODUCT.sustainabilityScore.carbon,
+                certifications: MOCK_PRODUCT.sustainabilityScore.certifications,
+              }}
             />
           </div>
         </div>
