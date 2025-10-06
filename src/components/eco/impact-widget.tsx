@@ -215,12 +215,12 @@ interface MetricItemProps {
 }
 
 function MetricItem({ metric }: MetricItemProps) {
-  const Icon = metric.icon || iconMap[metric.type];
+  const IconComponent = iconMap[metric.type];
 
   return (
     <div className="flex flex-col gap-1.5 rounded-md bg-neutral-50 p-2.5 dark:bg-neutral-900">
       <div className="text-muted-foreground flex items-center gap-1.5">
-        {typeof Icon === 'function' ? <Icon className="size-4" /> : Icon}
+        {metric.icon ? metric.icon : IconComponent && <IconComponent className="size-4" />}
         <span className="text-xs font-medium">{metric.label}</span>
       </div>
       <span className="text-forest-dark text-base font-bold">{metric.value}</span>
