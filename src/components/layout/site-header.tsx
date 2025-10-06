@@ -17,6 +17,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { Search, ShoppingCart, User, Menu, X, Leaf } from 'lucide-react';
+import { UserButton, useUser } from '@clerk/nextjs';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ import { Input } from '@/components/ui/input';
 export function SiteHeader() {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const { isSignedIn, isLoaded } = useUser();
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -89,12 +91,26 @@ export function SiteHeader() {
 
         {/* Desktop Actions */}
         <div className="hidden items-center gap-3 md:flex">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/account">
-              <User className="size-5" />
-              <span className="sr-only">Account</span>
-            </Link>
-          </Button>
+          {isLoaded && (
+            <>
+              {isSignedIn ? (
+                <UserButton
+                  appearance={{
+                    elements: {
+                      avatarBox: 'size-9',
+                    },
+                  }}
+                />
+              ) : (
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/sign-in">
+                    <User className="mr-2 size-4" />
+                    Sign In
+                  </Link>
+                </Button>
+              )}
+            </>
+          )}
           <Button variant="ghost" size="icon" asChild className="relative">
             <Link href="/cart">
               <ShoppingCart className="size-5" />
@@ -159,14 +175,26 @@ export function SiteHeader() {
                 Sell on Evercraft
               </Link>
               <div className="border-border border-t pt-3" />
-              <Link
-                href="/account"
-                className="text-foreground hover:text-forest-dark flex items-center gap-2 text-base font-medium transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <User className="size-5" />
-                Account
-              </Link>
+              {isLoaded && !isSignedIn && (
+                <Link
+                  href="/sign-in"
+                  className="text-foreground hover:text-forest-dark flex items-center gap-2 text-base font-medium transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <User className="size-5" />
+                  Sign In
+                </Link>
+              )}
+              {isLoaded && isSignedIn && (
+                <Link
+                  href="/account"
+                  className="text-foreground hover:text-forest-dark flex items-center gap-2 text-base font-medium transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <User className="size-5" />
+                  Account
+                </Link>
+              )}
               <Link
                 href="/cart"
                 className="text-foreground hover:text-forest-dark flex items-center gap-2 text-base font-medium transition-colors"
