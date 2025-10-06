@@ -1,13 +1,19 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Heart, ShoppingCart, Leaf } from 'lucide-react';
+import { EcoBadge } from '@/components/eco/eco-badge';
+import { SustainabilityScore } from '@/components/eco/sustainability-score';
+import { ProductCard } from '@/components/eco/product-card';
+import { ImpactWidget } from '@/components/eco/impact-widget';
 
 /**
  * Design System Showcase Component
  * Demonstrates Evercraft's eco-focused design system in action
  */
 export function DesignSystemShowcase() {
+  const [favorited, setFavorited] = useState(false);
   return (
     <div className="bg-background min-h-screen p-8">
       <div className="mx-auto max-w-6xl space-y-12">
@@ -213,6 +219,164 @@ export function DesignSystemShowcase() {
                 <Badge variant="outline">Carbon Neutral</Badge>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Eco-Specific Components */}
+        <section className="space-y-6">
+          <h2 className="text-foreground text-2xl font-semibold">Eco Components</h2>
+
+          {/* EcoBadges */}
+          <div>
+            <h3 className="text-muted-foreground mb-3 text-sm font-medium">Eco Badges</h3>
+            <div className="flex flex-wrap gap-3">
+              <EcoBadge variant="plastic-free" />
+              <EcoBadge variant="carbon-neutral" />
+              <EcoBadge variant="fair-trade" />
+              <EcoBadge variant="b-corp" />
+              <EcoBadge variant="vegan" />
+              <EcoBadge variant="organic" />
+              <EcoBadge variant="recycled" />
+              <EcoBadge variant="zero-waste" />
+            </div>
+          </div>
+
+          {/* Sustainability Scores */}
+          <div>
+            <h3 className="text-muted-foreground mb-3 text-sm font-medium">Sustainability Score</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-lg border p-4">
+                <p className="text-muted-foreground mb-3 text-xs">High Score (85)</p>
+                <SustainabilityScore score={85} />
+              </div>
+              <div className="rounded-lg border p-4">
+                <p className="text-muted-foreground mb-3 text-xs">Medium Score (62)</p>
+                <SustainabilityScore score={62} />
+              </div>
+            </div>
+            <div className="mt-4 rounded-lg border p-4">
+              <p className="text-muted-foreground mb-3 text-xs">With Breakdown</p>
+              <SustainabilityScore
+                score={87}
+                showBreakdown
+                breakdown={{
+                  materials: 92,
+                  packaging: 85,
+                  carbon: 78,
+                  certifications: 95,
+                }}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Product Cards */}
+        <section className="space-y-6">
+          <h2 className="text-foreground text-2xl font-semibold">Product Cards</h2>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <ProductCard
+              product={{
+                id: '1',
+                title: 'Organic Cotton Tote Bag - Reusable Shopping Bag',
+                price: 24.99,
+                compareAtPrice: 34.99,
+                image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=800&q=80',
+                imageAlt: 'Organic cotton tote bag',
+              }}
+              seller={{
+                name: 'EcoMaker Studio',
+                slug: 'ecomaker-studio',
+              }}
+              nonprofit={{
+                name: 'Ocean Conservancy',
+                shortName: 'Ocean Conservancy',
+              }}
+              ecoBadge="plastic-free"
+              sustainabilityScore={87}
+              rating={4.8}
+              reviewCount={124}
+              isFavorited={favorited}
+              onFavoriteClick={() => setFavorited(!favorited)}
+              onQuickAddClick={() => alert('Added to cart!')}
+              onProductClick={() => alert('View product')}
+            />
+
+            <ProductCard
+              product={{
+                id: '2',
+                title: 'Bamboo Cutlery Set - Zero Waste Travel Utensils',
+                price: 18.5,
+                image: 'https://images.unsplash.com/photo-1600882291950-70aff82ff089?w=800&q=80',
+                imageAlt: 'Bamboo cutlery set',
+              }}
+              seller={{
+                name: 'Green Living Co',
+                slug: 'green-living-co',
+              }}
+              nonprofit={{
+                name: 'Rainforest Alliance',
+                shortName: 'Rainforest',
+              }}
+              ecoBadge="zero-waste"
+              sustainabilityScore={92}
+              rating={4.9}
+              reviewCount={89}
+              onQuickAddClick={() => alert('Added to cart!')}
+            />
+
+            <ProductCard
+              product={{
+                id: '3',
+                title: 'Fair Trade Organic Coffee Beans - 12oz',
+                price: 15.99,
+                image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=800&q=80',
+                imageAlt: 'Organic coffee beans',
+              }}
+              seller={{
+                name: 'Ethical Grounds',
+                slug: 'ethical-grounds',
+              }}
+              nonprofit={{
+                name: 'Fair Trade Federation',
+                shortName: 'Fair Trade Fed',
+              }}
+              ecoBadge="fair-trade"
+              sustainabilityScore={78}
+              rating={4.7}
+              reviewCount={256}
+              onQuickAddClick={() => alert('Added to cart!')}
+            />
+          </div>
+        </section>
+
+        {/* Impact Widget */}
+        <section className="space-y-6">
+          <h2 className="text-foreground text-2xl font-semibold">Impact Widget</h2>
+          <div className="grid gap-6 md:grid-cols-2">
+            <ImpactWidget
+              totalDonation={12.5}
+              nonprofits={[
+                { name: 'Ocean Conservancy', amount: 5.0 },
+                { name: 'Rainforest Alliance', amount: 4.5 },
+                { name: 'Fair Trade Federation', amount: 3.0 },
+              ]}
+              metrics={[
+                { type: 'co2', label: 'CO₂ Offset', value: '5.2 lbs' },
+                { type: 'trees', label: 'Trees Planted', value: '3' },
+                { type: 'water', label: 'Water Saved', value: '12 gal' },
+                { type: 'plastic', label: 'Plastic Avoided', value: '2.1 lbs' },
+              ]}
+            />
+
+            <ImpactWidget
+              totalDonation={8.75}
+              nonprofits={[{ name: 'The Nature Conservancy', amount: 8.75 }]}
+              metrics={[
+                { type: 'co2', label: 'CO₂ Offset', value: '3.1 lbs' },
+                { type: 'trees', label: 'Trees Planted', value: '2' },
+              ]}
+              variant="highlight"
+            />
           </div>
         </section>
       </div>
