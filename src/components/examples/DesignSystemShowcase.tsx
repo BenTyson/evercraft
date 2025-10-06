@@ -291,8 +291,7 @@ export function DesignSystemShowcase() {
                 name: 'Ocean Conservancy',
                 shortName: 'Ocean Conservancy',
               }}
-              ecoBadge="plastic-free"
-              sustainabilityScore={87}
+              certifications={['organic', 'plastic-free']}
               rating={4.8}
               reviewCount={124}
               isFavorited={favorited}
@@ -306,7 +305,7 @@ export function DesignSystemShowcase() {
                 id: '2',
                 title: 'Bamboo Cutlery Set - Zero Waste Travel Utensils',
                 price: 18.5,
-                image: 'https://images.unsplash.com/photo-1600882291950-70aff82ff089?w=800&q=80',
+                image: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=800&q=80',
                 imageAlt: 'Bamboo cutlery set',
               }}
               seller={{
@@ -317,8 +316,7 @@ export function DesignSystemShowcase() {
                 name: 'Rainforest Alliance',
                 shortName: 'Rainforest',
               }}
-              ecoBadge="zero-waste"
-              sustainabilityScore={92}
+              certifications={['zero-waste', 'plastic-free', 'vegan']}
               rating={4.9}
               reviewCount={89}
               onQuickAddClick={() => alert('Added to cart!')}
@@ -340,8 +338,7 @@ export function DesignSystemShowcase() {
                 name: 'Fair Trade Federation',
                 shortName: 'Fair Trade Fed',
               }}
-              ecoBadge="fair-trade"
-              sustainabilityScore={78}
+              certifications={['fair-trade', 'organic']}
               rating={4.7}
               reviewCount={256}
               onQuickAddClick={() => alert('Added to cart!')}

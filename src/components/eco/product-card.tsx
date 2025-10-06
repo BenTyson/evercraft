@@ -1,12 +1,12 @@
 /**
  * ProductCard Component
  *
- * Displays a product with eco-information, sustainability score, and quick actions.
+ * Displays a product with eco-certifications and quick actions.
  * Based on UX research wireframe combining Faire's clean aesthetic with Etsy's functionality.
  *
  * Features:
- * - Product image with eco-badge overlay
- * - Sustainability score (0-100 with progress bar)
+ * - Product image
+ * - Eco certification badges (max 3 displayed)
  * - Product title (2 lines max)
  * - Seller name with nonprofit support badge
  * - Price and star rating
@@ -20,7 +20,6 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { EcoBadge } from './eco-badge';
-import { SustainabilityScore } from './sustainability-score';
 
 export interface ProductCardProps extends Omit<React.ComponentProps<'div'>, 'children'> {
   /**
@@ -49,9 +48,9 @@ export interface ProductCardProps extends Omit<React.ComponentProps<'div'>, 'chi
     shortName?: string;
   };
   /**
-   * Eco-certification badge (optional)
+   * Eco certifications (max 3 displayed on card)
    */
-  ecoBadge?:
+  certifications?: Array<
     | 'plastic-free'
     | 'carbon-neutral'
     | 'fair-trade'
@@ -59,11 +58,8 @@ export interface ProductCardProps extends Omit<React.ComponentProps<'div'>, 'chi
     | 'vegan'
     | 'organic'
     | 'recycled'
-    | 'zero-waste';
-  /**
-   * Sustainability score (0-100)
-   */
-  sustainabilityScore?: number;
+    | 'zero-waste'
+  >;
   /**
    * Product rating (0-5)
    */
@@ -88,8 +84,7 @@ function ProductCard({
   product,
   seller,
   nonprofit,
-  ecoBadge,
-  sustainabilityScore,
+  certifications = [],
   rating,
   reviewCount = 0,
   isFavorited = false,
@@ -141,13 +136,6 @@ function ProductCard({
           sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
         />
 
-        {/* Eco Badge Overlay */}
-        {ecoBadge && (
-          <div className="absolute top-2 right-2">
-            <EcoBadge variant={ecoBadge} size="sm" />
-          </div>
-        )}
-
         {/* Loading skeleton */}
         {!imageLoaded && (
           <div className="absolute inset-0 animate-pulse bg-neutral-200 dark:bg-neutral-700" />
@@ -156,9 +144,13 @@ function ProductCard({
 
       {/* Product Info */}
       <div className="flex flex-col gap-3 px-3 pb-3">
-        {/* Sustainability Score */}
-        {sustainabilityScore !== undefined && (
-          <SustainabilityScore score={sustainabilityScore} showLabel={false} size="sm" />
+        {/* Eco Certifications */}
+        {certifications.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {certifications.slice(0, 3).map((cert) => (
+              <EcoBadge key={cert} variant={cert} size="sm" showIcon={false} />
+            ))}
+          </div>
         )}
 
         {/* Product Title */}
