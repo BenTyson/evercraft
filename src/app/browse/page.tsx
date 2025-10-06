@@ -7,142 +7,100 @@
 
 'use client';
 
-import { useState } from 'react';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { useState, useEffect, useTransition } from 'react';
+import { SlidersHorizontal, X, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { SiteHeader } from '@/components/layout/site-header';
 import { ProductCard } from '@/components/eco/product-card';
-
-// Mock data - will be replaced with actual data from API/database
-const CATEGORIES = [
-  { id: '1', name: 'Home & Living', count: 1234 },
-  { id: '2', name: 'Kitchen & Dining', count: 892 },
-  { id: '3', name: 'Personal Care', count: 567 },
-  { id: '4', name: 'Fashion', count: 2341 },
-  { id: '5', name: 'Food & Beverage', count: 445 },
-];
-
-const CERTIFICATIONS = [
-  { id: 'organic', label: 'Organic', count: 234 },
-  { id: 'plastic-free', label: 'Plastic Free', count: 456 },
-  { id: 'fair-trade', label: 'Fair Trade', count: 189 },
-  { id: 'carbon-neutral', label: 'Carbon Neutral', count: 123 },
-  { id: 'zero-waste', label: 'Zero Waste', count: 278 },
-  { id: 'vegan', label: 'Vegan', count: 567 },
-  { id: 'b-corp', label: 'B Corp', count: 89 },
-  { id: 'recycled', label: 'Recycled', count: 345 },
-] as const;
-
-const MOCK_PRODUCTS = [
-  {
-    id: '1',
-    title: 'Organic Cotton Tote Bag',
-    price: 24.99,
-    compareAtPrice: 34.99,
-    image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=800&q=80',
-    imageAlt: 'Organic cotton tote bag',
-    seller: { name: 'EcoMaker Studio', slug: 'ecomaker-studio' },
-    nonprofit: { name: 'Ocean Conservancy', shortName: 'Ocean Conservancy' },
-    certifications: ['organic', 'plastic-free'] as const,
-    rating: 4.8,
-    reviewCount: 124,
-  },
-  {
-    id: '2',
-    title: 'Bamboo Cutlery Set',
-    price: 18.5,
-    image: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=800&q=80',
-    imageAlt: 'Bamboo cutlery set',
-    seller: { name: 'Green Living Co', slug: 'green-living-co' },
-    nonprofit: { name: 'Rainforest Alliance', shortName: 'Rainforest' },
-    certifications: ['zero-waste', 'plastic-free', 'vegan'] as const,
-    rating: 4.9,
-    reviewCount: 89,
-  },
-  {
-    id: '3',
-    title: 'Fair Trade Organic Coffee',
-    price: 15.99,
-    image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=800&q=80',
-    imageAlt: 'Organic coffee beans',
-    seller: { name: 'Ethical Grounds', slug: 'ethical-grounds' },
-    nonprofit: { name: 'Fair Trade Federation', shortName: 'Fair Trade Fed' },
-    certifications: ['fair-trade', 'organic'] as const,
-    rating: 4.7,
-    reviewCount: 256,
-  },
-  {
-    id: '4',
-    title: 'Reusable Beeswax Wraps',
-    price: 22.0,
-    image: 'https://images.unsplash.com/photo-1556909212-d5b604d0c90d?w=800&q=80',
-    imageAlt: 'Beeswax food wraps',
-    seller: { name: 'EcoMaker Studio', slug: 'ecomaker-studio' },
-    nonprofit: { name: 'The Nature Conservancy', shortName: 'Nature Conservancy' },
-    certifications: ['zero-waste', 'organic'] as const,
-    rating: 4.9,
-    reviewCount: 178,
-  },
-  {
-    id: '5',
-    title: 'Stainless Steel Water Bottle',
-    price: 29.99,
-    compareAtPrice: 39.99,
-    image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=800&q=80',
-    imageAlt: 'Stainless steel water bottle',
-    seller: { name: 'Green Living Co', slug: 'green-living-co' },
-    nonprofit: { name: 'Ocean Conservancy', shortName: 'Ocean Conservancy' },
-    certifications: ['plastic-free', 'carbon-neutral'] as const,
-    rating: 4.6,
-    reviewCount: 312,
-  },
-  {
-    id: '6',
-    title: 'Organic Hemp T-Shirt',
-    price: 34.99,
-    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80',
-    imageAlt: 'Organic hemp t-shirt',
-    seller: { name: 'Ethical Threads', slug: 'ethical-threads' },
-    nonprofit: { name: 'Fair Trade Federation', shortName: 'Fair Trade Fed' },
-    certifications: ['organic', 'fair-trade', 'vegan'] as const,
-    rating: 4.7,
-    reviewCount: 89,
-  },
-  {
-    id: '7',
-    title: 'Recycled Glass Vase',
-    price: 42.0,
-    image: 'https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=800&q=80',
-    imageAlt: 'Recycled glass vase',
-    seller: { name: 'EcoMaker Studio', slug: 'ecomaker-studio' },
-    nonprofit: { name: 'The Nature Conservancy', shortName: 'Nature Conservancy' },
-    certifications: ['recycled', 'zero-waste'] as const,
-    rating: 4.8,
-    reviewCount: 67,
-  },
-  {
-    id: '8',
-    title: 'Natural Soap Bar Set',
-    price: 18.99,
-    image: 'https://images.unsplash.com/photo-1600428853294-9c11c9c1e3d5?w=800&q=80',
-    imageAlt: 'Natural soap bars',
-    seller: { name: 'Pure Botanicals', slug: 'pure-botanicals' },
-    nonprofit: { name: 'Rainforest Alliance', shortName: 'Rainforest' },
-    certifications: ['organic', 'plastic-free', 'vegan'] as const,
-    rating: 4.9,
-    reviewCount: 234,
-  },
-];
+import { getProducts, getCategories, getCertifications } from '@/actions/products';
 
 type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'newest';
 
+interface Product {
+  id: string;
+  title: string;
+  price: number;
+  compareAtPrice: number | null;
+  images: Array<{ url: string; altText: string | null }>;
+  shop: { id: string; name: string; slug: string | null };
+  certifications: Array<{ id: string; name: string }>;
+  sustainabilityScore: { totalScore: number } | null;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  count: number;
+}
+
+interface Certification {
+  id: string;
+  name: string;
+  count: number;
+}
+
 export default function BrowsePage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [certifications, setCertifications] = useState<Certification[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedCertifications, setSelectedCertifications] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<SortOption>('featured');
   const [favorited, setFavorited] = useState<Record<string, boolean>>({});
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+  const [isPending, startTransition] = useTransition();
+
+  // Load initial data
+  useEffect(() => {
+    async function loadInitialData() {
+      try {
+        setIsLoading(true);
+        const [productsData, categoriesData, certificationsData] = await Promise.all([
+          getProducts({}),
+          getCategories(),
+          getCertifications(),
+        ]);
+
+        setProducts(productsData.products as Product[]);
+        setTotalCount(productsData.total);
+        setCategories(categoriesData);
+        setCertifications(certificationsData);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadInitialData();
+  }, []);
+
+  // Reload products when filters or sort changes
+  useEffect(() => {
+    async function loadProducts() {
+      try {
+        const productsData = await getProducts({
+          categoryIds: selectedCategories.length > 0 ? selectedCategories : undefined,
+          certificationIds: selectedCertifications.length > 0 ? selectedCertifications : undefined,
+          sortBy,
+        });
+
+        setProducts(productsData.products as Product[]);
+        setTotalCount(productsData.total);
+      } catch (error) {
+        console.error('Error loading products:', error);
+      }
+    }
+
+    if (!isLoading) {
+      startTransition(() => {
+        loadProducts();
+      });
+    }
+  }, [selectedCategories, selectedCertifications, sortBy, isLoading]);
 
   const toggleCategory = (categoryId: string) => {
     setSelectedCategories((prev) =>
@@ -165,19 +123,37 @@ export default function BrowsePage() {
     setSelectedCertifications([]);
   };
 
-  // Filter and sort products
-  const filteredProducts = [...MOCK_PRODUCTS];
-
-  // Apply sorting
-  if (sortBy === 'price-low') {
-    filteredProducts.sort((a, b) => a.price - b.price);
-  } else if (sortBy === 'price-high') {
-    filteredProducts.sort((a, b) => b.price - a.price);
-  } else if (sortBy === 'rating') {
-    filteredProducts.sort((a, b) => b.rating - a.rating);
-  }
-
   const activeFilterCount = selectedCategories.length + selectedCertifications.length;
+
+  // Convert certification names to badge variants
+  const getCertificationVariant = (name: string) => {
+    const lowerName = name.toLowerCase().replace(/\s+/g, '-');
+    const variants = [
+      'plastic-free',
+      'carbon-neutral',
+      'fair-trade',
+      'b-corp',
+      'vegan',
+      'organic',
+      'recycled',
+      'zero-waste',
+    ] as const;
+    return variants.find((v) => lowerName.includes(v)) || 'organic';
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen">
+        <SiteHeader />
+        <div className="container mx-auto flex min-h-[50vh] items-center justify-center px-4 py-16">
+          <div className="flex items-center gap-3 text-lg">
+            <Loader2 className="size-6 animate-spin" />
+            <span>Loading products...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -209,7 +185,7 @@ export default function BrowsePage() {
               <div className="mb-6">
                 <h3 className="mb-3 text-sm font-semibold tracking-wide uppercase">Categories</h3>
                 <div className="space-y-2">
-                  {CATEGORIES.map((category) => (
+                  {categories.map((category) => (
                     <label key={category.id} className="flex cursor-pointer items-center gap-2">
                       <input
                         type="checkbox"
@@ -232,7 +208,7 @@ export default function BrowsePage() {
                   Certifications
                 </h3>
                 <div className="space-y-2">
-                  {CERTIFICATIONS.map((cert) => (
+                  {certifications.map((cert) => (
                     <label key={cert.id} className="flex cursor-pointer items-center gap-2">
                       <input
                         type="checkbox"
@@ -240,7 +216,7 @@ export default function BrowsePage() {
                         onChange={() => toggleCertification(cert.id)}
                         className="accent-forest-dark size-4 rounded"
                       />
-                      <span className="text-sm">{cert.label}</span>
+                      <span className="text-sm">{cert.name}</span>
                       <span className="text-muted-foreground ml-auto text-xs">{cert.count}</span>
                     </label>
                   ))}
@@ -270,7 +246,17 @@ export default function BrowsePage() {
 
               {/* Results Count */}
               <p className="text-muted-foreground text-sm">
-                Showing <span className="font-semibold">{filteredProducts.length}</span> products
+                {isPending ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="size-4 animate-spin" />
+                    Loading...
+                  </span>
+                ) : (
+                  <>
+                    Showing <span className="font-semibold">{products.length}</span> of{' '}
+                    <span className="font-semibold">{totalCount}</span> products
+                  </>
+                )}
               </p>
 
               {/* Sort Dropdown */}
@@ -291,7 +277,7 @@ export default function BrowsePage() {
             {activeFilterCount > 0 && (
               <div className="mb-6 flex flex-wrap gap-2">
                 {selectedCategories.map((catId) => {
-                  const category = CATEGORIES.find((c) => c.id === catId);
+                  const category = categories.find((c) => c.id === catId);
                   return (
                     <button
                       key={catId}
@@ -304,14 +290,14 @@ export default function BrowsePage() {
                   );
                 })}
                 {selectedCertifications.map((certId) => {
-                  const cert = CERTIFICATIONS.find((c) => c.id === certId);
+                  const cert = certifications.find((c) => c.id === certId);
                   return (
                     <button
                       key={certId}
                       onClick={() => toggleCertification(certId)}
                       className="bg-eco-light text-forest-dark hover:bg-eco-light/80 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium transition-colors"
                     >
-                      {cert?.label}
+                      {cert?.name}
                       <X className="size-3.5" />
                     </button>
                   );
@@ -321,21 +307,44 @@ export default function BrowsePage() {
 
             {/* Product Grid */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredProducts.map((product) => (
+              {products.map((product) => (
                 <ProductCard
                   key={product.id}
-                  product={product}
-                  seller={product.seller}
-                  nonprofit={product.nonprofit}
-                  certifications={product.certifications}
-                  rating={product.rating}
-                  reviewCount={product.reviewCount}
+                  product={{
+                    id: product.id,
+                    title: product.title,
+                    price: product.price,
+                    compareAtPrice: product.compareAtPrice || undefined,
+                    image: product.images[0]?.url || '/placeholder.png',
+                    imageAlt: product.images[0]?.altText || product.title,
+                  }}
+                  seller={{
+                    name: product.shop.name,
+                    slug: product.shop.slug || product.shop.id,
+                  }}
+                  certifications={product.certifications
+                    .slice(0, 3)
+                    .map((c) => getCertificationVariant(c.name))}
+                  rating={product.sustainabilityScore?.totalScore || 0}
+                  reviewCount={0}
                   isFavorited={favorited[product.id]}
                   onFavoriteClick={() => toggleFavorite(product.id)}
                   onQuickAddClick={() => alert('Added to cart!')}
                 />
               ))}
             </div>
+
+            {/* Empty State */}
+            {products.length === 0 && !isPending && (
+              <div className="py-16 text-center">
+                <p className="text-muted-foreground text-lg">No products found.</p>
+                {activeFilterCount > 0 && (
+                  <Button variant="outline" className="mt-4" onClick={clearFilters}>
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
+            )}
           </main>
         </div>
       </div>
@@ -362,7 +371,7 @@ export default function BrowsePage() {
             <div className="mb-6">
               <h3 className="mb-3 text-sm font-semibold tracking-wide uppercase">Categories</h3>
               <div className="space-y-2">
-                {CATEGORIES.map((category) => (
+                {categories.map((category) => (
                   <label key={category.id} className="flex cursor-pointer items-center gap-2">
                     <input
                       type="checkbox"
@@ -381,7 +390,7 @@ export default function BrowsePage() {
             <div className="mb-6">
               <h3 className="mb-3 text-sm font-semibold tracking-wide uppercase">Certifications</h3>
               <div className="space-y-2">
-                {CERTIFICATIONS.map((cert) => (
+                {certifications.map((cert) => (
                   <label key={cert.id} className="flex cursor-pointer items-center gap-2">
                     <input
                       type="checkbox"
@@ -389,7 +398,7 @@ export default function BrowsePage() {
                       onChange={() => toggleCertification(cert.id)}
                       className="accent-forest-dark size-4 rounded"
                     />
-                    <span className="text-sm">{cert.label}</span>
+                    <span className="text-sm">{cert.name}</span>
                     <span className="text-muted-foreground ml-auto text-xs">{cert.count}</span>
                   </label>
                 ))}
@@ -401,8 +410,19 @@ export default function BrowsePage() {
               <Button variant="outline" className="flex-1" onClick={clearFilters}>
                 Clear All
               </Button>
-              <Button className="flex-1" onClick={() => setIsMobileFiltersOpen(false)}>
-                Show {filteredProducts.length} Products
+              <Button
+                className="flex-1"
+                onClick={() => setIsMobileFiltersOpen(false)}
+                disabled={isPending}
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  `Show ${products.length} Products`
+                )}
               </Button>
             </div>
           </div>
