@@ -167,7 +167,7 @@ export async function getProductById(id: string) {
             name: true,
             slug: true,
             bio: true,
-            avatar: true,
+            logo: true,
             createdAt: true,
           },
         },
@@ -214,7 +214,7 @@ export async function getProductById(id: string) {
           },
           take: 10,
           include: {
-            buyer: {
+            user: {
               select: {
                 name: true,
               },
