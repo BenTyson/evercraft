@@ -5,22 +5,17 @@
  * Mission-driven hero + featured products.
  */
 
-'use client';
-
-import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Leaf, Heart, TrendingUp } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { SiteHeader } from '@/components/layout/site-header';
-import { ProductCard } from '@/components/eco/product-card';
+import { getProducts } from '@/actions/products';
+import { FeaturedProducts } from './featured-products';
 
-export default function HomePage() {
-  const [favorited, setFavorited] = useState<Record<string, boolean>>({});
-
-  const toggleFavorite = (productId: string) => {
-    setFavorited((prev) => ({ ...prev, [productId]: !prev[productId] }));
-  };
+export default async function HomePage() {
+  // Fetch featured products from database
+  const { products } = await getProducts({ limit: 4, sortBy: 'featured' });
 
   return (
     <div className="min-h-screen">
@@ -79,130 +74,7 @@ export default function HomePage() {
       </section>
 
       {/* Featured Products */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold">Featured Products</h2>
-            <p className="text-muted-foreground mt-2">
-              Handpicked sustainable goods from our community
-            </p>
-          </div>
-          <Button variant="outline" asChild className="hidden md:inline-flex">
-            <Link href="/browse">
-              View All
-              <ArrowRight className="ml-2 size-4" />
-            </Link>
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <ProductCard
-            product={{
-              id: '1',
-              title: 'Organic Cotton Tote Bag',
-              price: 24.99,
-              compareAtPrice: 34.99,
-              image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=800&q=80',
-              imageAlt: 'Organic cotton tote bag',
-            }}
-            seller={{
-              name: 'EcoMaker Studio',
-              slug: 'ecomaker-studio',
-            }}
-            nonprofit={{
-              name: 'Ocean Conservancy',
-              shortName: 'Ocean Conservancy',
-            }}
-            certifications={['organic', 'plastic-free']}
-            rating={4.8}
-            reviewCount={124}
-            isFavorited={favorited['1']}
-            onFavoriteClick={() => toggleFavorite('1')}
-            onQuickAddClick={() => alert('Added to cart!')}
-          />
-
-          <ProductCard
-            product={{
-              id: '2',
-              title: 'Bamboo Cutlery Set',
-              price: 18.5,
-              image: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=800&q=80',
-              imageAlt: 'Bamboo cutlery set',
-            }}
-            seller={{
-              name: 'Green Living Co',
-              slug: 'green-living-co',
-            }}
-            nonprofit={{
-              name: 'Rainforest Alliance',
-              shortName: 'Rainforest',
-            }}
-            certifications={['zero-waste', 'plastic-free', 'vegan']}
-            rating={4.9}
-            reviewCount={89}
-            isFavorited={favorited['2']}
-            onFavoriteClick={() => toggleFavorite('2')}
-            onQuickAddClick={() => alert('Added to cart!')}
-          />
-
-          <ProductCard
-            product={{
-              id: '3',
-              title: 'Fair Trade Organic Coffee',
-              price: 15.99,
-              image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=800&q=80',
-              imageAlt: 'Organic coffee beans',
-            }}
-            seller={{
-              name: 'Ethical Grounds',
-              slug: 'ethical-grounds',
-            }}
-            nonprofit={{
-              name: 'Fair Trade Federation',
-              shortName: 'Fair Trade Fed',
-            }}
-            certifications={['fair-trade', 'organic']}
-            rating={4.7}
-            reviewCount={256}
-            isFavorited={favorited['3']}
-            onFavoriteClick={() => toggleFavorite('3')}
-            onQuickAddClick={() => alert('Added to cart!')}
-          />
-
-          <ProductCard
-            product={{
-              id: '4',
-              title: 'Reusable Beeswax Wraps',
-              price: 22.0,
-              image: 'https://images.unsplash.com/photo-1556909212-d5b604d0c90d?w=800&q=80',
-              imageAlt: 'Beeswax food wraps',
-            }}
-            seller={{
-              name: 'EcoMaker Studio',
-              slug: 'ecomaker-studio',
-            }}
-            nonprofit={{
-              name: 'The Nature Conservancy',
-              shortName: 'Nature Conservancy',
-            }}
-            certifications={['zero-waste', 'organic']}
-            rating={4.9}
-            reviewCount={178}
-            isFavorited={favorited['4']}
-            onFavoriteClick={() => toggleFavorite('4')}
-            onQuickAddClick={() => alert('Added to cart!')}
-          />
-        </div>
-
-        <div className="mt-8 text-center md:hidden">
-          <Button variant="outline" asChild>
-            <Link href="/browse">
-              View All Products
-              <ArrowRight className="ml-2 size-4" />
-            </Link>
-          </Button>
-        </div>
-      </section>
+      <FeaturedProducts products={products} />
 
       {/* Why Evercraft Section */}
       <section className="bg-neutral-50 dark:bg-neutral-900">
