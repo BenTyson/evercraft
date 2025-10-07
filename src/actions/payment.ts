@@ -1,0 +1,252 @@
+'use server';
+
+import { auth, clerkClient } from '@clerk/nextjs/server';
+import { stripe } from '@/lib/stripe';
+import { db } from '@/lib/db';
+import { ShippingAddress } from '@/store/checkout-store';
+import { sendOrderConfirmationEmail } from '@/lib/email';
+import { calculateCartShipping } from '@/lib/shipping';
+
+interface CartItem {
+  id: string;
+  productId: string;
+  title: string;
+  price: number;
+  quantity: number;
+  image?: string;
+  shopId: string;
+  shopName: string;
+}
+
+interface CreatePaymentIntentInput {
+  items: CartItem[];
+  shippingAddress: ShippingAddress;
+}
+
+export async function createPaymentIntent(input: CreatePaymentIntentInput) {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return { success: false, error: 'Not authenticated' };
+    }
+
+    // Calculate totals
+    const subtotal = input.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const donationAmount = subtotal * 0.05; // 5% donation
+
+    // Calculate shipping dynamically
+    const shippingResult = calculateCartShipping({
+      items: input.items.map((item) => ({
+        price: item.price,
+        quantity: item.quantity,
+        weight: 1, // Default weight
+      })),
+      destinationCountry: input.shippingAddress.country,
+      destinationState: input.shippingAddress.state,
+    });
+    const shipping = shippingResult.shippingCost;
+
+    const total = subtotal + donationAmount + shipping;
+
+    // Create Stripe payment intent
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(total * 100), // Stripe uses cents
+      currency: 'usd',
+      automatic_payment_methods: {
+        enabled: true,
+      },
+      metadata: {
+        userId,
+        subtotal: subtotal.toFixed(2),
+        donation: donationAmount.toFixed(2),
+        shipping: shipping.toFixed(2),
+      },
+    });
+
+    return {
+      success: true,
+      clientSecret: paymentIntent.client_secret,
+    };
+  } catch (error) {
+    console.error('Error creating payment intent:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create payment intent',
+    };
+  }
+}
+
+interface CreateOrderInput {
+  paymentIntentId: string;
+  items: CartItem[];
+  shippingAddress: ShippingAddress;
+}
+
+export async function createOrder(input: CreateOrderInput) {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return { success: false, error: 'Not authenticated' };
+    }
+
+    // Verify payment intent
+    const paymentIntent = await stripe.paymentIntents.retrieve(input.paymentIntentId);
+
+    if (paymentIntent.status !== 'succeeded') {
+      return { success: false, error: 'Payment not completed' };
+    }
+
+    // Calculate totals
+    const subtotal = input.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const donationAmount = subtotal * 0.05;
+
+    // Calculate shipping dynamically
+    const shippingResult = calculateCartShipping({
+      items: input.items.map((item) => ({
+        price: item.price,
+        quantity: item.quantity,
+        weight: 1, // Default weight
+      })),
+      destinationCountry: input.shippingAddress.country,
+      destinationState: input.shippingAddress.state,
+    });
+    const shipping = shippingResult.shippingCost;
+
+    const total = subtotal + donationAmount + shipping;
+
+    // Check inventory availability for all products
+    const inventoryCheck = await Promise.all(
+      input.items.map(async (item) => {
+        const product = await db.product.findUnique({
+          where: { id: item.productId },
+          select: {
+            id: true,
+            title: true,
+            trackInventory: true,
+            inventoryQuantity: true
+          },
+        });
+
+        if (!product) {
+          return { success: false, error: `Product ${item.title} not found` };
+        }
+
+        if (product.trackInventory && product.inventoryQuantity < item.quantity) {
+          return {
+            success: false,
+            error: `Insufficient inventory for ${product.title}. Available: ${product.inventoryQuantity}, Requested: ${item.quantity}`
+          };
+        }
+
+        return { success: true, product };
+      })
+    );
+
+    // Check if any inventory checks failed
+    const failedCheck = inventoryCheck.find((check) => !check.success);
+    if (failedCheck) {
+      return { success: false, error: failedCheck.error };
+    }
+
+    // Generate unique order number
+    const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+
+    // Create order with transaction to ensure atomicity
+    const order = await db.$transaction(async (tx) => {
+      // Create the order
+      const newOrder = await tx.order.create({
+        data: {
+          orderNumber,
+          buyerId: userId,
+          status: 'PROCESSING',
+          subtotal,
+          shippingCost: shipping,
+          tax: 0,
+          total,
+          nonprofitDonation: donationAmount,
+          shippingAddress: input.shippingAddress as any,
+          billingAddress: input.shippingAddress as any,
+          paymentStatus: 'PAID',
+          paymentIntentId: input.paymentIntentId,
+          updatedAt: new Date(),
+        },
+      });
+
+      // Create order items and decrement inventory
+      for (const item of input.items) {
+        // Get shop info for the product
+        const product = await tx.product.findUnique({
+          where: { id: item.productId },
+          select: { shopId: true, trackInventory: true },
+        });
+
+        if (!product) continue;
+
+        // Create order item
+        await tx.orderItem.create({
+          data: {
+            id: `${newOrder.id}-${item.productId}`,
+            orderId: newOrder.id,
+            productId: item.productId,
+            shopId: product.shopId,
+            quantity: item.quantity,
+            priceAtPurchase: item.price,
+            subtotal: item.price * item.quantity,
+            donationAmount: item.price * item.quantity * 0.05,
+          },
+        });
+
+        // Decrement inventory if tracking is enabled
+        if (product.trackInventory) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: {
+              inventoryQuantity: {
+                decrement: item.quantity,
+              },
+            },
+          });
+        }
+      }
+
+      return newOrder;
+    });
+
+    // Send order confirmation email
+    try {
+      const clerk = await clerkClient();
+      const user = await clerk.users.getUser(userId);
+      const userEmail = user.emailAddresses[0]?.emailAddress;
+
+      if (userEmail) {
+        await sendOrderConfirmationEmail({
+          to: userEmail,
+          orderNumber: order.orderNumber,
+          orderTotal: total,
+          items: input.items.map((item) => ({
+            title: item.title,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+          shippingAddress: input.shippingAddress,
+        });
+      }
+    } catch (emailError) {
+      // Log email error but don't fail the order
+      console.error('Failed to send order confirmation email:', emailError);
+    }
+
+    return {
+      success: true,
+      orderIds: [order.id],
+    };
+  } catch (error) {
+    console.error('Error creating order:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create order',
+    };
+  }
+}

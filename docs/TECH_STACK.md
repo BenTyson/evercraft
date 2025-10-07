@@ -1,6 +1,6 @@
 # Technology Stack
 
-**Last Updated:** October 5, 2025
+**Last Updated:** October 7, 2025
 
 ---
 
@@ -14,13 +14,14 @@ Evercraft is built with modern, scalable technologies prioritizing performance, 
 
 ### Core Framework
 
-- **Next.js 14+** (App Router)
+- **Next.js 15.5.4** (App Router)
   - Server-side rendering (SSR) for SEO
   - Server components for performance
-  - API routes for backend
+  - Server Actions for mutations
   - Image optimization built-in
   - File-based routing
   - Excellent TypeScript support
+  - React 19 support
 
 ### Language
 
@@ -32,12 +33,13 @@ Evercraft is built with modern, scalable technologies prioritizing performance, 
 
 ### Styling
 
-- **Tailwind CSS**
+- **Tailwind CSS v4** (PostCSS)
   - Utility-first CSS framework
   - Rapid UI development
   - Consistent design system
   - Minimal CSS bundle (purge unused)
   - Dark mode support built-in
+  - Latest v4 architecture with improved performance
 
 ### UI Components
 
@@ -78,22 +80,32 @@ Evercraft is built with modern, scalable technologies prioritizing performance, 
   - Built-in, no additional library
   - Good for auth, theme, etc.
 
+### Utility Libraries
+
+- **date-fns 4.1.0**
+  - Modern date utility library
+  - Modular and tree-shakeable
+  - TypeScript support
+  - Used for review timestamps and date formatting
+
 ---
 
 ## Backend
 
 ### API Layer
 
-- **Next.js API Routes**
+- **Next.js Server Actions** (Primary)
+  - Server-side functions for mutations
+  - Type-safe with TypeScript
+  - Automatic POST endpoint generation
+  - Progressive enhancement support
+  - Used for all data mutations (reviews, orders, etc.)
+
+- **Next.js API Routes** (Secondary)
+  - RESTful endpoints for specific use cases
   - Serverless functions
   - Same codebase as frontend
   - Edge runtime support
-
-- **tRPC** (Type-safe API)
-  - End-to-end type safety
-  - No code generation
-  - Auto-complete in IDE
-  - Eliminates API documentation need
 
 ### Database
 
@@ -117,23 +129,18 @@ Evercraft is built with modern, scalable technologies prioritizing performance, 
 
 ### Authentication
 
-- **Clerk** (Recommended) or **NextAuth.js**
+- **Clerk 6.33.3** ✅ Implemented
 
-  **Clerk Pros:**
-  - Built-in UI components
+  **Features in use:**
+  - Built-in UI components (sign-in, sign-up, user profile)
   - User management dashboard
-  - Multi-factor auth
+  - Multi-factor authentication
   - Social logins (Google, Apple, Facebook)
-  - Webhooks for user events
-  - Excellent UX
-
-  **NextAuth.js Pros:**
-  - Open source, free
-  - Flexible, self-hosted
-  - Many providers
-  - Custom database integration
-
-  **Decision:** Start with Clerk for speed, migrate to NextAuth if needed
+  - Webhooks for user lifecycle events
+  - Role-based access control (BUYER, SELLER, ADMIN)
+  - Middleware for route protection
+  - TypeScript support
+  - Excellent developer experience
 
 ---
 
@@ -141,15 +148,17 @@ Evercraft is built with modern, scalable technologies prioritizing performance, 
 
 ### Payments
 
-- **Stripe Connect**
-  - Marketplace payments (split payments)
-  - Seller onboarding (KYC)
+- **Stripe 19.1.0** ✅ Implemented
+  - Stripe Connect for marketplace payments
+  - Split payments to sellers and nonprofit donations
+  - Seller onboarding with KYC verification
   - Automated payouts
-  - Payment intents API
+  - Payment Intents API
   - Supports Apple Pay, Google Pay
   - Strong fraud detection
   - PCI compliance handled
-  - Webhooks for events
+  - Webhooks for payment events
+  - React Stripe.js integration (@stripe/react-stripe-js 5.0.0)
 
 ### Search
 
@@ -164,32 +173,25 @@ Evercraft is built with modern, scalable technologies prioritizing performance, 
 
 ### File Upload & Storage
 
-- **Uploadthing** (Recommended) or **Cloudinary**
-
-  **Uploadthing Pros:**
-  - Built for Next.js
-  - Type-safe uploads
+- **UploadThing 7.7.4** ✅ Implemented
+  - Built for Next.js integration
+  - Type-safe uploads with TypeScript
   - Automatic image optimization
-  - S3-backed
-  - Simple pricing
-
-  **Cloudinary Pros:**
-  - Advanced image transformations
-  - Video support
-  - AI-powered features
-  - CDN included
-  - More mature
-
-  **Decision:** Uploadthing for simplicity, Cloudinary if advanced features needed
+  - S3-backed storage
+  - Simple pricing model
+  - React components (@uploadthing/react 7.3.3)
+  - Used for product images and review images
+  - Seamless integration with App Router
 
 ### Email
 
-- **Resend**
+- **Resend 6.1.2** ✅ Implemented
   - Developer-friendly API
-  - React Email templates
+  - React Email templates support
   - Good deliverability
   - Affordable pricing
   - Webhooks for tracking
+  - Used for order confirmations and notifications
 
 ### Shipping
 
@@ -528,26 +530,63 @@ Evercraft is built with modern, scalable technologies prioritizing performance, 
 
 ### Key Decisions Made
 
-1. **Next.js over Remix/Nuxt:** Best ecosystem, performance, SEO
-2. **PostgreSQL over MongoDB:** E-commerce needs relational data
-3. **Stripe Connect over PayPal:** Better marketplace support
-4. **Meilisearch over Algolia:** Cost-effective, open source
-5. **Clerk over NextAuth:** Faster MVP, great UX (can migrate later)
-6. **Railway over Vercel/AWS:** User familiarity, simplicity
-7. **shadcn/ui over MUI:** Modern, accessible, customizable
-8. **tRPC over REST:** Type safety, better DX
-9. **Vitest over Jest:** Faster, better ESM support
+1. **Next.js 15 over Remix/Nuxt:** Best ecosystem, performance, SEO
+2. **PostgreSQL over MongoDB:** E-commerce needs relational data ✅
+3. **Stripe Connect over PayPal:** Better marketplace support ✅
+4. **Clerk over NextAuth:** Faster MVP, great UX, excellent DX ✅
+5. **Railway over Vercel/AWS:** User familiarity, simplicity ✅
+6. **shadcn/ui over MUI:** Modern, accessible, customizable ✅
+7. **Server Actions over tRPC:** Native Next.js integration, simpler setup ✅
+8. **Vitest over Jest:** Faster, better ESM support ✅
+9. **UploadThing over Cloudinary:** Better Next.js integration ✅
+10. **Zustand over Redux:** Simpler API, less boilerplate ✅
+11. **date-fns over moment.js:** Modern, tree-shakeable, smaller bundle ✅
 
-### Open Decisions
+### Implementation Status
 
-- [ ] Clerk vs NextAuth (final decision in Phase 1)
-- [ ] Uploadthing vs Cloudinary (evaluate in Phase 3)
-- [ ] Self-hosted Meilisearch vs managed service (evaluate scaling needs)
+- ✅ **Phase 0-6:** Completed (Authentication, Products, Cart, Checkout, Orders, Impact)
+- ✅ **Phase 7:** Reviews & Ratings system fully implemented
+- 🚧 **Phase 8+:** Upcoming features (Advanced search, analytics, mobile app)
+
+---
+
+## Key Features Implemented
+
+### Phase 7: Reviews & Ratings ✅
+- **Server Actions:** `/src/actions/reviews.ts` with 520+ lines of type-safe mutations
+- **Components:**
+  - StarRating - Reusable rating display component
+  - ReviewForm - Create/edit review form with validation
+  - ProductReviews - Product review list with filtering/sorting
+  - UserReviewsList - User's review management interface
+- **Features:**
+  - 1-5 star ratings with visual display
+  - Verified purchase badges
+  - Review images (via UploadThing)
+  - Helpful vote system
+  - Rating aggregation and statistics
+  - Filtering (all, verified only)
+  - Sorting (recent, highest rated, most helpful)
+  - User review history at `/account/reviews`
+  - Edit/delete functionality
+  - Server-side validation with proper error handling
+
+### Previous Phases (Phase 0-6) ✅
+- User authentication with Clerk (social logins, MFA)
+- Role-based access control (Buyer, Seller, Admin)
+- Product catalog with variants and inventory
+- Shopping cart with Zustand persistence
+- Stripe checkout integration
+- Order processing and fulfillment
+- Nonprofit selection and donation tracking
+- Impact metrics dashboard
+- Seller verification workflow
+- Image uploads via UploadThing
 
 ---
 
 **This stack is optimized for:**
-✅ Fast development velocity (MVP in 7-8 months)
+✅ Fast development velocity
 ✅ Excellent UX (performance, accessibility)
 ✅ Type safety (minimize bugs)
 ✅ Scalability (grow with platform)

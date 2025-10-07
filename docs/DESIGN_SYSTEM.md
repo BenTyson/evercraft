@@ -1,6 +1,6 @@
 # Design System
 
-**Last Updated:** October 5, 2025
+**Last Updated:** October 7, 2025
 
 ---
 
@@ -371,6 +371,19 @@ border-[#DC3545] focus:ring-[#DC3545]
 bg-[#E9ECEF] cursor-not-allowed opacity-60
 ```
 
+**Textarea**
+
+```css
+border border-[#CED4DA] rounded-md
+px-3 py-2 text-sm min-h-[80px]
+focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]
+focus:ring-offset-2
+```
+
+- Usage: Multi-line text input (reviews, messages)
+- Resizable: vertical only (optional)
+- Character counter (optional)
+
 ### Badges
 
 **Eco-Score Badges**
@@ -403,6 +416,55 @@ px-2.5 py-0.5 rounded-full text-xs font-medium
 - Always include accessible labels
 - Use consistent sizes within a section
 - Align with text baseline
+
+### Review System Components ✅
+
+**StarRating Component**
+
+- Display: Read-only or interactive
+- Sizes: `sm` (16px), `md` (20px), `lg` (24px)
+- Colors: Filled stars (`text-yellow-400`), Empty stars (`text-gray-300`)
+- Implementation: Lucide React Star icons
+- Props: `rating` (1-5), `size`, `className`
+
+**ReviewForm Component**
+
+- Rating selector: Interactive 5-star rating
+- Text input: Textarea with character limits (10-1000 chars)
+- Image upload: Optional review images via UploadThing
+- Validation: Client and server-side validation
+- States: Editing mode, Submit mode, Loading state
+- Actions: Cancel, Submit
+
+**ProductReviews Component**
+
+- Filters: All reviews, Verified purchases only
+- Sorting: Most recent, Highest rated, Most helpful
+- Display: Review cards with author, rating, text, images
+- Verified badge: Green pill badge for verified purchases
+- Helpful votes: "Mark as helpful" button with count
+- Pagination: Load more reviews
+
+**UserReviewsList Component**
+
+- Display: User's review history
+- Actions: Edit, Delete with confirmation
+- Product info: Product image and title links
+- Edit mode: Inline ReviewForm component
+- Empty state: "No reviews yet" with browse link
+
+**Review Card Pattern**
+
+```css
+bg-white border border-gray-200 rounded-lg p-6
+hover:shadow-md transition-shadow
+```
+
+- Header: Star rating + verified badge
+- Body: Review text with proper line-height
+- Footer: Review images grid (if any)
+- Meta: Author name, date (relative format with date-fns)
+- Actions: Edit/Delete (own reviews), Mark helpful (others')
 
 ---
 
@@ -730,15 +792,44 @@ module.exports = {
 
 ---
 
-## Next Steps
+## Implementation Status
 
-1. **Create Figma design system** (Week 1-2)
-   - Color styles
-   - Text styles
-   - Component library
-2. **Build Tailwind config** (Week 3)
-3. **Create shadcn/ui component library** (Week 3)
-4. **Document in Storybook** (optional, ongoing)
+### ✅ Completed Components
+
+**UI Primitives (shadcn/ui pattern):**
+- Button (Primary, Secondary, Outline, Ghost)
+- Input (Text, Email, Password)
+- Textarea (Multi-line text input)
+- Label (Form labels)
+- Select (Dropdown selector)
+- Separator (Visual dividers)
+
+**Review System:**
+- StarRating (Read-only and interactive)
+- ReviewForm (Create/edit reviews)
+- ProductReviews (Review list with filters)
+- UserReviewsList (User review management)
+
+**Other Components:**
+- Product cards with hover states
+- Navigation header
+- Footer
+- Forms with validation states
+- Modal dialogs
+- Loading states and skeletons
+
+### 🚧 Future Enhancements
+
+1. **Storybook integration** (optional, for component documentation)
+2. **Dark mode support** (using Tailwind's dark mode)
+3. **Additional UI components** as needed:
+   - Dropdown menu
+   - Dialog/Modal variants
+   - Toast notifications
+   - Carousel/Slider
+   - Tabs
+   - Accordion
+4. **Animation library expansion** (more Framer Motion variants)
 
 ---
 

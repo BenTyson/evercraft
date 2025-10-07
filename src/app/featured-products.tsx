@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,7 @@ function getCertificationVariant(name: string) {
 }
 
 export function FeaturedProducts({ products }: FeaturedProductsProps) {
+  const router = useRouter();
   const [favorited, setFavorited] = useState<Record<string, boolean>>({});
 
   const toggleFavorite = (productId: string) => {
@@ -85,6 +87,7 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
             isFavorited={favorited[product.id]}
             onFavoriteClick={() => toggleFavorite(product.id)}
             onQuickAddClick={() => alert('Added to cart!')}
+            onProductClick={() => router.push(`/products/${product.id}`)}
           />
         ))}
       </div>

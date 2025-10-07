@@ -13,6 +13,8 @@
  * - Favorite and quick-add actions
  */
 
+'use client';
+
 import * as React from 'react';
 import { Heart, Plus, Star, Leaf } from 'lucide-react';
 import Image from 'next/image';

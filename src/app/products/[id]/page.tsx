@@ -25,8 +25,12 @@ import { SustainabilityScore } from '@/components/eco/sustainability-score';
 import { ProductCard } from '@/components/eco/product-card';
 import { cn } from '@/lib/utils';
 import { getProductById, getProducts } from '@/actions/products';
+import { getProductReviews, getReviewStats, canUserReview } from '@/actions/reviews';
 import { AddToCartButton } from './add-to-cart-button';
 import { FavoriteButton } from './favorite-button';
+import { ProductReviews } from '@/components/reviews/product-reviews';
+import { ReviewForm } from '@/components/reviews/review-form';
+import { auth } from '@clerk/nextjs/server';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -48,6 +52,29 @@ function getCertificationVariant(name: string) {
   return variants.find((v) => lowerName.includes(v)) || 'organic';
 }
 
+// Get inventory status
+function getInventoryStatus(
+  trackInventory: boolean,
+  quantity: number,
+  lowStockThreshold?: number | null
+) {
+  if (!trackInventory) return null;
+
+  if (quantity === 0) {
+    return { label: 'Out of Stock', color: 'text-red-600', bgColor: 'bg-red-50' };
+  }
+
+  if (lowStockThreshold && quantity <= lowStockThreshold) {
+    return {
+      label: `Low Stock (${quantity} left)`,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50',
+    };
+  }
+
+  return { label: 'In Stock', color: 'text-green-600', bgColor: 'bg-green-50' };
+}
+
 export default async function ProductDetailPage({ params }: PageProps) {
   const { id } = await params;
   const product = await getProductById(id);
@@ -56,11 +83,19 @@ export default async function ProductDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  // Get related products from same category
-  const relatedProductsData = await getProducts({
-    categoryIds: product.category ? [product.category.id] : undefined,
-    limit: 3,
-  });
+  // Get review data
+  const [reviewsResult, statsResult, relatedProductsData] = await Promise.all([
+    getProductReviews(id, { limit: 10, offset: 0, sortBy: 'recent' }),
+    getReviewStats(id),
+    getProducts({
+      categoryIds: product.category ? [product.category.id] : undefined,
+      limit: 3,
+    }),
+  ]);
+
+  // Check if user can review
+  const { userId } = await auth();
+  const canReviewResult = userId ? await canUserReview(id) : null;
 
   // Filter out current product from related
   const relatedProducts = relatedProductsData.products.filter((p) => p.id !== product.id);
@@ -85,6 +120,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const shopAge = new Date().getFullYear() - new Date(product.shop.createdAt).getFullYear();
   const shopJoinedText =
     shopAge > 0 ? `Member since ${new Date(product.shop.createdAt).getFullYear()}` : 'New member';
+
+  // Get inventory status
+  const inventoryStatus = getInventoryStatus(
+    product.trackInventory,
+    product.inventoryQuantity,
+    product.lowStockThreshold
+  );
 
   return (
     <div className="min-h-screen">
@@ -233,17 +275,38 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </div>
 
             {/* Stock & SKU */}
-            {product.sku && (
-              <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-4 text-sm">
+              {inventoryStatus && (
+                <span
+                  className={cn(
+                    'rounded-full px-3 py-1 text-sm font-semibold',
+                    inventoryStatus.color,
+                    inventoryStatus.bgColor
+                  )}
+                >
+                  {inventoryStatus.label}
+                </span>
+              )}
+              {product.sku && (
                 <span className="text-muted-foreground">
                   SKU: <span className="text-foreground font-mono">{product.sku}</span>
                 </span>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Add to Cart */}
             <div className="flex gap-3">
-              <AddToCartButton productId={product.id} />
+              <AddToCartButton
+                productId={product.id}
+                title={product.title}
+                price={product.price}
+                image={product.images[0]?.url}
+                shopId={product.shop.id}
+                shopName={product.shop.name}
+                disabled={
+                  product.trackInventory && product.inventoryQuantity === 0
+                }
+              />
               <FavoriteButton productId={product.id} />
             </div>
 
@@ -323,47 +386,24 @@ export default async function ProductDetailPage({ params }: PageProps) {
         )}
 
         {/* Reviews Section */}
-        {product.reviews.length > 0 && (
-          <div className="mt-12">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Customer Reviews</h2>
-              <Button variant="outline">Write a Review</Button>
-            </div>
+        {statsResult.success && reviewsResult.success && (
+          <ProductReviews
+            productId={id}
+            initialReviews={reviewsResult.reviews || []}
+            initialStats={statsResult}
+            initialTotalCount={reviewsResult.totalCount || 0}
+          />
+        )}
 
-            <div className="space-y-6">
-              {product.reviews.map((review) => (
-                <div key={review.id} className="bg-card rounded-lg border p-6">
-                  <div className="mb-3 flex items-start justify-between">
-                    <div>
-                      <div className="mb-1 flex items-center gap-2">
-                        <span className="font-semibold">{review.user.name || 'Anonymous'}</span>
-                        {review.isVerifiedPurchase && (
-                          <span className="bg-eco-light text-forest-dark rounded-full px-2 py-0.5 text-xs font-semibold">
-                            Verified Purchase
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
-                            key={i}
-                            className={cn(
-                              'size-4',
-                              i < review.rating
-                                ? 'fill-yellow-400 text-yellow-400'
-                                : 'text-neutral-300'
-                            )}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <span className="text-muted-foreground text-sm">
-                      {new Date(review.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <p className="text-muted-foreground">{review.text}</p>
-                </div>
-              ))}
+        {/* Write Review Section */}
+        {canReviewResult?.success && canReviewResult.canReview && (
+          <div className="mt-12">
+            <div className="bg-card rounded-lg border p-6">
+              <ReviewForm
+                productId={id}
+                productTitle={product.title}
+                orderId={canReviewResult.order?.id}
+              />
             </div>
           </div>
         )}
@@ -393,7 +433,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     .map((c) => getCertificationVariant(c.name))}
                   rating={relatedProduct.sustainabilityScore?.totalScore || 0}
                   reviewCount={0}
-                  onQuickAddClick={() => {}}
                 />
               ))}
             </div>

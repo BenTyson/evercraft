@@ -22,11 +22,22 @@ import { UserButton, useUser } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useCartStore } from '@/store/cart-store';
 
 export function SiteHeader() {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
-  const { isSignedIn, isLoaded } = useUser();
+  const [isMounted, setIsMounted] = React.useState(false);
+  const { isSignedIn, isLoaded, user } = useUser();
+  const cartItemCount = useCartStore((state) => state.getTotalItems());
+
+  // Check if user is admin
+  const userRole = (user?.publicMetadata as any)?.role as string | undefined;
+  const isAdmin = userRole === 'admin';
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -72,11 +83,19 @@ export function SiteHeader() {
             Impact
           </Link>
           <Link
-            href="/sell"
+            href="/apply"
             className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
           >
-            Sell on Evercraft
+            Become a Seller
           </Link>
+          {isAdmin && (
+            <Link
+              href="/admin/applications"
+              className="text-red-600 hover:text-red-700 text-sm font-semibold transition-colors"
+            >
+              Admin
+            </Link>
+          )}
         </nav>
 
         {/* Desktop Search */}
@@ -114,10 +133,12 @@ export function SiteHeader() {
           <Button variant="ghost" size="icon" asChild className="relative">
             <Link href="/cart">
               <ShoppingCart className="size-5" />
-              <span className="bg-eco-dark absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full text-[10px] font-bold text-white">
-                2
-              </span>
-              <span className="sr-only">Shopping cart (2 items)</span>
+              {isMounted && cartItemCount > 0 && (
+                <span className="bg-eco-dark absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full text-[10px] font-bold text-white">
+                  {cartItemCount}
+                </span>
+              )}
+              <span className="sr-only">Shopping cart ({isMounted ? cartItemCount : 0} items)</span>
             </Link>
           </Button>
         </div>
@@ -168,12 +189,21 @@ export function SiteHeader() {
                 Impact
               </Link>
               <Link
-                href="/sell"
+                href="/apply"
                 className="text-foreground hover:text-forest-dark text-base font-medium transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Sell on Evercraft
+                Become a Seller
               </Link>
+              {isAdmin && (
+                <Link
+                  href="/admin/applications"
+                  className="text-red-600 hover:text-red-700 text-base font-semibold transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Admin Panel
+                </Link>
+              )}
               <div className="border-border border-t pt-3" />
               {isLoaded && !isSignedIn && (
                 <Link
@@ -186,14 +216,24 @@ export function SiteHeader() {
                 </Link>
               )}
               {isLoaded && isSignedIn && (
-                <Link
-                  href="/account"
-                  className="text-foreground hover:text-forest-dark flex items-center gap-2 text-base font-medium transition-colors"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <User className="size-5" />
-                  Account
-                </Link>
+                <>
+                  <Link
+                    href="/account"
+                    className="text-foreground hover:text-forest-dark flex items-center gap-2 text-base font-medium transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <User className="size-5" />
+                    Account
+                  </Link>
+                  <Link
+                    href="/orders"
+                    className="text-foreground hover:text-forest-dark flex items-center gap-2 text-base font-medium transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <ShoppingCart className="size-5" />
+                    My Orders
+                  </Link>
+                </>
               )}
               <Link
                 href="/cart"
@@ -201,7 +241,7 @@ export function SiteHeader() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <ShoppingCart className="size-5" />
-                Cart (2)
+                Cart ({isMounted ? cartItemCount : 0})
               </Link>
             </nav>
           </div>

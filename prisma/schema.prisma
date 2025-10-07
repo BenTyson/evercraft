@@ -1,7 +1,3 @@
-// Evercraft Database Schema
-// PostgreSQL + Prisma ORM
-// Last updated: October 6, 2025
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -12,28 +8,568 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============================================================================
-// ENUMS
-// ============================================================================
+model Address {
+  id         String   @id
+  userId     String
+  type       String
+  firstName  String
+  lastName   String
+  company    String?
+  address1   String
+  address2   String?
+  city       String
+  state      String
+  postalCode String
+  country    String   @default("US")
+  phone      String?
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
+  User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-enum Role {
-  BUYER
-  SELLER
-  ADMIN
+  @@index([isDefault])
+  @@index([userId])
 }
 
-enum VerificationStatus {
+model AnalyticsEvent {
+  id        String   @id
+  userId    String?
+  shopId    String?
+  eventType String
+  eventData Json
+  sessionId String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  Shop      Shop?    @relation(fields: [shopId], references: [id])
+  User      User?    @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([eventType])
+  @@index([shopId])
+  @@index([userId])
+}
+
+model Category {
+  id              String     @id
+  parentId        String?
+  name            String
+  slug            String     @unique
+  description     String?
+  image           String?
+  metaTitle       String?
+  metaDescription String?
+  position        Int        @default(0)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime
+  Category        Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
+  other_Category  Category[] @relation("CategoryToCategory")
+  Product         Product[]
+
+  @@index([parentId])
+  @@index([position])
+  @@index([slug])
+}
+
+model Certification {
+  id          String    @id
+  productId   String?
+  shopId      String?
+  name        String
+  type        String
+  issuedBy    String
+  issuedDate  DateTime?
+  expiryDate  DateTime?
+  certificate String?
+  verified    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  Product     Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([type])
+  @@index([verified])
+}
+
+model Collection {
+  id                String              @id
+  userId            String
+  name              String
+  description       String?
+  isPublic          Boolean             @default(false)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime
+  User              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  CollectionProduct CollectionProduct[]
+
+  @@index([isPublic])
+  @@index([userId])
+}
+
+model CollectionProduct {
+  id           String     @id
+  collectionId String
+  productId    String
+  createdAt    DateTime   @default(now())
+  Collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  Product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, productId])
+  @@index([collectionId])
+  @@index([productId])
+}
+
+model Donation {
+  id          String         @id
+  orderId     String
+  nonprofitId String
+  shopId      String?
+  amount      Float
+  status      DonationStatus @default(PENDING)
+  payoutId    String?
+  createdAt   DateTime       @default(now())
+  Nonprofit   Nonprofit      @relation(fields: [nonprofitId], references: [id])
+
+  @@index([createdAt])
+  @@index([nonprofitId])
+  @@index([orderId])
+  @@index([status])
+}
+
+model Favorite {
+  id        String   @id
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  Product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([productId])
+  @@index([userId])
+}
+
+model Message {
+  id                            String   @id
+  fromUserId                    String
+  toUserId                      String
+  orderId                       String?
+  subject                       String?
+  body                          String
+  attachments                   String[]
+  isRead                        Boolean  @default(false)
+  createdAt                     DateTime @default(now())
+  User_Message_fromUserIdToUser User     @relation("Message_fromUserIdToUser", fields: [fromUserId], references: [id])
+  User_Message_toUserIdToUser   User     @relation("Message_toUserIdToUser", fields: [toUserId], references: [id])
+
+  @@index([createdAt])
+  @@index([fromUserId])
+  @@index([isRead])
+  @@index([toUserId])
+}
+
+model Nonprofit {
+  id              String      @id
+  name            String
+  ein             String      @unique
+  mission         String
+  description     String?
+  category        String[]
+  logo            String?
+  images          String[]
+  website         String?
+  socialLinks     Json?
+  isVerified      Boolean     @default(false)
+  stripeAccountId String?     @unique
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime
+  Donation        Donation[]
+  OrderItem       OrderItem[]
+  Shop            Shop[]
+
+  @@index([ein])
+  @@index([isVerified])
+}
+
+model NotificationPreference {
+  id                String   @id
+  userId            String   @unique
+  emailMarketing    Boolean  @default(false)
+  emailOrderUpdates Boolean  @default(true)
+  emailMessages     Boolean  @default(true)
+  emailReviews      Boolean  @default(true)
+  pushNotifications Boolean  @default(false)
+  smsNotifications  Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime
+  User              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id                String        @id
+  orderNumber       String        @unique
+  buyerId           String
+  status            OrderStatus   @default(PROCESSING)
+  subtotal          Float
+  shippingCost      Float         @default(0)
+  tax               Float         @default(0)
+  total             Float
+  nonprofitDonation Float         @default(0)
+  shippingAddress   Json
+  billingAddress    Json
+  paymentStatus     PaymentStatus @default(PENDING)
+  paymentIntentId   String?       @unique
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime
+  User              User          @relation(fields: [buyerId], references: [id])
+  OrderItem         OrderItem[]
+  Payment           Payment[]
+
+  @@index([buyerId])
+  @@index([createdAt])
+  @@index([orderNumber])
+  @@index([paymentStatus])
+  @@index([status])
+}
+
+model OrderItem {
+  id              String          @id
+  orderId         String
+  productId       String
+  variantId       String?
+  shopId          String
+  quantity        Int
+  priceAtPurchase Float
+  subtotal        Float
+  nonprofitId     String?
+  donationAmount  Float           @default(0)
+  createdAt       DateTime        @default(now())
+  Nonprofit       Nonprofit?      @relation(fields: [nonprofitId], references: [id])
+  Order           Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  Product         Product         @relation(fields: [productId], references: [id])
+  Shop            Shop            @relation(fields: [shopId], references: [id])
+  ProductVariant  ProductVariant? @relation(fields: [variantId], references: [id])
+
+  @@index([nonprofitId])
+  @@index([orderId])
+  @@index([productId])
+  @@index([shopId])
+}
+
+model Payment {
+  id                    String        @id
+  orderId               String
+  stripePaymentIntentId String        @unique
+  amount                Float
+  platformFee           Float
+  sellerPayout          Float
+  nonprofitDonation     Float
+  status                PaymentStatus @default(PENDING)
+  createdAt             DateTime      @default(now())
+  Order                 Order         @relation(fields: [orderId], references: [id])
+
+  @@index([createdAt])
+  @@index([orderId])
+  @@index([status])
+}
+
+model Product {
+  id                  String               @id
+  shopId              String
+  title               String
+  description         String
+  price               Float
+  compareAtPrice      Float?
+  sku                 String?
+  categoryId          String?
+  tags                String[]
+  status              ProductStatus        @default(DRAFT)
+  inventoryQuantity   Int                  @default(0)
+  trackInventory      Boolean              @default(true)
+  lowStockThreshold   Int?
+  ecoScore            Int?
+  ecoAttributes       Json?
+  metaTitle           String?
+  metaDescription     String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime
+  Certification       Certification[]
+  CollectionProduct   CollectionProduct[]
+  Favorite            Favorite[]
+  OrderItem           OrderItem[]
+  Category            Category?            @relation(fields: [categoryId], references: [id])
+  Shop                Shop                 @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  ProductImage        ProductImage[]
+  ProductVariant      ProductVariant[]
+  Review              Review[]
+  SustainabilityScore SustainabilityScore?
+
+  @@index([categoryId])
+  @@index([createdAt])
+  @@index([ecoScore])
+  @@index([shopId])
+  @@index([status])
+}
+
+model ProductImage {
+  id             String           @id
+  productId      String
+  url            String
+  altText        String?
+  position       Int              @default(0)
+  isPrimary      Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  Product        Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  ProductVariant ProductVariant[]
+
+  @@index([isPrimary])
+  @@index([productId])
+}
+
+model ProductVariant {
+  id                String        @id
+  productId         String
+  name              String
+  sku               String?
+  price             Float?
+  inventoryQuantity Int           @default(0)
+  trackInventory    Boolean       @default(true)
+  imageId           String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime
+  OrderItem         OrderItem[]
+  ProductImage      ProductImage? @relation(fields: [imageId], references: [id])
+  Product           Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([sku])
+}
+
+model Promotion {
+  id              String   @id
+  shopId          String?
+  code            String   @unique
+  description     String
+  discountType    String
+  discountValue   Float
+  minimumPurchase Float?
+  maxUses         Int?
+  currentUses     Int      @default(0)
+  startDate       DateTime
+  endDate         DateTime
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  Shop            Shop?    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([code])
+  @@index([endDate])
+  @@index([isActive])
+  @@index([shopId])
+}
+
+model Review {
+  id                 String   @id
+  productId          String
+  userId             String
+  orderId            String?
+  rating             Int
+  text               String?
+  images             String[]
+  isVerifiedPurchase Boolean  @default(false)
+  helpfulCount       Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime
+  Product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  User               User     @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([isVerifiedPurchase])
+  @@index([productId])
+  @@index([rating])
+  @@index([userId])
+}
+
+model SearchHistory {
+  id        String   @id
+  userId    String?
+  query     String
+  filters   Json?
+  results   Int
+  clicked   String?
+  createdAt DateTime @default(now())
+  User      User?    @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([query])
+  @@index([userId])
+}
+
+model SellerApplication {
+  id                  String            @id
+  userId              String
+  businessName        String
+  businessWebsite     String?
+  businessDescription String
+  ecoQuestions        Json
+  preferredNonprofit  String?
+  donationPercentage  Float             @default(1.0)
+  status              ApplicationStatus @default(PENDING)
+  reviewNotes         String?
+  reviewedAt          DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime
+  User                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([userId])
+}
+
+model SellerReview {
+  id                    String   @id
+  shopId                String
+  userId                String
+  orderId               String?
+  rating                Int
+  shippingSpeedRating   Int?
+  communicationRating   Int?
+  itemAsDescribedRating Int?
+  text                  String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime
+  Shop                  Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  User                  User     @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([rating])
+  @@index([shopId])
+  @@index([userId])
+}
+
+model ShippingProfile {
+  id                 String   @id
+  shopId             String
+  name               String
+  processingTimeMin  Int
+  processingTimeMax  Int
+  shippingOrigin     Json
+  shippingRates      Json
+  carbonNeutralPrice Float?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime
+  Shop               Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+}
+
+model Shop {
+  id                 String             @id
+  userId             String             @unique
+  slug               String             @unique
+  name               String
+  bio                String?
+  story              String?
+  bannerImage        String?
+  logo               String?
+  colors             Json?
+  isVerified         Boolean            @default(false)
+  verificationStatus VerificationStatus @default(PENDING)
+  stripeAccountId    String?            @unique
+  nonprofitId        String?
+  donationPercentage Float              @default(1.0)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime
+  AnalyticsEvent     AnalyticsEvent[]
+  OrderItem          OrderItem[]
+  Product            Product[]
+  Promotion          Promotion[]
+  SellerReview       SellerReview[]
+  ShippingProfile    ShippingProfile[]
+  Nonprofit          Nonprofit?         @relation(fields: [nonprofitId], references: [id])
+  User               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([isVerified])
+  @@index([nonprofitId])
+  @@index([slug])
+  @@index([userId])
+}
+
+model SupportTicket {
+  id        String              @id
+  userId    String
+  orderId   String?
+  subject   String
+  message   String
+  status    SupportTicketStatus @default(OPEN)
+  priority  String              @default("normal")
+  createdAt DateTime            @default(now())
+  updatedAt DateTime
+  User      User                @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([priority])
+  @@index([status])
+  @@index([userId])
+}
+
+model SustainabilityScore {
+  id                 String   @id
+  productId          String   @unique
+  totalScore         Int
+  materialsScore     Int
+  packagingScore     Int
+  carbonScore        Int
+  certificationScore Int
+  breakdownJson      Json
+  calculatedAt       DateTime @default(now())
+  updatedAt          DateTime
+  Product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([totalScore])
+  @@index([updatedAt])
+}
+
+model User {
+  id                               String                  @id
+  email                            String                  @unique
+  emailVerified                    DateTime?
+  name                             String?
+  avatar                           String?
+  phone                            String?
+  role                             Role                    @default(BUYER)
+  twoFactorEnabled                 Boolean                 @default(false)
+  createdAt                        DateTime                @default(now())
+  updatedAt                        DateTime
+  Address                          Address[]
+  AnalyticsEvent                   AnalyticsEvent[]
+  Collection                       Collection[]
+  Favorite                         Favorite[]
+  Message_Message_fromUserIdToUser Message[]               @relation("Message_fromUserIdToUser")
+  Message_Message_toUserIdToUser   Message[]               @relation("Message_toUserIdToUser")
+  NotificationPreference           NotificationPreference?
+  Order                            Order[]
+  Review                           Review[]
+  SearchHistory                    SearchHistory[]
+  SellerApplication                SellerApplication[]
+  SellerReview                     SellerReview[]
+  Shop                             Shop?
+  SupportTicket                    SupportTicket[]
+
+  @@index([createdAt])
+  @@index([email])
+  @@index([role])
+}
+
+enum ApplicationStatus {
   PENDING
   UNDER_REVIEW
   APPROVED
   REJECTED
 }
 
-enum ProductStatus {
-  DRAFT
-  ACTIVE
-  SOLD_OUT
-  ARCHIVED
+enum DonationStatus {
+  PENDING
+  PAID
+  FAILED
 }
 
 enum OrderStatus {
@@ -51,17 +587,17 @@ enum PaymentStatus {
   REFUNDED
 }
 
-enum DonationStatus {
-  PENDING
-  PAID
-  FAILED
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  SOLD_OUT
+  ARCHIVED
 }
 
-enum ApplicationStatus {
-  PENDING
-  UNDER_REVIEW
-  APPROVED
-  REJECTED
+enum Role {
+  BUYER
+  SELLER
+  ADMIN
 }
 
 enum SupportTicketStatus {
@@ -71,656 +607,9 @@ enum SupportTicketStatus {
   CLOSED
 }
 
-// ============================================================================
-// USER & AUTHENTICATION
-// ============================================================================
-
-model User {
-  id               String    @id @default(cuid())
-  email            String    @unique
-  emailVerified    DateTime?
-  name             String?
-  avatar           String?
-  phone            String?
-  role             Role      @default(BUYER)
-  twoFactorEnabled Boolean   @default(false)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-
-  // Relations
-  shop              Shop?
-  orders            Order[]
-  addresses         Address[]
-  favorites         Favorite[]
-  collections       Collection[]
-  reviews           Review[]
-  sellerReviews     SellerReview[]
-  messagesSent      Message[]               @relation("MessagesSent")
-  messagesReceived  Message[]               @relation("MessagesReceived")
-  applications      SellerApplication[]
-  supportTickets    SupportTicket[]
-  analyticsEvents   AnalyticsEvent[]
-  notificationPrefs NotificationPreference?
-  searchHistory     SearchHistory[]
-
-  @@index([email])
-  @@index([role])
-  @@index([createdAt])
-}
-
-// ============================================================================
-// SHOPS & SELLERS
-// ============================================================================
-
-model Shop {
-  id                 String             @id @default(cuid())
-  userId             String             @unique
-  slug               String             @unique
-  name               String
-  bio                String?
-  story              String? // Rich text
-  bannerImage        String?
-  logo               String?
-  colors             Json? // Custom shop colors
-  isVerified         Boolean            @default(false)
-  verificationStatus VerificationStatus @default(PENDING)
-  stripeAccountId    String?            @unique
-  nonprofitId        String?
-  donationPercentage Float              @default(1.0)
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-
-  // Relations
-  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  nonprofit        Nonprofit?        @relation(fields: [nonprofitId], references: [id])
-  products         Product[]
-  orderItems       OrderItem[]
-  shippingProfiles ShippingProfile[]
-  promotions       Promotion[]
-  sellerReviews    SellerReview[]
-  analyticsEvents  AnalyticsEvent[]
-
-  @@index([userId])
-  @@index([slug])
-  @@index([isVerified])
-  @@index([nonprofitId])
-}
-
-model SellerApplication {
-  id                  String            @id @default(cuid())
-  userId              String
-  businessName        String
-  businessWebsite     String?
-  businessDescription String
-  ecoQuestions        Json // Eco-practices questionnaire
-  preferredNonprofit  String?
-  donationPercentage  Float             @default(1.0)
-  status              ApplicationStatus @default(PENDING)
-  reviewNotes         String?
-  reviewedAt          DateTime?
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([status])
-  @@index([createdAt])
-}
-
-// ============================================================================
-// PRODUCTS
-// ============================================================================
-
-model Product {
-  id              String        @id @default(cuid())
-  shopId          String
-  title           String
-  description     String // Rich text
-  price           Float
-  compareAtPrice  Float?
-  sku             String?
-  categoryId      String?
-  tags            String[] // Array of tag strings
-  status          ProductStatus @default(DRAFT)
-  ecoScore        Int? // 0-100
-  ecoAttributes   Json? // Materials, certifications, packaging, etc.
-  metaTitle       String?
-  metaDescription String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  // Relations
-  shop                Shop                 @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  category            Category?            @relation(fields: [categoryId], references: [id])
-  variants            ProductVariant[]
-  images              ProductImage[]
-  reviews             Review[]
-  favorites           Favorite[]
-  collectionProducts  CollectionProduct[]
-  orderItems          OrderItem[]
-  certifications      Certification[]
-  sustainabilityScore SustainabilityScore?
-
-  @@index([shopId])
-  @@index([categoryId])
-  @@index([status])
-  @@index([ecoScore])
-  @@index([createdAt])
-}
-
-model ProductVariant {
-  id                String   @id @default(cuid())
-  productId         String
-  name              String // e.g., "Small / Red"
-  sku               String?
-  price             Float? // Override product price
-  inventoryQuantity Int      @default(0)
-  trackInventory    Boolean  @default(true)
-  imageId           String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  // Relations
-  product    Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
-  image      ProductImage? @relation(fields: [imageId], references: [id])
-  orderItems OrderItem[]
-
-  @@index([productId])
-  @@index([sku])
-}
-
-model ProductImage {
-  id        String   @id @default(cuid())
-  productId String
-  url       String
-  altText   String?
-  position  Int      @default(0)
-  isPrimary Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  // Relations
-  product  Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
-  variants ProductVariant[]
-
-  @@index([productId])
-  @@index([isPrimary])
-}
-
-model Category {
-  id              String   @id @default(cuid())
-  parentId        String?
-  name            String
-  slug            String   @unique
-  description     String?
-  image           String?
-  metaTitle       String?
-  metaDescription String?
-  position        Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children Category[] @relation("CategoryHierarchy")
-  products Product[]
-
-  @@index([slug])
-  @@index([parentId])
-  @@index([position])
-}
-
-// ============================================================================
-// ORDERS & PAYMENTS
-// ============================================================================
-
-model Order {
-  id                String        @id @default(cuid())
-  orderNumber       String        @unique
-  buyerId           String
-  status            OrderStatus   @default(PROCESSING)
-  subtotal          Float
-  shippingCost      Float         @default(0)
-  tax               Float         @default(0)
-  total             Float
-  nonprofitDonation Float         @default(0)
-  shippingAddress   Json
-  billingAddress    Json
-  paymentStatus     PaymentStatus @default(PENDING)
-  paymentIntentId   String?       @unique
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-
-  // Relations
-  buyer    User        @relation(fields: [buyerId], references: [id])
-  items    OrderItem[]
-  payments Payment[]
-
-  @@index([buyerId])
-  @@index([orderNumber])
-  @@index([status])
-  @@index([paymentStatus])
-  @@index([createdAt])
-}
-
-model OrderItem {
-  id              String   @id @default(cuid())
-  orderId         String
-  productId       String
-  variantId       String?
-  shopId          String
-  quantity        Int
-  priceAtPurchase Float
-  subtotal        Float
-  nonprofitId     String?
-  donationAmount  Float    @default(0)
-  createdAt       DateTime @default(now())
-
-  // Relations
-  order     Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product   Product         @relation(fields: [productId], references: [id])
-  variant   ProductVariant? @relation(fields: [variantId], references: [id])
-  shop      Shop            @relation(fields: [shopId], references: [id])
-  nonprofit Nonprofit?      @relation(fields: [nonprofitId], references: [id])
-
-  @@index([orderId])
-  @@index([productId])
-  @@index([shopId])
-  @@index([nonprofitId])
-}
-
-model Payment {
-  id                    String        @id @default(cuid())
-  orderId               String
-  stripePaymentIntentId String        @unique
-  amount                Float
-  platformFee           Float
-  sellerPayout          Float
-  nonprofitDonation     Float
-  status                PaymentStatus @default(PENDING)
-  createdAt             DateTime      @default(now())
-
-  // Relations
-  order Order @relation(fields: [orderId], references: [id])
-
-  @@index([orderId])
-  @@index([status])
-  @@index([createdAt])
-}
-
-// ============================================================================
-// NONPROFITS & DONATIONS
-// ============================================================================
-
-model Nonprofit {
-  id              String   @id @default(cuid())
-  name            String
-  ein             String   @unique // Tax ID
-  mission         String
-  description     String?
-  category        String[] // Array: Environment, Social Justice, etc.
-  logo            String?
-  images          String[] // Array of image URLs
-  website         String?
-  socialLinks     Json? // { instagram: "", facebook: "", etc. }
-  isVerified      Boolean  @default(false)
-  stripeAccountId String?  @unique
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  shops      Shop[]
-  orderItems OrderItem[]
-  donations  Donation[]
-
-  @@index([ein])
-  @@index([isVerified])
-}
-
-model Donation {
-  id          String         @id @default(cuid())
-  orderId     String
-  nonprofitId String
-  shopId      String?
-  amount      Float
-  status      DonationStatus @default(PENDING)
-  payoutId    String?
-  createdAt   DateTime       @default(now())
-
-  // Relations
-  nonprofit Nonprofit @relation(fields: [nonprofitId], references: [id])
-
-  @@index([nonprofitId])
-  @@index([orderId])
-  @@index([status])
-  @@index([createdAt])
-}
-
-// ============================================================================
-// REVIEWS & RATINGS
-// ============================================================================
-
-model Review {
-  id                 String   @id @default(cuid())
-  productId          String
-  userId             String
-  orderId            String?
-  rating             Int // 1-5
-  text               String?
-  images             String[] // Array of image URLs
-  isVerifiedPurchase Boolean  @default(false)
-  helpfulCount       Int      @default(0)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  // Relations
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id])
-
-  @@index([productId])
-  @@index([userId])
-  @@index([rating])
-  @@index([isVerifiedPurchase])
-  @@index([createdAt])
-}
-
-model SellerReview {
-  id                    String   @id @default(cuid())
-  shopId                String
-  userId                String
-  orderId               String?
-  rating                Int // 1-5
-  shippingSpeedRating   Int? // 1-5
-  communicationRating   Int? // 1-5
-  itemAsDescribedRating Int? // 1-5
-  text                  String?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-
-  // Relations
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id])
-
-  @@index([shopId])
-  @@index([userId])
-  @@index([rating])
-  @@index([createdAt])
-}
-
-// ============================================================================
-// MESSAGING
-// ============================================================================
-
-model Message {
-  id          String   @id @default(cuid())
-  fromUserId  String
-  toUserId    String
-  orderId     String?
-  subject     String?
-  body        String
-  attachments String[] // Array of file URLs
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
-
-  // Relations
-  from User @relation("MessagesSent", fields: [fromUserId], references: [id])
-  to   User @relation("MessagesReceived", fields: [toUserId], references: [id])
-
-  @@index([fromUserId])
-  @@index([toUserId])
-  @@index([isRead])
-  @@index([createdAt])
-}
-
-// ============================================================================
-// USER FEATURES
-// ============================================================================
-
-model Address {
-  id         String   @id @default(cuid())
-  userId     String
-  type       String // "shipping" or "billing"
-  firstName  String
-  lastName   String
-  company    String?
-  address1   String
-  address2   String?
-  city       String
-  state      String
-  postalCode String
-  country    String   @default("US")
-  phone      String?
-  isDefault  Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([isDefault])
-}
-
-model Favorite {
-  id        String   @id @default(cuid())
-  userId    String
-  productId String
-  createdAt DateTime @default(now())
-
-  // Relations
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, productId])
-  @@index([userId])
-  @@index([productId])
-}
-
-model Collection {
-  id          String   @id @default(cuid())
-  userId      String
-  name        String
-  description String?
-  isPublic    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  collectionProducts CollectionProduct[]
-
-  @@index([userId])
-  @@index([isPublic])
-}
-
-model CollectionProduct {
-  id           String   @id @default(cuid())
-  collectionId String
-  productId    String
-  createdAt    DateTime @default(now())
-
-  // Relations
-  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@unique([collectionId, productId])
-  @@index([collectionId])
-  @@index([productId])
-}
-
-// ============================================================================
-// ECO-SPECIFIC FEATURES
-// ============================================================================
-
-model Certification {
-  id          String    @id @default(cuid())
-  productId   String?
-  shopId      String?
-  name        String // e.g., "B-Corp", "Fair Trade", "Plastic-Free"
-  type        String // "product" or "business"
-  issuedBy    String
-  issuedDate  DateTime?
-  expiryDate  DateTime?
-  certificate String? // URL to certificate document
-  verified    Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-
-  // Relations
-  product Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@index([productId])
-  @@index([type])
-  @@index([verified])
-}
-
-model SustainabilityScore {
-  id                 String   @id @default(cuid())
-  productId          String   @unique
-  totalScore         Int // 0-100
-  materialsScore     Int // 0-100
-  packagingScore     Int // 0-100
-  carbonScore        Int // 0-100
-  certificationScore Int // 0-100
-  breakdownJson      Json // Detailed breakdown
-  calculatedAt       DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  // Relations
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@index([totalScore])
-  @@index([updatedAt])
-}
-
-// ============================================================================
-// SHIPPING & FULFILLMENT
-// ============================================================================
-
-model ShippingProfile {
-  id                 String   @id @default(cuid())
-  shopId             String
-  name               String
-  processingTimeMin  Int // Days
-  processingTimeMax  Int // Days
-  shippingOrigin     Json // Address
-  shippingRates      Json // Array of rate objects
-  carbonNeutralPrice Float? // Additional cost for carbon-neutral shipping
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  // Relations
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-
-  @@index([shopId])
-}
-
-// ============================================================================
-// PROMOTIONS & MARKETING
-// ============================================================================
-
-model Promotion {
-  id              String   @id @default(cuid())
-  shopId          String?
-  code            String   @unique
-  description     String
-  discountType    String // "percentage" or "fixed"
-  discountValue   Float
-  minimumPurchase Float?
-  maxUses         Int?
-  currentUses     Int      @default(0)
-  startDate       DateTime
-  endDate         DateTime
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-
-  // Relations
-  shop Shop? @relation(fields: [shopId], references: [id], onDelete: Cascade)
-
-  @@index([code])
-  @@index([shopId])
-  @@index([isActive])
-  @@index([endDate])
-}
-
-// ============================================================================
-// ANALYTICS & TRACKING
-// ============================================================================
-
-model AnalyticsEvent {
-  id        String   @id @default(cuid())
-  userId    String?
-  shopId    String?
-  eventType String // "page_view", "product_view", "add_to_cart", etc.
-  eventData Json
-  sessionId String?
-  ipAddress String?
-  userAgent String?
-  createdAt DateTime @default(now())
-
-  // Relations
-  user User? @relation(fields: [userId], references: [id])
-  shop Shop? @relation(fields: [shopId], references: [id])
-
-  @@index([userId])
-  @@index([shopId])
-  @@index([eventType])
-  @@index([createdAt])
-}
-
-model SearchHistory {
-  id        String   @id @default(cuid())
-  userId    String?
-  query     String
-  filters   Json? // Applied filters
-  results   Int // Number of results
-  clicked   String? // Product ID if clicked
-  createdAt DateTime @default(now())
-
-  // Relations
-  user User? @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-  @@index([query])
-  @@index([createdAt])
-}
-
-// ============================================================================
-// SUPPORT & ADMIN
-// ============================================================================
-
-model SupportTicket {
-  id        String              @id @default(cuid())
-  userId    String
-  orderId   String?
-  subject   String
-  message   String
-  status    SupportTicketStatus @default(OPEN)
-  priority  String              @default("normal") // "low", "normal", "high", "urgent"
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
-
-  // Relations
-  user User @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-  @@index([status])
-  @@index([priority])
-  @@index([createdAt])
-}
-
-model NotificationPreference {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  emailMarketing    Boolean  @default(false)
-  emailOrderUpdates Boolean  @default(true)
-  emailMessages     Boolean  @default(true)
-  emailReviews      Boolean  @default(true)
-  pushNotifications Boolean  @default(false)
-  smsNotifications  Boolean  @default(false)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+enum VerificationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
 }

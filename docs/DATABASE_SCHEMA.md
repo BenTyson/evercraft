@@ -1,7 +1,7 @@
 # Database Schema
 
-**Last Updated:** October 5, 2025
-**Status:** Draft - Will be refined in Phase 0, Week 3
+**Last Updated:** October 7, 2025
+**Status:** ✅ Production - Fully implemented with 27 models
 
 ---
 
@@ -559,36 +559,111 @@ Nonprofit <── Shop (selected)
 
 ---
 
-## Next Steps (Phase 0, Week 3)
+## Review System (Phase 7 - Completed)
 
-1. **Finalize schema design**
-   - [ ] Review all entities
-   - [ ] Define all relationships
-   - [ ] Plan indexes
+### Reviews Model
 
-2. **Create Prisma schema file**
-   - [ ] Define models
-   - [ ] Set up relations
-   - [ ] Configure indexes
-   - [ ] Add validation
+```prisma
+model Review {
+  id                 String   @id
+  productId          String
+  userId             String
+  orderId            String?
+  rating             Int      // 1-5 stars
+  text               String?  // Review text (10-1000 chars)
+  images             String[] // Review images URLs
+  isVerifiedPurchase Boolean  @default(false)
+  helpfulCount       Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime
 
-3. **Generate initial migration**
-   - [ ] `prisma migrate dev`
-   - [ ] Test schema
+  // Relations
+  Product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  User               User     @relation(fields: [userId], references: [id])
 
-4. **Seed database**
-   - [ ] Create seed script
-   - [ ] Add sample data (categories, nonprofits)
+  @@index([createdAt])
+  @@index([isVerifiedPurchase])
+  @@index([productId])
+  @@index([rating])
+  @@index([userId])
+}
+```
+
+**Features:**
+- ⭐ 1-5 star ratings
+- ✅ Verified purchase badges
+- 📊 Rating aggregation and statistics
+- 👍 Helpful vote system
+- 🖼️ Support for review images
+- 🔍 Filtering by verified purchases
+- 📋 Sorting options (recent, helpful, rating)
+
+**Key Actions:**
+- `createReview()` - Submit new reviews
+- `getProductReviews()` - Fetch with filtering/sorting
+- `getReviewStats()` - Calculate avg rating & distribution
+- `updateReview()` / `deleteReview()` - CRUD operations
+- `markReviewHelpful()` - Helpful vote system
+- `getUserReviews()` - User review history
+- `canUserReview()` - Eligibility checking
+
+---
+
+## Implementation Status
+
+### ✅ Completed
+
+1. **Schema design** - All 27 models defined
+2. **Prisma schema file** - `/prisma/schema.prisma` fully implemented
+3. **Initial migration** - Database migrated and seeded
+4. **Seed database** - Sample data for categories, nonprofits, users, shops, products, reviews
+5. **Indexes** - All performance indexes configured
+6. **Relations** - All foreign keys and cascades properly set up
+7. **Review system** - Full implementation with server actions and UI
+
+### Key Features Implemented
+
+- **Authentication** - Clerk integration with role-based access
+- **Product Management** - Full CRUD with images, inventory, variants
+- **Shopping Cart** - Zustand state management with persistence
+- **Checkout** - Stripe payment integration with order processing
+- **Orders & Fulfillment** - Order management, bulk processing, shipping calculator
+- **Reviews & Ratings** - Complete review system with helpful votes and verified purchases
+- **Impact Tracking** - Nonprofit donations and environmental metrics
+- **Admin Tools** - Seller verification, product moderation
+
+---
+
+## Performance Optimizations
+
+### Indexes Implemented
+
+All models include appropriate indexes for:
+- Foreign keys (userId, shopId, productId, orderId, etc.)
+- Status fields for filtering
+- Timestamps for sorting (createdAt, updatedAt)
+- Unique constraints (email, slug, composite keys)
+- Search optimization (verified, isPublic, isDefault)
+
+### Query Optimizations
+
+- Eager loading with `include` for related data
+- Efficient aggregations for statistics
+- Composite indexes for common filter combinations
+- Pagination support with `take` and `skip`
+- Selective field loading with `select`
 
 ---
 
 ## Notes
 
-- This is a living document and will be updated as the schema evolves
-- Full Prisma schema will be in `/prisma/schema.prisma`
-- Use Prisma Studio for data visualization during development
-- Consider soft deletes for critical entities (users, products, orders)
+- ✅ Production-ready schema with full Prisma type safety
+- ✅ All migrations applied successfully
+- ✅ Comprehensive seed data available
+- ✅ Prisma Studio configured for data visualization
+- ✅ Soft deletes not implemented (using CASCADE deletes)
+- ✅ Full ERD available in Prisma schema file
 
----
-
-**ERD will be created using Prisma ERD generator or similar tool in Week 3.**
+**Schema Location:** `/prisma/schema.prisma`
+**Generated Client:** `/src/generated/prisma`
+**Seed Script:** `/prisma/seed.ts`

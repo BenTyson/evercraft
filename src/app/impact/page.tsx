@@ -5,113 +5,112 @@
  * Shows metrics like carbon saved, plastic avoided, and donations made.
  */
 
-'use client';
-
+import { redirect } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Leaf, Heart, Droplet, TreePine } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { SiteHeader } from '@/components/layout/site-header';
-import { ImpactWidget } from '@/components/eco/impact-widget';
 import { cn } from '@/lib/utils';
+import { auth } from '@clerk/nextjs/server';
+import { getUserImpact, getCommunityImpact, getUserMilestones } from '@/actions/impact';
+import { db } from '@/lib/db';
 
-// Mock data - will be replaced with actual user data from API/database
-const USER_IMPACT = {
-  totalOrders: 23,
-  totalSpent: 1247.89,
-  carbonSaved: 145, // kg CO2
-  plasticAvoided: 12.5, // kg
-  donationsToNonprofits: 62.39, // USD
-  treesPlanted: 8,
-};
+export default async function ImpactDashboardPage() {
+  // Check if user is authenticated
+  const { userId } = await auth();
 
-const NONPROFIT_CONTRIBUTIONS = [
-  {
-    id: '1',
-    name: 'Ocean Conservancy',
-    logo: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=200&q=80',
-    totalDonated: 24.5,
-    orderCount: 8,
-    description: 'Protecting ocean ecosystems and reducing plastic pollution',
-  },
-  {
-    id: '2',
-    name: 'Rainforest Alliance',
-    logo: 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=200&q=80',
-    totalDonated: 18.75,
-    orderCount: 6,
-    description: 'Conserving biodiversity and sustainable livelihoods',
-  },
-  {
-    id: '3',
-    name: 'Fair Trade Federation',
-    logo: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=200&q=80',
-    totalDonated: 12.5,
-    orderCount: 5,
-    description: 'Supporting fair wages and ethical trade practices',
-  },
-  {
-    id: '4',
-    name: 'The Nature Conservancy',
-    logo: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=200&q=80',
-    totalDonated: 6.64,
-    orderCount: 4,
-    description: 'Protecting lands and waters worldwide',
-  },
-];
+  if (!userId) {
+    redirect('/sign-in?redirect=/impact');
+  }
 
-const RECENT_MILESTONES = [
-  {
-    id: '1',
-    icon: TreePine,
-    title: 'Planted 8 Trees',
-    description: 'Your purchases helped plant 8 trees through our carbon offset program',
-    date: '2 weeks ago',
-    color: 'text-green-600',
-    bgColor: 'bg-green-50',
-  },
-  {
-    id: '2',
-    icon: Droplet,
-    title: '10kg Plastic Avoided',
-    description: 'Milestone reached! You have avoided 10kg of single-use plastic',
-    date: '1 month ago',
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-50',
-  },
-  {
-    id: '3',
-    icon: Heart,
-    title: '$50 Donated',
-    description: 'Your purchases contributed $50 to environmental nonprofits',
-    date: '2 months ago',
-    color: 'text-pink-600',
-    bgColor: 'bg-pink-50',
-  },
-];
+  // Fetch data in parallel
+  const [impactResult, communityResult, milestonesResult] = await Promise.all([
+    getUserImpact(),
+    getCommunityImpact(),
+    getUserMilestones(),
+  ]);
 
-const COMMUNITY_IMPACT = {
-  totalOrders: 125834,
-  totalDonations: 2145789.45,
-  carbonOffset: 458932, // kg CO2
-  plasticAvoided: 38567, // kg
-  treesPlanted: 12456,
-  nonprofitsSupported: 42,
-};
+  if (!impactResult.success || !impactResult.impact) {
+    return (
+      <div className="min-h-screen">
+        <SiteHeader />
+        <div className="container mx-auto px-4 py-12">
+          <h1 className="text-3xl font-bold text-red-600">Error loading impact data</h1>
+          <p className="text-gray-600 mt-2">{impactResult.error}</p>
+        </div>
+      </div>
+    );
+  }
 
-export default function ImpactDashboardPage() {
+  const USER_IMPACT = impactResult.impact;
+  const COMMUNITY_IMPACT = communityResult.success ? communityResult.communityImpact! : null;
+  const milestones = milestonesResult.success ? milestonesResult.milestones! : [];
+
+  // Get nonprofit details for contributions
+  const nonprofitIds = USER_IMPACT.nonprofitContributions.map((nc) => nc.id);
+  const nonprofits = await db.nonprofit.findMany({
+    where: {
+      id: {
+        in: nonprofitIds,
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+      logo: true,
+      mission: true,
+    },
+  });
+
+  const NONPROFIT_CONTRIBUTIONS = USER_IMPACT.nonprofitContributions.map((contribution) => {
+    const nonprofit = nonprofits.find((n) => n.id === contribution.id);
+    return {
+      ...contribution,
+      description: nonprofit?.mission || 'Making a positive environmental impact',
+    };
+  });
+
+  // Map milestones to include icon components
+  const iconMap = {
+    TreePine,
+    Droplet,
+    Heart,
+  };
+
+  const RECENT_MILESTONES = milestones.map((milestone, index) => ({
+    id: String(index + 1),
+    icon: iconMap[milestone.icon as keyof typeof iconMap] || Leaf,
+    title: milestone.title,
+    description: milestone.description,
+    date: milestone.date,
+    color:
+      milestone.icon === 'TreePine'
+        ? 'text-green-600'
+        : milestone.icon === 'Droplet'
+          ? 'text-blue-600'
+          : 'text-pink-600',
+    bgColor:
+      milestone.icon === 'TreePine'
+        ? 'bg-green-50'
+        : milestone.icon === 'Droplet'
+          ? 'bg-blue-50'
+          : 'bg-pink-50',
+  }));
   const formattedDonations = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
   }).format(USER_IMPACT.donationsToNonprofits);
 
-  const formattedCommunityDonations = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    notation: 'compact',
-    maximumFractionDigits: 1,
-  }).format(COMMUNITY_IMPACT.totalDonations);
+  const formattedCommunityDonations = COMMUNITY_IMPACT
+    ? new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        notation: 'compact',
+        maximumFractionDigits: 1,
+      }).format(COMMUNITY_IMPACT.totalDonations)
+    : '$0';
 
   return (
     <div className="min-h-screen">
@@ -210,176 +209,145 @@ export default function ImpactDashboardPage() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {NONPROFIT_CONTRIBUTIONS.map((nonprofit) => {
-              const formattedAmount = new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
-              }).format(nonprofit.totalDonated);
+          {NONPROFIT_CONTRIBUTIONS.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              {NONPROFIT_CONTRIBUTIONS.map((nonprofit) => {
+                const formattedAmount = new Intl.NumberFormat('en-US', {
+                  style: 'currency',
+                  currency: 'USD',
+                }).format(nonprofit.totalDonated);
 
-              return (
-                <div
-                  key={nonprofit.id}
-                  className="bg-card group flex gap-4 rounded-lg border p-6 transition-all hover:shadow-md"
-                >
-                  <div className="relative size-16 shrink-0 overflow-hidden rounded-full">
-                    <Image
-                      src={nonprofit.logo}
-                      alt={nonprofit.name}
-                      fill
-                      className="object-cover"
-                      sizes="64px"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="mb-1 font-bold">{nonprofit.name}</h3>
-                    <p className="text-muted-foreground mb-3 text-sm">{nonprofit.description}</p>
-                    <div className="flex items-center gap-4 text-sm">
-                      <div>
-                        <p className="text-forest-dark font-bold">{formattedAmount}</p>
-                        <p className="text-muted-foreground text-xs">donated</p>
+                return (
+                  <div
+                    key={nonprofit.id}
+                    className="bg-card group flex gap-4 rounded-lg border p-6 transition-all hover:shadow-md"
+                  >
+                    {nonprofit.logo && (
+                      <div className="relative size-16 shrink-0 overflow-hidden rounded-full">
+                        <Image
+                          src={nonprofit.logo}
+                          alt={nonprofit.name}
+                          fill
+                          className="object-cover"
+                          sizes="64px"
+                        />
                       </div>
-                      <div>
-                        <p className="font-semibold">{nonprofit.orderCount}</p>
-                        <p className="text-muted-foreground text-xs">purchases</p>
+                    )}
+                    <div className="flex-1">
+                      <h3 className="mb-1 font-bold">{nonprofit.name}</h3>
+                      <p className="text-muted-foreground mb-3 text-sm">{nonprofit.description}</p>
+                      <div className="flex items-center gap-4 text-sm">
+                        <div>
+                          <p className="text-forest-dark font-bold">{formattedAmount}</p>
+                          <p className="text-muted-foreground text-xs">donated</p>
+                        </div>
+                        <div>
+                          <p className="font-semibold">{nonprofit.orderCount}</p>
+                          <p className="text-muted-foreground text-xs">purchases</p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="bg-card rounded-lg border p-12 text-center">
+              <Heart className="mx-auto mb-4 size-12 text-gray-300" />
+              <p className="text-muted-foreground mb-4">
+                You haven&apos;t made any purchases yet
+              </p>
+              <Button asChild>
+                <Link href="/browse">Start Shopping</Link>
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Recent Milestones */}
-        <div className="mb-12">
-          <h2 className="mb-6 text-2xl font-bold">Recent Milestones</h2>
-          <div className="space-y-4">
-            {RECENT_MILESTONES.map((milestone) => {
-              const Icon = milestone.icon;
-              return (
-                <div
-                  key={milestone.id}
-                  className="bg-card flex items-start gap-4 rounded-lg border p-6"
-                >
-                  <div className={cn('rounded-full p-3', milestone.bgColor)}>
-                    <Icon className={cn('size-6', milestone.color)} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="mb-1 flex items-start justify-between">
-                      <h3 className="font-bold">{milestone.title}</h3>
-                      <span className="text-muted-foreground text-sm">{milestone.date}</span>
+        {RECENT_MILESTONES.length > 0 && (
+          <div className="mb-12">
+            <h2 className="mb-6 text-2xl font-bold">Recent Milestones</h2>
+            <div className="space-y-4">
+              {RECENT_MILESTONES.map((milestone) => {
+                const Icon = milestone.icon;
+                return (
+                  <div
+                    key={milestone.id}
+                    className="bg-card flex items-start gap-4 rounded-lg border p-6"
+                  >
+                    <div className={cn('rounded-full p-3', milestone.bgColor)}>
+                      <Icon className={cn('size-6', milestone.color)} />
                     </div>
-                    <p className="text-muted-foreground text-sm">{milestone.description}</p>
+                    <div className="flex-1">
+                      <div className="mb-1 flex items-start justify-between">
+                        <h3 className="font-bold">{milestone.title}</h3>
+                        <span className="text-muted-foreground text-sm">{milestone.date}</span>
+                      </div>
+                      <p className="text-muted-foreground text-sm">{milestone.description}</p>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Community Impact */}
-        <div className="from-forest-dark to-eco-dark rounded-2xl bg-gradient-to-br p-8 text-white md:p-12">
-          <div className="mb-8 text-center">
-            <h2 className="mb-2 text-3xl font-bold">Our Community&apos;s Impact</h2>
-            <p className="text-neutral-100">
-              Together, Evercraft shoppers are making a real difference
-            </p>
-          </div>
+        {COMMUNITY_IMPACT && (
+          <div className="from-forest-dark to-eco-dark rounded-2xl bg-gradient-to-br p-8 text-white md:p-12">
+            <div className="mb-8 text-center">
+              <h2 className="mb-2 text-3xl font-bold">Our Community&apos;s Impact</h2>
+              <p className="text-neutral-100">
+                Together, Evercraft shoppers are making a real difference
+              </p>
+            </div>
 
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-6">
-            <div className="text-center">
-              <p className="mb-1 text-3xl font-bold">
-                {(COMMUNITY_IMPACT.totalOrders / 1000).toFixed(0)}K+
-              </p>
-              <p className="text-sm text-neutral-100">Orders Placed</p>
+            <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-6">
+              <div className="text-center">
+                <p className="mb-1 text-3xl font-bold">
+                  {(COMMUNITY_IMPACT.totalOrders / 1000).toFixed(0)}K+
+                </p>
+                <p className="text-sm text-neutral-100">Orders Placed</p>
+              </div>
+              <div className="text-center">
+                <p className="mb-1 text-3xl font-bold">{formattedCommunityDonations}</p>
+                <p className="text-sm text-neutral-100">Donated</p>
+              </div>
+              <div className="text-center">
+                <p className="mb-1 text-3xl font-bold">
+                  {(COMMUNITY_IMPACT.carbonOffset / 1000).toFixed(0)}t
+                </p>
+                <p className="text-sm text-neutral-100">CO₂ Offset</p>
+              </div>
+              <div className="text-center">
+                <p className="mb-1 text-3xl font-bold">
+                  {(COMMUNITY_IMPACT.plasticAvoided / 1000).toFixed(1)}t
+                </p>
+                <p className="text-sm text-neutral-100">Plastic Avoided</p>
+              </div>
+              <div className="text-center">
+                <p className="mb-1 text-3xl font-bold">
+                  {(COMMUNITY_IMPACT.treesPlanted / 1000).toFixed(1)}K
+                </p>
+                <p className="text-sm text-neutral-100">Trees Planted</p>
+              </div>
+              <div className="text-center">
+                <p className="mb-1 text-3xl font-bold">{COMMUNITY_IMPACT.nonprofitsSupported}</p>
+                <p className="text-sm text-neutral-100">Nonprofits</p>
+              </div>
             </div>
-            <div className="text-center">
-              <p className="mb-1 text-3xl font-bold">{formattedCommunityDonations}</p>
-              <p className="text-sm text-neutral-100">Donated</p>
-            </div>
-            <div className="text-center">
-              <p className="mb-1 text-3xl font-bold">
-                {(COMMUNITY_IMPACT.carbonOffset / 1000).toFixed(0)}t
-              </p>
-              <p className="text-sm text-neutral-100">CO₂ Offset</p>
-            </div>
-            <div className="text-center">
-              <p className="mb-1 text-3xl font-bold">
-                {(COMMUNITY_IMPACT.plasticAvoided / 1000).toFixed(1)}t
-              </p>
-              <p className="text-sm text-neutral-100">Plastic Avoided</p>
-            </div>
-            <div className="text-center">
-              <p className="mb-1 text-3xl font-bold">
-                {(COMMUNITY_IMPACT.treesPlanted / 1000).toFixed(1)}K
-              </p>
-              <p className="text-sm text-neutral-100">Trees Planted</p>
-            </div>
-            <div className="text-center">
-              <p className="mb-1 text-3xl font-bold">{COMMUNITY_IMPACT.nonprofitsSupported}</p>
-              <p className="text-sm text-neutral-100">Nonprofits</p>
-            </div>
-          </div>
 
-          <div className="mt-8 text-center">
-            <Button size="lg" variant="secondary" asChild>
-              <Link href="/browse">
-                Continue Shopping
-                <Leaf className="ml-2 size-5" />
-              </Link>
-            </Button>
+            <div className="mt-8 text-center">
+              <Button size="lg" variant="secondary" asChild>
+                <Link href="/browse">
+                  Continue Shopping
+                  <Leaf className="ml-2 size-5" />
+                </Link>
+              </Button>
+            </div>
           </div>
-        </div>
-
-        {/* Impact Widget Example */}
-        <div className="mt-12">
-          <h2 className="mb-6 text-2xl font-bold">Your Latest Impact</h2>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <ImpactWidget
-              totalDonation={3.5}
-              nonprofits={[
-                {
-                  name: 'Ocean Conservancy',
-                  logo: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=200&q=80',
-                  amount: 3.5,
-                },
-              ]}
-              metrics={[
-                { type: 'co2', value: '12.5 kg', label: 'CO₂ saved' },
-                { type: 'plastic', value: '0.8 kg', label: 'Plastic avoided' },
-              ]}
-            />
-            <ImpactWidget
-              totalDonation={2.25}
-              nonprofits={[
-                {
-                  name: 'Rainforest Alliance',
-                  logo: 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=200&q=80',
-                  amount: 2.25,
-                },
-              ]}
-              metrics={[
-                { type: 'trees', value: '2', label: 'Trees planted' },
-                { type: 'water', value: '450 L', label: 'Water saved' },
-              ]}
-            />
-            <ImpactWidget
-              totalDonation={1.8}
-              nonprofits={[
-                {
-                  name: 'The Nature Conservancy',
-                  logo: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=200&q=80',
-                  amount: 1.8,
-                },
-              ]}
-              metrics={[
-                { type: 'co2', value: '8.3 kg', label: 'CO₂ saved' },
-                { type: 'custom', value: '1.2 kg', label: 'Waste diverted' },
-              ]}
-            />
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

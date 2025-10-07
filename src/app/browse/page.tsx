@@ -8,6 +8,7 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { SlidersHorizontal, X, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -41,6 +42,7 @@ interface Certification {
 }
 
 export default function BrowsePage() {
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [certifications, setCertifications] = useState<Certification[]>([]);
@@ -330,6 +332,7 @@ export default function BrowsePage() {
                   isFavorited={favorited[product.id]}
                   onFavoriteClick={() => toggleFavorite(product.id)}
                   onQuickAddClick={() => alert('Added to cart!')}
+                  onProductClick={() => router.push(`/products/${product.id}`)}
                 />
               ))}
             </div>

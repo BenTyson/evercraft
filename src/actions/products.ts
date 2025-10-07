@@ -214,7 +214,7 @@ export async function getProductById(id: string) {
           },
           take: 10,
           include: {
-            user: {
+            User: {
               select: {
                 name: true,
               },
@@ -278,29 +278,45 @@ export async function getCategories() {
 
 export async function getCertifications() {
   try {
-    const certifications = await db.certification.findMany({
+    // Get all unique certifications from products
+    // Note: In current schema, certifications are tied to individual products
+    // We get unique certification names and count products for each
+    const allCertifications = await db.certification.findMany({
       where: {
         type: 'product',
         verified: true,
+        product: {
+          status: 'ACTIVE',
+        },
       },
-      include: {
-        _count: {
+      select: {
+        id: true,
+        name: true,
+        product: {
           select: {
-            products: {
-              where: {
-                status: 'ACTIVE',
-              },
-            },
+            id: true,
           },
         },
       },
     });
 
-    return certifications.map((cert) => ({
-      id: cert.id,
-      name: cert.name,
-      count: cert._count.products,
-    }));
+    // Group by certification name and count unique products
+    const certMap = new Map<string, { id: string; name: string; count: number }>();
+
+    for (const cert of allCertifications) {
+      const existing = certMap.get(cert.name);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        certMap.set(cert.name, {
+          id: cert.id,
+          name: cert.name,
+          count: 1,
+        });
+      }
+    }
+
+    return Array.from(certMap.values());
   } catch (error) {
     console.error('Error fetching certifications:', error);
     throw new Error('Failed to fetch certifications');
