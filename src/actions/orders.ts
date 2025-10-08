@@ -78,7 +78,21 @@ export async function getOrderById(orderId: string) {
         id: orderId,
         buyerId: userId, // Ensure user owns this order
       },
-      include: {
+      select: {
+        id: true,
+        orderNumber: true,
+        status: true,
+        subtotal: true,
+        shippingCost: true,
+        tax: true,
+        total: true,
+        nonprofitDonation: true,
+        shippingAddress: true,
+        billingAddress: true,
+        createdAt: true,
+        trackingNumber: true,
+        trackingCarrier: true,
+        shippingLabelUrl: true,
         items: {
           include: {
             product: {
@@ -154,7 +168,14 @@ export async function getSellerOrders() {
           },
         },
       },
-      include: {
+      select: {
+        id: true,
+        status: true,
+        total: true,
+        createdAt: true,
+        trackingNumber: true,
+        trackingCarrier: true,
+        shippingLabelUrl: true,
         items: {
           where: {
             shopId: shop.id, // Only include items from this shop

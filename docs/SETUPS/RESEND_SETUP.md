@@ -5,6 +5,7 @@ This document explains how to set up Resend for transactional emails in Evercraf
 ## What is Resend?
 
 Resend is a modern email API designed for developers. It provides:
+
 - Simple API for sending transactional emails
 - Email templates and customization
 - Delivery tracking and analytics
@@ -56,6 +57,7 @@ RESEND_FROM_EMAIL="Evercraft <noreply@yourdomain.com>"
 ```
 
 **Important Notes:**
+
 - Replace `re_your_api_key_here` with your actual Resend API key
 - For development, you can use any email like `noreply@evercraft.com` (emails will still send but may go to spam)
 - For production with a verified domain, use your verified email address
@@ -73,6 +75,7 @@ npm run dev
 ### Order Confirmation Email
 
 Sent immediately after successful payment. Includes:
+
 - Order number and total
 - List of items ordered with quantities and prices
 - Shipping address
@@ -82,6 +85,7 @@ Sent immediately after successful payment. Includes:
 ### Order Status Update Email
 
 Sent when sellers update order status. Includes:
+
 - Current order status
 - Order number
 - Personalized message based on status
@@ -89,12 +93,12 @@ Sent when sellers update order status. Includes:
 
 ### Email Status Messages
 
-| Status | Title | Message |
-|--------|-------|---------|
+| Status     | Title            | Message                                   |
+| ---------- | ---------------- | ----------------------------------------- |
 | PROCESSING | Order Processing | Your order is being prepared for shipment |
-| SHIPPED | Order Shipped! | Your order is on its way to you |
-| DELIVERED | Order Delivered | Your order has been delivered |
-| CANCELLED | Order Cancelled | Your order has been cancelled |
+| SHIPPED    | Order Shipped!   | Your order is on its way to you           |
+| DELIVERED  | Order Delivered  | Your order has been delivered             |
+| CANCELLED  | Order Cancelled  | Your order has been cancelled             |
 
 ## Testing Emails
 
@@ -141,6 +145,7 @@ Email templates are located in `/src/lib/email.ts`. To customize:
 ## Free Tier Limits
 
 Resend's free tier includes:
+
 - **3,000 emails per month**
 - **100 emails per day**
 - Full API access
@@ -153,6 +158,7 @@ This is more than enough for an MVP. For production, monitor usage and upgrade i
 ### Emails Not Sending
 
 1. **Check Environment Variables:**
+
    ```bash
    # Verify variables are set
    echo $RESEND_API_KEY
@@ -170,10 +176,12 @@ This is more than enough for an MVP. For production, monitor usage and upgrade i
 ### Emails Going to Spam
 
 For development:
+
 - This is expected without a verified domain
 - Check spam/junk folder
 
 For production:
+
 - Verify your domain in Resend
 - Add SPF, DKIM, and DMARC records
 - Use a professional "from" address
@@ -188,6 +196,7 @@ For production:
 ### Rate Limiting
 
 If you hit rate limits:
+
 - Free tier: 100 emails/day, 3000 emails/month
 - Upgrade to a paid plan for higher limits
 - Implement email queuing for high volume
@@ -202,6 +211,7 @@ If you prefer a different email service:
 4. **Postmark** - Focused on transactional emails
 
 To switch services:
+
 1. Update `/src/lib/email.ts` with new service SDK
 2. Update environment variables
 3. Test email sending

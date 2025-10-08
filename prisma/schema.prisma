@@ -25,7 +25,7 @@ model Address {
   isDefault  Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime
-  User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([isDefault])
   @@index([userId])
@@ -41,8 +41,8 @@ model AnalyticsEvent {
   ipAddress String?
   userAgent String?
   createdAt DateTime @default(now())
-  Shop      Shop?    @relation(fields: [shopId], references: [id])
-  User      User?    @relation(fields: [userId], references: [id])
+  shop      Shop?    @relation(fields: [shopId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
 
   @@index([createdAt])
   @@index([eventType])
@@ -62,9 +62,9 @@ model Category {
   position        Int        @default(0)
   createdAt       DateTime   @default(now())
   updatedAt       DateTime
-  Category        Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
-  other_Category  Category[] @relation("CategoryToCategory")
-  Product         Product[]
+  parent          Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children        Category[] @relation("CategoryToCategory")
+  products        Product[]
 
   @@index([parentId])
   @@index([position])
@@ -83,7 +83,7 @@ model Certification {
   certificate String?
   verified    Boolean   @default(false)
   createdAt   DateTime  @default(now())
-  Product     Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product     Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
   @@index([type])
@@ -98,8 +98,8 @@ model Collection {
   isPublic          Boolean             @default(false)
   createdAt         DateTime            @default(now())
   updatedAt         DateTime
-  User              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  CollectionProduct CollectionProduct[]
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collectionProducts CollectionProduct[]
 
   @@index([isPublic])
   @@index([userId])
@@ -110,8 +110,8 @@ model CollectionProduct {
   collectionId String
   productId    String
   createdAt    DateTime   @default(now())
-  Collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  Product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([collectionId, productId])
   @@index([collectionId])
@@ -127,7 +127,7 @@ model Donation {
   status      DonationStatus @default(PENDING)
   payoutId    String?
   createdAt   DateTime       @default(now())
-  Nonprofit   Nonprofit      @relation(fields: [nonprofitId], references: [id])
+  nonprofit   Nonprofit      @relation(fields: [nonprofitId], references: [id])
 
   @@index([createdAt])
   @@index([nonprofitId])
@@ -140,8 +140,8 @@ model Favorite {
   userId    String
   productId String
   createdAt DateTime @default(now())
-  Product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
   @@index([productId])
@@ -182,9 +182,9 @@ model Nonprofit {
   stripeAccountId String?     @unique
   createdAt       DateTime    @default(now())
   updatedAt       DateTime
-  Donation        Donation[]
-  OrderItem       OrderItem[]
-  Shop            Shop[]
+  donations       Donation[]
+  orderItems      OrderItem[]
+  shops           Shop[]
 
   @@index([ein])
   @@index([isVerified])
@@ -201,28 +201,32 @@ model NotificationPreference {
   smsNotifications  Boolean  @default(false)
   createdAt         DateTime @default(now())
   updatedAt         DateTime
-  User              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Order {
-  id                String        @id
-  orderNumber       String        @unique
-  buyerId           String
-  status            OrderStatus   @default(PROCESSING)
-  subtotal          Float
-  shippingCost      Float         @default(0)
-  tax               Float         @default(0)
-  total             Float
-  nonprofitDonation Float         @default(0)
-  shippingAddress   Json
-  billingAddress    Json
-  paymentStatus     PaymentStatus @default(PENDING)
-  paymentIntentId   String?       @unique
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime
-  User              User          @relation(fields: [buyerId], references: [id])
-  OrderItem         OrderItem[]
-  Payment           Payment[]
+  id                   String        @id
+  orderNumber          String        @unique
+  buyerId              String
+  status               OrderStatus   @default(PROCESSING)
+  subtotal             Float
+  shippingCost         Float         @default(0)
+  tax                  Float         @default(0)
+  total                Float
+  nonprofitDonation    Float         @default(0)
+  shippingAddress      Json
+  billingAddress       Json
+  paymentStatus        PaymentStatus @default(PENDING)
+  paymentIntentId      String?       @unique
+  trackingNumber       String?
+  trackingCarrier      String?
+  shippingLabelUrl     String?
+  shippoTransactionId  String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime
+  buyer                User          @relation(fields: [buyerId], references: [id])
+  items                OrderItem[]
+  payments             Payment[]
 
   @@index([buyerId])
   @@index([createdAt])
@@ -243,11 +247,11 @@ model OrderItem {
   nonprofitId     String?
   donationAmount  Float           @default(0)
   createdAt       DateTime        @default(now())
-  Nonprofit       Nonprofit?      @relation(fields: [nonprofitId], references: [id])
-  Order           Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  Product         Product         @relation(fields: [productId], references: [id])
-  Shop            Shop            @relation(fields: [shopId], references: [id])
-  ProductVariant  ProductVariant? @relation(fields: [variantId], references: [id])
+  nonprofit       Nonprofit?      @relation(fields: [nonprofitId], references: [id])
+  order           Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product         Product         @relation(fields: [productId], references: [id])
+  shop            Shop            @relation(fields: [shopId], references: [id])
+  variant         ProductVariant? @relation(fields: [variantId], references: [id])
 
   @@index([nonprofitId])
   @@index([orderId])
@@ -265,7 +269,7 @@ model Payment {
   nonprofitDonation     Float
   status                PaymentStatus @default(PENDING)
   createdAt             DateTime      @default(now())
-  Order                 Order         @relation(fields: [orderId], references: [id])
+  order                 Order         @relation(fields: [orderId], references: [id])
 
   @@index([createdAt])
   @@index([orderId])
@@ -292,16 +296,16 @@ model Product {
   metaDescription     String?
   createdAt           DateTime             @default(now())
   updatedAt           DateTime
-  Certification       Certification[]
-  CollectionProduct   CollectionProduct[]
-  Favorite            Favorite[]
-  OrderItem           OrderItem[]
-  Category            Category?            @relation(fields: [categoryId], references: [id])
-  Shop                Shop                 @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  ProductImage        ProductImage[]
-  ProductVariant      ProductVariant[]
-  Review              Review[]
-  SustainabilityScore SustainabilityScore?
+  certifications      Certification[]
+  collectionProducts  CollectionProduct[]
+  favorites           Favorite[]
+  orderItems          OrderItem[]
+  category            Category?            @relation(fields: [categoryId], references: [id])
+  shop                Shop                 @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  images              ProductImage[]
+  variants            ProductVariant[]
+  reviews             Review[]
+  sustainabilityScore SustainabilityScore?
 
   @@index([categoryId])
   @@index([createdAt])
@@ -311,22 +315,22 @@ model Product {
 }
 
 model ProductImage {
-  id             String           @id
+  id             String           @id @default(cuid())
   productId      String
   url            String
   altText        String?
   position       Int              @default(0)
   isPrimary      Boolean          @default(false)
   createdAt      DateTime         @default(now())
-  Product        Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
-  ProductVariant ProductVariant[]
+  product        Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variants       ProductVariant[]
 
   @@index([isPrimary])
   @@index([productId])
 }
 
 model ProductVariant {
-  id                String        @id
+  id                String        @id @default(cuid())
   productId         String
   name              String
   sku               String?
@@ -336,9 +340,9 @@ model ProductVariant {
   imageId           String?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime
-  OrderItem         OrderItem[]
-  ProductImage      ProductImage? @relation(fields: [imageId], references: [id])
-  Product           Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems        OrderItem[]
+  image             ProductImage? @relation(fields: [imageId], references: [id])
+  product           Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
   @@index([sku])
@@ -358,7 +362,7 @@ model Promotion {
   endDate         DateTime
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
-  Shop            Shop?    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop            Shop?    @relation(fields: [shopId], references: [id], onDelete: Cascade)
 
   @@index([code])
   @@index([endDate])
@@ -378,8 +382,8 @@ model Review {
   helpfulCount       Int      @default(0)
   createdAt          DateTime @default(now())
   updatedAt          DateTime
-  Product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  User               User     @relation(fields: [userId], references: [id])
+  product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user               User     @relation(fields: [userId], references: [id])
 
   @@index([createdAt])
   @@index([isVerifiedPurchase])
@@ -396,7 +400,7 @@ model SearchHistory {
   results   Int
   clicked   String?
   createdAt DateTime @default(now())
-  User      User?    @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
 
   @@index([createdAt])
   @@index([query])
@@ -417,7 +421,7 @@ model SellerApplication {
   reviewedAt          DateTime?
   createdAt           DateTime          @default(now())
   updatedAt           DateTime
-  User                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([createdAt])
   @@index([status])
@@ -436,8 +440,8 @@ model SellerReview {
   text                  String?
   createdAt             DateTime @default(now())
   updatedAt             DateTime
-  Shop                  Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  User                  User     @relation(fields: [userId], references: [id])
+  shop                  Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user                  User     @relation(fields: [userId], references: [id])
 
   @@index([createdAt])
   @@index([rating])
@@ -456,7 +460,7 @@ model ShippingProfile {
   carbonNeutralPrice Float?
   createdAt          DateTime @default(now())
   updatedAt          DateTime
-  Shop               Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop               Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
 
   @@index([shopId])
 }
@@ -478,14 +482,14 @@ model Shop {
   donationPercentage Float              @default(1.0)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime
-  AnalyticsEvent     AnalyticsEvent[]
-  OrderItem          OrderItem[]
-  Product            Product[]
-  Promotion          Promotion[]
-  SellerReview       SellerReview[]
-  ShippingProfile    ShippingProfile[]
-  Nonprofit          Nonprofit?         @relation(fields: [nonprofitId], references: [id])
-  User               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analyticsEvents    AnalyticsEvent[]
+  orderItems         OrderItem[]
+  products           Product[]
+  promotions         Promotion[]
+  sellerReviews      SellerReview[]
+  shippingProfiles   ShippingProfile[]
+  nonprofit          Nonprofit?         @relation(fields: [nonprofitId], references: [id])
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([isVerified])
   @@index([nonprofitId])
@@ -503,7 +507,7 @@ model SupportTicket {
   priority  String              @default("normal")
   createdAt DateTime            @default(now())
   updatedAt DateTime
-  User      User                @relation(fields: [userId], references: [id])
+  user      User                @relation(fields: [userId], references: [id])
 
   @@index([createdAt])
   @@index([priority])
@@ -522,7 +526,7 @@ model SustainabilityScore {
   breakdownJson      Json
   calculatedAt       DateTime @default(now())
   updatedAt          DateTime
-  Product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([totalScore])
   @@index([updatedAt])
@@ -539,20 +543,20 @@ model User {
   twoFactorEnabled                 Boolean                 @default(false)
   createdAt                        DateTime                @default(now())
   updatedAt                        DateTime
-  Address                          Address[]
-  AnalyticsEvent                   AnalyticsEvent[]
-  Collection                       Collection[]
-  Favorite                         Favorite[]
-  Message_Message_fromUserIdToUser Message[]               @relation("Message_fromUserIdToUser")
-  Message_Message_toUserIdToUser   Message[]               @relation("Message_toUserIdToUser")
-  NotificationPreference           NotificationPreference?
-  Order                            Order[]
-  Review                           Review[]
-  SearchHistory                    SearchHistory[]
-  SellerApplication                SellerApplication[]
-  SellerReview                     SellerReview[]
-  Shop                             Shop?
-  SupportTicket                    SupportTicket[]
+  addresses                        Address[]
+  analyticsEvents                  AnalyticsEvent[]
+  collections                      Collection[]
+  favorites                        Favorite[]
+  sentMessages                     Message[]               @relation("Message_fromUserIdToUser")
+  receivedMessages                 Message[]               @relation("Message_toUserIdToUser")
+  notificationPreference           NotificationPreference?
+  orders                           Order[]
+  reviews                          Review[]
+  searchHistory                    SearchHistory[]
+  sellerApplications               SellerApplication[]
+  sellerReviews                    SellerReview[]
+  shop                             Shop?
+  supportTickets                   SupportTicket[]
 
   @@index([createdAt])
   @@index([email])

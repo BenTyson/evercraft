@@ -35,9 +35,9 @@ const BASE_WEIGHT_ALLOWANCE = 5; // pounds included in base rate
 
 ```typescript
 const METHOD_MULTIPLIERS = {
-  standard: 1.0,    // 100% of base rate (5-7 business days)
-  express: 1.8,     // 180% of base rate (2-3 business days)
-  overnight: 3.0,   // 300% of base rate (1 business day)
+  standard: 1.0, // 100% of base rate (5-7 business days)
+  express: 1.8, // 180% of base rate (2-3 business days)
+  overnight: 3.0, // 300% of base rate (1 business day)
 };
 ```
 
@@ -53,7 +53,7 @@ import { calculateCartShipping } from '@/lib/shipping';
 const result = calculateCartShipping({
   items: [
     { price: 29.99, quantity: 2, weight: 1.5 },
-    { price: 15.00, quantity: 1, weight: 0.5 },
+    { price: 15.0, quantity: 1, weight: 0.5 },
   ],
   destinationCountry: 'US',
   method: 'standard',
@@ -103,6 +103,7 @@ function getShippingZone(country?: string): ShippingZone {
 ```
 
 **Zones:**
+
 - `domestic`: United States
 - `international`: All other countries
 
@@ -128,6 +129,7 @@ if (totalWeight > BASE_WEIGHT_ALLOWANCE) {
 ```
 
 **Example:**
+
 - Cart weight: 8 lbs
 - Base allowance: 5 lbs
 - Extra weight: 3 lbs
@@ -141,16 +143,19 @@ shippingCost = baseRate * METHOD_MULTIPLIERS[method];
 ```
 
 **Example (Standard):**
+
 - Base rate: $5.99
 - Method multiplier: 1.0×
 - Final cost: $5.99
 
 **Example (Express):**
+
 - Base rate: $5.99
 - Method multiplier: 1.8×
 - Final cost: $10.78
 
 **Example (Overnight):**
+
 - Base rate: $5.99
 - Method multiplier: 3.0×
 - Final cost: $17.97
@@ -175,6 +180,7 @@ const shippingMessage = getShippingEstimateMessage(shippingResult);
 ```
 
 **Displays:**
+
 - Shipping cost in order summary
 - "Add $X more to qualify for free shipping" message
 
@@ -189,6 +195,7 @@ const shippingResult = calculateCartShipping({
 ```
 
 **Updates:**
+
 - Shipping cost based on destination
 - Real-time updates as address changes
 - Shows free shipping incentive
@@ -209,6 +216,7 @@ const shipping = shippingResult.shippingCost;
 ```
 
 **Used in:**
+
 - `createPaymentIntent()` - Calculate total for Stripe
 - `createOrder()` - Record accurate shipping cost
 
@@ -217,18 +225,21 @@ const shipping = shippingResult.shippingCost;
 ## Shipping Methods
 
 ### Standard Shipping
+
 - **Delivery Time:** 5-7 business days
 - **Cost Multiplier:** 1.0× base rate
 - **Description:** Economical ground shipping
 - **Availability:** All zones
 
 ### Express Shipping
+
 - **Delivery Time:** 2-3 business days
 - **Cost Multiplier:** 1.8× base rate
 - **Description:** Faster delivery
 - **Availability:** All zones
 
 ### Overnight Shipping
+
 - **Delivery Time:** 1 business day
 - **Cost Multiplier:** 3.0× base rate
 - **Description:** Next day delivery
@@ -243,6 +254,7 @@ const shipping = shippingResult.shippingCost;
 Calculate shipping for a given cart configuration.
 
 **Parameters:**
+
 ```typescript
 interface ShippingCalculationInput {
   subtotal: number;
@@ -255,6 +267,7 @@ interface ShippingCalculationInput {
 ```
 
 **Returns:**
+
 ```typescript
 interface ShippingCalculationResult {
   shippingCost: number;
@@ -272,6 +285,7 @@ interface ShippingCalculationResult {
 Convenience function for cart items.
 
 **Parameters:**
+
 ```typescript
 interface CartShippingInput {
   items: Array<{
@@ -290,9 +304,10 @@ interface CartShippingInput {
 Format shipping cost for display.
 
 **Example:**
+
 ```typescript
-formatShippingCost(5.99);  // "$5.99"
-formatShippingCost(0);     // "FREE"
+formatShippingCost(5.99); // "$5.99"
+formatShippingCost(0); // "FREE"
 ```
 
 ### `getShippingEstimateMessage(result: ShippingCalculationResult): string`
@@ -300,6 +315,7 @@ formatShippingCost(0);     // "FREE"
 Get user-friendly message about shipping status.
 
 **Returns:**
+
 - "🎉 You qualify for free shipping!" (if qualified)
 - "Add $X more to qualify for free shipping" (if close)
 - "" (empty string if far from threshold)
@@ -312,9 +328,7 @@ Get user-friendly message about shipping status.
 
 ```typescript
 const result = calculateCartShipping({
-  items: [
-    { price: 25.00, quantity: 1, weight: 0.5 },
-  ],
+  items: [{ price: 25.0, quantity: 1, weight: 0.5 }],
   destinationCountry: 'US',
 });
 
@@ -330,9 +344,7 @@ const result = calculateCartShipping({
 
 ```typescript
 const result = calculateCartShipping({
-  items: [
-    { price: 60.00, quantity: 1, weight: 2.0 },
-  ],
+  items: [{ price: 60.0, quantity: 1, weight: 2.0 }],
   destinationCountry: 'US',
 });
 
@@ -348,9 +360,7 @@ const result = calculateCartShipping({
 
 ```typescript
 const result = calculateCartShipping({
-  items: [
-    { price: 30.00, quantity: 2, weight: 10.0 },
-  ],
+  items: [{ price: 30.0, quantity: 2, weight: 10.0 }],
   destinationCountry: 'CA',
 });
 
@@ -365,9 +375,7 @@ const result = calculateCartShipping({
 
 ```typescript
 const result = calculateCartShipping({
-  items: [
-    { price: 40.00, quantity: 1, weight: 2.0 },
-  ],
+  items: [{ price: 40.0, quantity: 1, weight: 2.0 }],
   destinationCountry: 'US',
   method: 'express',
 });
@@ -499,6 +507,7 @@ describe('calculateCartShipping', () => {
 ## Support
 
 For questions or issues with the shipping calculator:
+
 1. Check this documentation
 2. Review `src/lib/shipping.ts` implementation
 3. Test with `src/actions/shipping.ts` server actions

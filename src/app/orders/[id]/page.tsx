@@ -12,10 +12,21 @@ import { auth } from '@clerk/nextjs/server';
 import { SiteHeader } from '@/components/layout/site-header';
 import { Button } from '@/components/ui/button';
 import { getOrderById } from '@/actions/orders';
+import { OrderTracking } from '@/components/order-tracking';
 import { cn } from '@/lib/utils';
 
 interface PageProps {
   params: Promise<{ id: string }>;
+}
+
+interface ShippingAddress {
+  firstName: string;
+  lastName: string;
+  address1: string;
+  address2?: string;
+  city: string;
+  state: string;
+  zipCode: string;
 }
 
 function getStatusColor(status: string) {
@@ -68,7 +79,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
   const order = result.order;
   const shippingAddress =
-    typeof order.shippingAddress === 'object' ? order.shippingAddress : null;
+    typeof order.shippingAddress === 'object' ? (order.shippingAddress as ShippingAddress) : null;
 
   return (
     <>
@@ -109,7 +120,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Order Items */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6 lg:col-span-2">
             <div className="bg-card rounded-lg border p-6">
               <h2 className="mb-4 text-xl font-bold">Order Items</h2>
               <div className="space-y-4">
@@ -241,10 +252,19 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 </div>
               </div>
             </div>
+
+            {/* Order Tracking */}
+            {order.trackingNumber && (
+              <OrderTracking
+                orderId={order.id}
+                trackingNumber={order.trackingNumber}
+                trackingCarrier={order.trackingCarrier}
+              />
+            )}
           </div>
 
           {/* Order Summary Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="space-y-6 lg:col-span-1">
             {/* Seller Info */}
             <div className="bg-card rounded-lg border p-6">
               <h2 className="mb-4 text-lg font-bold">Seller</h2>
@@ -277,15 +297,14 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 <h2 className="mb-4 text-lg font-bold">Shipping Address</h2>
                 <div className="text-sm">
                   <p className="font-medium">
-                    {(shippingAddress as any).firstName} {(shippingAddress as any).lastName}
+                    {shippingAddress.firstName} {shippingAddress.lastName}
                   </p>
-                  <p className="text-muted-foreground">{(shippingAddress as any).address1}</p>
-                  {(shippingAddress as any).address2 && (
-                    <p className="text-muted-foreground">{(shippingAddress as any).address2}</p>
+                  <p className="text-muted-foreground">{shippingAddress.address1}</p>
+                  {shippingAddress.address2 && (
+                    <p className="text-muted-foreground">{shippingAddress.address2}</p>
                   )}
                   <p className="text-muted-foreground">
-                    {(shippingAddress as any).city}, {(shippingAddress as any).state}{' '}
-                    {(shippingAddress as any).zipCode}
+                    {shippingAddress.city}, {shippingAddress.state} {shippingAddress.zipCode}
                   </p>
                 </div>
               </div>
@@ -316,7 +335,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                     </p>
                   </div>
                 )}
-                <div className="border-t pt-3 flex justify-between font-bold">
+                <div className="flex justify-between border-t pt-3 font-bold">
                   <span>Total</span>
                   <span>${order.total.toFixed(2)}</span>
                 </div>

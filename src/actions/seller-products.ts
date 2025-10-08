@@ -106,6 +106,12 @@ export async function updateProduct(productId: string, input: CreateProductInput
   try {
     const { certificationIds, images, ...data } = input;
 
+    // Get current product to find existing certifications
+    const currentProduct = await db.product.findUnique({
+      where: { id: productId },
+      include: { certifications: { select: { id: true } } },
+    });
+
     // Delete existing images if new images are provided
     if (images) {
       await db.productImage.deleteMany({
@@ -119,7 +125,8 @@ export async function updateProduct(productId: string, input: CreateProductInput
         ...data,
         certifications: certificationIds
           ? {
-              set: certificationIds.map((id) => ({ id })),
+              disconnect: currentProduct?.certifications.map((cert) => ({ id: cert.id })) || [],
+              connect: certificationIds.map((id) => ({ id })),
             }
           : undefined,
         images: images

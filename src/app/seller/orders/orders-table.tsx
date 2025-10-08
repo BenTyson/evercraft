@@ -9,12 +9,16 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { updateOrderStatus, bulkUpdateOrderStatus } from '@/actions/orders';
 import { cn } from '@/lib/utils';
+import { ShippingLabelManager } from './shipping-label-manager';
 
 interface Order {
   id: string;
   status: string;
   total: number;
   createdAt: Date;
+  trackingNumber?: string | null;
+  trackingCarrier?: string | null;
+  shippingLabelUrl?: string | null;
   user: { name: string | null; email: string | null };
   items: Array<{
     id: string;
@@ -101,7 +105,7 @@ export function OrdersTable({ orders: initialOrders }: OrdersTableProps) {
       } else {
         alert(result.error || 'Failed to update order status');
       }
-    } catch (error) {
+    } catch {
       alert('An error occurred while updating the order status');
     } finally {
       setUpdatingStatus(null);
@@ -272,44 +276,61 @@ export function OrdersTable({ orders: initialOrders }: OrdersTableProps) {
 
             {/* Expanded Order Details */}
             {isExpanded && (
-              <div className="border-t px-6 pb-6 pt-4">
-                <h4 className="mb-3 text-sm font-semibold">Order Items</h4>
-                <div className="space-y-3">
-                  {order.items.map((item) => (
-                    <div key={item.id} className="flex gap-4">
-                      <div className="bg-muted relative size-16 flex-shrink-0 overflow-hidden rounded">
-                        {item.product.images[0]?.url ? (
-                          <Image
-                            src={item.product.images[0].url}
-                            alt={item.product.images[0].altText || item.product.title}
-                            fill
-                            className="object-cover"
-                            sizes="64px"
-                          />
-                        ) : (
-                          <div className="flex size-full items-center justify-center">
-                            <ShoppingBag className="text-muted-foreground size-6" />
+              <div className="border-t px-6 pt-4 pb-6">
+                <div className="grid gap-6 md:grid-cols-2">
+                  {/* Order Items */}
+                  <div>
+                    <h4 className="mb-3 text-sm font-semibold">Order Items</h4>
+                    <div className="space-y-3">
+                      {order.items.map((item) => (
+                        <div key={item.id} className="flex gap-4">
+                          <div className="bg-muted relative size-16 flex-shrink-0 overflow-hidden rounded">
+                            {item.product.images[0]?.url ? (
+                              <Image
+                                src={item.product.images[0].url}
+                                alt={item.product.images[0].altText || item.product.title}
+                                fill
+                                className="object-cover"
+                                sizes="64px"
+                              />
+                            ) : (
+                              <div className="flex size-full items-center justify-center">
+                                <ShoppingBag className="text-muted-foreground size-6" />
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <div className="flex flex-1 items-center justify-between">
-                        <div>
-                          <Link
-                            href={`/products/${item.product.id}`}
-                            className="hover:text-forest-dark font-medium transition-colors"
-                          >
-                            {item.title}
-                          </Link>
-                          <p className="text-muted-foreground text-sm">
-                            Qty: {item.quantity} × ${item.price.toFixed(2)}
-                          </p>
+                          <div className="flex flex-1 items-center justify-between">
+                            <div>
+                              <Link
+                                href={`/products/${item.product.id}`}
+                                className="hover:text-forest-dark font-medium transition-colors"
+                              >
+                                {item.title}
+                              </Link>
+                              <p className="text-muted-foreground text-sm">
+                                Qty: {item.quantity} × ${item.price.toFixed(2)}
+                              </p>
+                            </div>
+                            <div className="text-sm font-semibold">
+                              ${(item.price * item.quantity).toFixed(2)}
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-sm font-semibold">
-                          ${(item.price * item.quantity).toFixed(2)}
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+
+                  {/* Shipping Label */}
+                  <div>
+                    <h4 className="mb-3 text-sm font-semibold">Shipping</h4>
+                    <ShippingLabelManager
+                      orderId={order.id}
+                      trackingNumber={order.trackingNumber}
+                      trackingCarrier={order.trackingCarrier}
+                      shippingLabelUrl={order.shippingLabelUrl}
+                      onLabelCreated={() => router.refresh()}
+                    />
+                  </div>
                 </div>
               </div>
             )}
