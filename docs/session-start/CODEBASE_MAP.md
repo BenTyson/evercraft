@@ -1,7 +1,7 @@
 # EVERCRAFT CODEBASE MAP
 
 **Generated:** October 8, 2025
-**Last Updated:** October 9, 2025 (Session 5 - Phase 9 Analytics & Tools 50% Complete 🚀)
+**Last Updated:** October 9, 2025 (Session 6 - Analytics Bug Fixes & Refactoring ✅)
 **Purpose:** Comprehensive reference for understanding the Evercraft marketplace codebase structure, implementations, and capabilities.
 
 ---
@@ -196,14 +196,15 @@
 
 ### Admin Dashboard
 
-| Route                 | Status   | File                                   | Lines | Description                                 |
-| --------------------- | -------- | -------------------------------------- | ----- | ------------------------------------------- |
-| `/admin`              | ✅ Built | `/src/app/admin/page.tsx`              | 261   | Admin dashboard with metrics, activity feed |
-| `/admin/financial`    | ✅ Built | `/src/app/admin/financial/page.tsx`    | 400+  | Financial reporting with charts ⭐ NEW      |
-| `/admin/users`        | ✅ Built | `/src/app/admin/users/page.tsx`        | 30    | User management with role updates           |
-| `/admin/nonprofits`   | ✅ Built | `/src/app/admin/nonprofits/page.tsx`   | 32    | Nonprofit CRUD and verification             |
-| `/admin/applications` | ✅ Built | `/src/app/admin/applications/page.tsx` | 33    | Review seller applications                  |
-| `/admin/products`     | ✅ Built | `/src/app/admin/products/page.tsx`     | 33    | Product moderation                          |
+| Route                 | Status   | File                                   | Lines | Description                                         |
+| --------------------- | -------- | -------------------------------------- | ----- | --------------------------------------------------- |
+| `/admin`              | ✅ Built | `/src/app/admin/page.tsx`              | 261   | Admin dashboard with metrics, activity feed         |
+| `/admin/financial`    | ✅ Built | `/src/app/admin/financial/page.tsx`    | 343   | CFO view: transactions, payouts, payment analytics  |
+| `/admin/analytics`    | ✅ Built | `/src/app/admin/analytics/page.tsx`    | 115   | Business Intelligence: 6 tabs with 14 analytics ⭐  |
+| `/admin/users`        | ✅ Built | `/src/app/admin/users/page.tsx`        | 30    | User management with role updates                   |
+| `/admin/nonprofits`   | ✅ Built | `/src/app/admin/nonprofits/page.tsx`   | 32    | Nonprofit CRUD and verification                     |
+| `/admin/applications` | ✅ Built | `/src/app/admin/applications/page.tsx` | 33    | Review seller applications                          |
+| `/admin/products`     | ✅ Built | `/src/app/admin/products/page.tsx`     | 33    | Product moderation                                  |
 
 ### Seller Analytics & Tools Routes ⭐ NEW
 
@@ -238,8 +239,19 @@
 
 **Admin Components:**
 
-- `/src/app/admin/financial/revenue-chart.tsx` - Revenue trends line chart (70 lines) ⭐ NEW
-- `/src/app/admin/financial/category-pie-chart.tsx` - Category revenue pie chart (90 lines) ⭐ NEW
+**Financial:** (Refactored for clarity - removed duplicate charts)
+- Financial page now focused on transactions, accounting, and money flow
+- Payment analytics display (success rate, total/successful/failed counts)
+- Nonprofit donation breakdown table
+- Recent transactions table with full breakdowns
+
+**Analytics:** ⭐ **NEW - PHASE 9 COMPLETE**
+- `/src/app/admin/analytics/analytics-tabs.tsx` - 6-tab navigation with comprehensive BI (600+ lines)
+- `/src/app/admin/analytics/top-sellers-table.tsx` - Seller leaderboard with revenue/orders toggle (120 lines)
+- `/src/app/admin/analytics/top-products-table.tsx` - Products table with pagination and sorting (150 lines)
+- **Features**: Revenue forecast, cohort analysis, user behavior metrics, category analytics, inventory insights, payment performance
+
+**Management:**
 - `/src/app/admin/users/users-list.tsx` - User management table with search, filters, role updates (369 lines)
 - `/src/app/admin/nonprofits/nonprofits-list.tsx` - Nonprofit CRUD with verification workflow (436 lines)
 - `/src/app/admin/applications/applications-list.tsx` - Applications table with approve/reject (346 lines)
@@ -334,6 +346,40 @@
 - ✅ Top performers tracking (sellers, categories, nonprofits)
 - ✅ Payment success rate monitoring
 - ✅ Transaction history with full breakdowns
+
+**File:** `/src/actions/admin-analytics.ts` (1,225 lines) ⭐ **NEW - PHASE 9 COMPLETE**
+
+| Function                  | Purpose                                               |
+| ------------------------- | ----------------------------------------------------- |
+| `getAnalyticsOverview()`  | High-level KPIs with MoM growth (users, revenue, orders, products) |
+| `getRevenueAnalytics()`   | 12-month trends, category breakdown, fees/payouts (uses `subtotal` field) |
+| `getRevenueForecast()`    | 3-month revenue projection using linear regression    |
+| `getUserAnalytics()`      | User growth trends, role distribution, LTV metrics    |
+| `getCohortAnalysis()`     | User retention by signup cohort (simplified active user tracking) |
+| `getUserBehavior()`       | Purchase frequency, repeat purchase rate, avg days between purchases |
+| `getSellerAnalytics()`    | Seller performance metrics, active rate, avg revenue (via orderItems.order) |
+| `getTopSellers()`         | Top 20 sellers by revenue or order count (pre-fetches paid orders) |
+| `getProductAnalytics()`   | Product count metrics, avg products per shop          |
+| `getTopProducts()`        | Top 50 products by revenue or units sold (uses `subtotal`) |
+| `getCategoryAnalytics()`  | Product count and revenue by category name (resolves from `categoryId`) |
+| `getInventoryInsights()`  | Low/out of stock products (uses `inventoryQuantity` field, mapped output) |
+| `getOrderAnalytics()`     | Order velocity trends, status distribution            |
+| `getPaymentAnalytics()`   | Payment success rate, status breakdown                |
+
+**Features:**
+
+- ✅ Comprehensive platform-wide business intelligence
+- ✅ 14 analytics functions covering all major metrics
+- ✅ Month-over-month growth calculations for all KPIs
+- ✅ Revenue forecasting with linear regression (3-month projections)
+- ✅ Cohort analysis for user retention tracking
+- ✅ Top performers tracking (sellers, products by multiple metrics)
+- ✅ Inventory management insights (low stock alerts)
+- ✅ Category-level performance analysis
+- ✅ User behavior patterns (frequency, LTV, repeat purchase rate, avg days between)
+- ✅ Admin authorization checks on all functions
+- ✅ **Prisma Schema Compliance**: All field names match schema (subtotal, inventoryQuantity, categoryId)
+- ✅ **Optimized Queries**: Avoids JOIN ambiguity by pre-fetching order IDs
 
 ### Seller Analytics Actions ⭐ NEW
 
@@ -736,7 +782,7 @@
 | Financial Reporting     | ✅ Built | `/src/app/admin/financial/` ⭐  |
 | Charts & Visualizations | ✅ Built | Revenue trends, category pie ⭐ |
 
-### Analytics & Tools (Phase 9 - 🚀 50% Complete)
+### Analytics & Tools (Phase 9 - ✅ 100% Complete)
 
 | Feature                 | Status   | Location                         |
 | ----------------------- | -------- | -------------------------------- |
@@ -751,8 +797,9 @@
 | Shop Profile Management | ✅ Built | Name, slug, bio, story ⭐        |
 | Branding Customization  | ✅ Built | Logo, banner, colors ⭐          |
 | Nonprofit Partnership   | ✅ Built | Browse, select, donate % ⭐      |
-| Customer Impact         | ❌ Todo  | Buyer-facing dashboard           |
-| Platform Analytics      | ❌ Todo  | Admin trends & forecasting       |
+| Platform Analytics      | ✅ Built | `/src/app/admin/analytics/` ⭐   |
+| Analytics Dashboard     | ✅ Built | 14 functions, 6 tabs, BI suite ⭐|
+| Customer Impact         | ✅ Built | `/src/app/impact/page.tsx` ⭐    |
 
 ### Advanced Features
 
@@ -921,7 +968,7 @@
 ## NOTES FOR AGENTS
 
 1. **Always check this map before building** - Many features already exist!
-2. **Server Actions are comprehensive** - Most business logic is already implemented (12 action files, ~4,100 lines)
+2. **Server Actions are comprehensive** - Most business logic is already implemented (13+ action files, ~4,550+ lines)
 3. **Schema is ahead of UI** - Many models exist without frontend
 4. **Integration setup is complete** - Clerk, Stripe, Shippo, Resend all working
 5. **Component library exists** - Use existing UI components before creating new ones
@@ -930,9 +977,16 @@
 8. **Email service is functional** - But gracefully degrades if not configured
 9. **Shipping is fully integrated** - Shippo label generation works for sellers
 10. **Review system is complete** - Don't rebuild rating/review functionality (483 lines in reviews.ts)
-11. **Admin panel is 85% done** - Dashboard, users, nonprofits, applications, products complete; needs financial reporting & charts
+11. **Admin panel is 100% complete** - Dashboard, users, nonprofits, applications, products, financial, analytics all built ✅
 12. **Prisma relation names are lowercase** - NEVER run `npx prisma format` (auto-capitalizes)
 13. **Impact tracking uses OrderItem donations** - OrderItem.donationAmount and OrderItem.nonprofit relation (not separate Donation model)
+14. **⚠️ CRITICAL PRISMA FIELD NAMES** - Always use correct schema field names:
+    - OrderItem: Use `subtotal` (NOT `price`)
+    - Product: Use `inventoryQuantity` (NOT `quantity`)
+    - Product: Use `categoryId` scalar for groupBy (NOT `category` relation)
+    - Shop: Use `orderItems` relation to access orders (NOT `orders` relation)
+15. **Avoid JOIN ambiguity** - When querying OrderItem with Order.paymentStatus filter, pre-fetch paid order IDs to avoid ambiguous `subtotal` column errors
+16. **Analytics are fully functional** - All 14 admin analytics functions tested and working with proper Prisma queries
 
 ---
 

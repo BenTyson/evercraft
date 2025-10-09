@@ -1,22 +1,18 @@
 /**
  * Admin Financial Dashboard
  *
- * Comprehensive financial reporting and analytics page.
+ * Transaction history, accounting, and money flow tracking.
  */
 
 import { redirect } from 'next/navigation';
 import { isAdmin } from '@/lib/auth';
 import {
   getFinancialOverview,
-  getRevenueTrends,
-  getTopSellersByRevenue,
-  getRevenueByCategory,
   getNonprofitDonationBreakdown,
   getRecentTransactions,
 } from '@/actions/admin-financial';
-import { DollarSign, TrendingUp, TrendingDown, Users, Heart, CreditCard } from 'lucide-react';
-import RevenueChart from './revenue-chart';
-import CategoryPieChart from './category-pie-chart';
+import { getPaymentAnalytics } from '@/actions/admin-analytics';
+import { DollarSign, TrendingUp, TrendingDown, Users, Heart, CreditCard, AlertCircle, CheckCircle } from 'lucide-react';
 
 export default async function FinancialDashboardPage() {
   const admin = await isAdmin();
@@ -25,20 +21,11 @@ export default async function FinancialDashboardPage() {
     redirect('/?error=unauthorized');
   }
 
-  const [
-    overviewResult,
-    trendsResult,
-    topSellersResult,
-    categoryResult,
-    nonprofitResult,
-    transactionsResult,
-  ] = await Promise.all([
+  const [overviewResult, nonprofitResult, transactionsResult, paymentResult] = await Promise.all([
     getFinancialOverview(),
-    getRevenueTrends(12),
-    getTopSellersByRevenue(10),
-    getRevenueByCategory(),
     getNonprofitDonationBreakdown(10),
     getRecentTransactions(20),
+    getPaymentAnalytics(),
   ]);
 
   if (!overviewResult.success) {
@@ -51,18 +38,16 @@ export default async function FinancialDashboardPage() {
   }
 
   const overview = overviewResult.overview!;
-  const trends = trendsResult.success ? trendsResult.trends! : [];
-  const topSellers = topSellersResult.success ? topSellersResult.topSellers! : [];
-  const categoryBreakdown = categoryResult.success ? categoryResult.categoryBreakdown! : [];
   const nonprofitBreakdown = nonprofitResult.success ? nonprofitResult.nonprofitBreakdown! : [];
   const transactions = transactionsResult.success ? transactionsResult.transactions! : [];
+  const paymentAnalytics = paymentResult.success ? paymentResult.analytics : null;
 
   return (
     <div className="container mx-auto px-4 py-12">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Financial Dashboard</h1>
-        <p className="mt-2 text-gray-600">Revenue analytics and financial reporting</p>
+        <p className="mt-2 text-gray-600">Transaction history, accounting, and money flow tracking</p>
       </div>
 
       {/* Overview Metrics */}
@@ -105,65 +90,61 @@ export default async function FinancialDashboardPage() {
         />
       </div>
 
-      {/* Revenue Trends Chart */}
-      <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 text-xl font-bold text-gray-900">Revenue Trends</h2>
-        <p className="mb-6 text-sm text-gray-600">Monthly revenue over the last 12 months</p>
-        <RevenueChart data={trends} />
-      </div>
+      {/* Payment Analytics */}
+      {paymentAnalytics && (
+        <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6">
+          <h2 className="mb-4 text-xl font-bold text-gray-900">Payment Status</h2>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50">
+                <CreditCard className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Payments</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {paymentAnalytics.totalPayments.toLocaleString()}
+                </p>
+              </div>
+            </div>
 
-      {/* Two Column Layout */}
-      <div className="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
-        {/* Top Sellers */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h2 className="mb-4 text-xl font-bold text-gray-900">Top Sellers by Revenue</h2>
-          <div className="space-y-4">
-            {topSellers.length > 0 ? (
-              topSellers.map((seller, index) => (
-                <div
-                  key={seller.shopId}
-                  className="flex items-center gap-4 border-b border-gray-100 pb-4 last:border-0"
-                >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">
-                    {index + 1}
-                  </div>
-                  {seller.shopLogo ? (
-                    <img
-                      src={seller.shopLogo}
-                      alt={seller.shopName}
-                      className="h-10 w-10 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
-                      <Users className="h-5 w-5 text-gray-500" />
-                    </div>
-                  )}
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900">{seller.shopName}</p>
-                    <p className="text-sm text-gray-600">{seller.totalOrders} orders</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-gray-900">
-                      ${seller.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      ${seller.totalDonations.toFixed(2)} donated
-                    </p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="py-8 text-center text-gray-500">No sales data yet</p>
-            )}
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-50">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Successful</p>
+                <p className="text-2xl font-bold text-green-900">
+                  {paymentAnalytics.successfulPayments.toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-red-50">
+                <AlertCircle className="h-6 w-6 text-red-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Failed</p>
+                <p className="text-2xl font-bold text-red-900">
+                  {paymentAnalytics.failedPayments.toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-50">
+                <TrendingUp className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Success Rate</p>
+                <p className="text-2xl font-bold text-purple-900">
+                  {paymentAnalytics.successRate.toFixed(1)}%
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* Category Revenue Breakdown */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h2 className="mb-4 text-xl font-bold text-gray-900">Revenue by Category</h2>
-          <CategoryPieChart data={categoryBreakdown} />
-        </div>
-      </div>
+      )}
 
       {/* Nonprofit Donations */}
       <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6">

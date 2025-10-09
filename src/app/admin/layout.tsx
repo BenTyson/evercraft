@@ -1,5 +1,13 @@
 import Link from 'next/link';
-import { LayoutDashboard, Package, UserCog, FileText, Heart, DollarSign } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Package,
+  UserCog,
+  FileText,
+  Heart,
+  DollarSign,
+  BarChart3,
+} from 'lucide-react';
 import { SiteHeader } from '@/components/layout/site-header';
 
 export default function AdminLayout({ children }: { children: React.Node }) {
@@ -18,6 +26,9 @@ export default function AdminLayout({ children }: { children: React.Node }) {
               </AdminNavLink>
               <AdminNavLink href="/admin/financial" icon={DollarSign}>
                 Financial
+              </AdminNavLink>
+              <AdminNavLink href="/admin/analytics" icon={BarChart3}>
+                Analytics
               </AdminNavLink>
               <AdminNavLink href="/admin/users" icon={UserCog}>
                 Users

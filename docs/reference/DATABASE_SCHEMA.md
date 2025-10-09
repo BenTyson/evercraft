@@ -1,7 +1,7 @@
 # Database Schema
 
-**Last Updated:** October 7, 2025
-**Status:** ✅ Production - Fully implemented with 27 models
+**Last Updated:** October 9, 2025
+**Status:** ✅ Production - Fully implemented with 27 models (Analytics-optimized)
 
 ---
 
@@ -120,7 +120,7 @@ model Shop {
   user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   nonprofit           Nonprofit? @relation(fields: [nonprofitId], references: [id])
   products            Product[]
-  orders              Order[]
+  orderItems          OrderItem[]  // ⚠️ Use this to access orders (NOT "orders" relation)
   shippingProfiles    ShippingProfile[]
   promotions          Promotion[]
   sellerReviews       SellerReview[]
@@ -135,6 +135,11 @@ enum VerificationStatus {
 }
 ```
 
+**⚠️ Important Notes:**
+- **Accessing orders**: Shop has `orderItems` relation, not `orders` relation
+- **To filter by order status**: Navigate through `orderItems.order.paymentStatus`
+- **Example**: `shop.orderItems.some({ order: { paymentStatus: 'PAID' } })`
+
 ---
 
 ### Products
@@ -143,22 +148,25 @@ Product catalog.
 
 ```prisma
 model Product {
-  id              String   @id @default(cuid())
-  shopId          String
-  title           String
-  description     String   // Rich text
-  price           Float
-  compareAtPrice  Float?
-  sku             String?
-  categoryId      String?
-  tags            String[] // Array of tag strings
-  status          ProductStatus @default(DRAFT)
-  ecoScore        Int?     // 0-100
-  ecoAttributes   Json?    // Materials, certifications, packaging, etc.
-  metaTitle       String?
-  metaDescription String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  shopId             String
+  title              String
+  description        String   // Rich text
+  price              Float
+  compareAtPrice     Float?
+  sku                String?
+  categoryId         String?  // ⚠️ Scalar field for groupBy (NOT "category" relation)
+  tags               String[] // Array of tag strings
+  inventoryQuantity  Int      @default(0)  // ⚠️ Use this (NOT "quantity")
+  trackInventory     Boolean  @default(true)
+  lowStockThreshold  Int?
+  status             ProductStatus @default(DRAFT)
+  ecoScore           Int?     // 0-100
+  ecoAttributes      Json?    // Materials, certifications, packaging, etc.
+  metaTitle          String?
+  metaDescription    String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   // Relations
   shop            Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
@@ -180,6 +188,11 @@ enum ProductStatus {
   ARCHIVED
 }
 ```
+
+**⚠️ Important Notes:**
+- **Inventory field**: Use `inventoryQuantity` (NOT `quantity`)
+- **Category queries**: Use `categoryId` scalar for `groupBy` operations (NOT `category` relation)
+- **Inventory tracking**: Added in migration `20251007031524_add_product_inventory`
 
 ---
 
@@ -317,7 +330,7 @@ model OrderItem {
   shopId           String
   quantity         Int
   priceAtPurchase  Float
-  subtotal         Float
+  subtotal         Float    // ⚠️ Use this for revenue calculations (NOT "price")
   nonprofitId      String?
   donationAmount   Float    @default(0)
   createdAt        DateTime @default(now())
@@ -330,6 +343,11 @@ model OrderItem {
   nonprofit        Nonprofit? @relation(fields: [nonprofitId], references: [id])
 }
 ```
+
+**⚠️ Important Notes:**
+- **Use `subtotal` for revenue**: This field contains the line total (priceAtPurchase × quantity)
+- **No `price` field exists**: The field is `priceAtPurchase`, not `price`
+- **Ambiguous column warning**: Both Order and OrderItem have a `subtotal` field. When querying OrderItem with Order filters, pre-fetch order IDs to avoid JOIN ambiguity
 
 ---
 
@@ -658,6 +676,45 @@ All models include appropriate indexes for:
 
 ---
 
+## Critical Field Names Reference
+
+**⚠️ Common Mistakes to Avoid:**
+
+### OrderItem Fields
+- ✅ Use `subtotal` for revenue calculations
+- ❌ NOT `price` (field doesn't exist)
+- ℹ️ `priceAtPurchase` contains the unit price at time of purchase
+- ℹ️ `subtotal` = priceAtPurchase × quantity (already calculated)
+
+### Product Fields
+- ✅ Use `inventoryQuantity` for stock queries
+- ❌ NOT `quantity` (field doesn't exist)
+- ✅ Use `categoryId` scalar for `groupBy` operations
+- ❌ NOT `category` (that's the relation, not usable in groupBy)
+
+### Shop Relations
+- ✅ Use `orderItems` relation to access shop's orders
+- ❌ NOT `orders` (relation doesn't exist on Shop)
+- ℹ️ To filter by order status: `shop.orderItems.some({ order: { paymentStatus: 'PAID' } })`
+
+### Query Optimization
+- ⚠️ **JOIN Ambiguity**: Both Order and OrderItem have a `subtotal` field
+- ✅ **Solution**: Pre-fetch order IDs when filtering OrderItem by Order.paymentStatus
+- ✅ **Example**:
+  ```typescript
+  const paidOrders = await db.order.findMany({
+    where: { paymentStatus: 'PAID' },
+    select: { id: true },
+  });
+  const paidOrderIds = paidOrders.map((o) => o.id);
+
+  await db.orderItem.findMany({
+    where: { orderId: { in: paidOrderIds } }
+  });
+  ```
+
+---
+
 ## Notes
 
 - ✅ Production-ready schema with full Prisma type safety
@@ -666,6 +723,7 @@ All models include appropriate indexes for:
 - ✅ Prisma Studio configured for data visualization
 - ✅ Soft deletes not implemented (using CASCADE deletes)
 - ✅ Full ERD available in Prisma schema file
+- ✅ **All analytics queries optimized** for performance and schema compliance
 
 **Schema Location:** `/prisma/schema.prisma`
 **Generated Client:** `/src/generated/prisma`
