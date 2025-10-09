@@ -1,23 +1,88 @@
 # Current Status
 
-**Last Updated:** October 8, 2025
+**Last Updated:** October 9, 2025
 **Session:** Active development
 
 ---
 
 ## 🎯 Current Phase
 
-**Phase 8: Admin Panel & Platform Management** ✅ **100% COMPLETE**
+**Phase 9: Analytics & Seller Tools** 🚀 **IN PROGRESS - 50% COMPLETE**
 
-**Completed:** Dashboard, seller applications, product moderation, activity feed, user management, nonprofit management, **financial reporting** ✅
+**Completed:** Seller analytics dashboard, marketing tools (promotions), seller settings ✅
 
-**Next Phase:** Phase 9 - Analytics & Tools
+**In Progress:** Customer impact tracking, platform analytics
+
+**Previous Phase:** Phase 8 - Admin Panel ✅ **100% COMPLETE**
 
 ---
 
 ## ✅ Recently Completed
 
-### Today (October 8, 2025)
+### Today (October 9, 2025)
+
+**Phase 9 Analytics & Tools - 50% COMPLETE** ✅
+
+**Seller Analytics Dashboard - COMPLETED** ✅
+
+- [x] Created comprehensive analytics server actions (`src/actions/seller-analytics.ts` - 579 lines)
+  - getSellerAnalytics() - Revenue, orders, customers with MoM growth tracking
+  - getSellerRevenueTrends() - 12-month revenue and order trends
+  - getBestSellingProducts() - Top products by revenue or units sold
+  - getSellerCustomerStats() - Customer insights, repeat rate, top locations
+  - getSellerNonprofitImpact() - Donation tracking and nonprofit partnership metrics
+  - getSellerEnvironmentalImpact() - Eco-score, carbon savings, plastic avoided
+  - exportSellerData() - CSV export for sales and products
+- [x] Built analytics dashboard at `/seller/analytics`
+- [x] Created interactive visualizations with Recharts
+  - RevenueChart - Line chart showing revenue and order trends
+  - BestSellersTable - Top products with revenue and units data
+- [x] Features: Revenue overview with growth indicators, customer insights, impact metrics
+
+**Seller Marketing Tools - COMPLETED** ✅
+
+- [x] Created promotion management server actions (`src/actions/seller-promotions.ts` - 390 lines)
+  - getShopPromotions() - List all promotions with usage stats
+  - createPromotion() - Create discount codes (percentage or fixed)
+  - updatePromotion() - Edit existing promotions
+  - deletePromotion() - Remove promotions
+  - togglePromotionStatus() - Activate/deactivate promotions
+- [x] Built marketing tools page at `/seller/marketing`
+- [x] Created PromotionsTable component with action menu
+- [x] Created PromotionForm modal for CRUD operations
+- [x] Features: Discount codes, usage tracking, expiration dates, minimum purchase amounts
+
+**Seller Settings Page - COMPLETED** ✅
+
+- [x] Created comprehensive settings server actions (`src/actions/seller-settings.ts`)
+  - updateShopProfile() - Update name, slug, bio, story with validation
+  - updateShopBranding() - Update logo, banner, brand colors (using colors Json field)
+  - updateShopNonprofit() - Partner with nonprofits and set donation percentage
+  - getAvailableNonprofits() - Browse verified nonprofits with filtering
+  - searchNonprofits() - Search nonprofits by name or mission
+  - getShippingProfiles() - View existing shipping configurations
+- [x] Built settings page at `/seller/settings` with 5-tab navigation
+- [x] Shop Profile Tab - Update shop name, URL slug, bio, and story with validation
+- [x] Branding Tab - Upload logo/banner via UploadThing, customize brand colors with live preview
+- [x] Nonprofit Tab - Browse/search nonprofits, set donation percentage with impact calculator
+- [x] Shipping Tab - View existing shipping profiles (full CRUD deferred due to schema complexity)
+- [x] Account Tab - View Clerk account info, email preferences (UI only)
+- [x] Created NonprofitSelectorModal - Searchable nonprofit directory with category filters
+- [x] Added shopLogo and shopBanner upload routes to UploadThing core
+- [x] Installed form dependencies: react-hook-form, @hookform/resolvers, zod
+
+**Critical Bug Fixes** ✅
+
+- [x] Fixed Prisma validation errors in `/seller/analytics`
+  - Replaced unsupported `count({ distinct })` with `findMany()` + Set pattern
+  - Fixed in getSellerAnalytics(), getSellerNonprofitImpact() (4 locations total)
+- [x] Fixed Prisma error in `/seller/orders`
+  - Changed incorrect `User:` relation to `buyer:` (actual relation name in schema)
+- [x] Updated Shop model queries to use `colors` Json field instead of separate color fields
+- [x] Fixed Nonprofit queries to use `isVerified` instead of non-existent `isActive`
+- [x] Fixed Nonprofit category handling (String[] array, not single string)
+
+### Yesterday (October 8, 2025)
 
 **Phase 8 Financial Reporting - JUST COMPLETED** ✅
 
@@ -203,13 +268,14 @@
   - [x] **Financial reporting (revenue trends, top sellers, category breakdown)** ✅ COMPLETED
   - [x] **Charts & visualizations (revenue trends, category pie chart)** ✅ COMPLETED
 
-- [ ] **Phase 9**: Analytics & Tools - **0%**
-  - [ ] Seller analytics dashboard
-  - [ ] Marketing tools
-  - [ ] Customer impact tracking
-  - [ ] Platform analytics
+- [ ] **Phase 9**: Analytics & Tools - **50%** 🚀 IN PROGRESS
+  - [x] Seller analytics dashboard (revenue, orders, customers, nonprofit impact, environmental metrics)
+  - [x] Marketing tools (promotion codes, discount management)
+  - [x] Seller settings page (shop profile, branding, nonprofit partnership, shipping view)
+  - [ ] Customer impact tracking (buyer-facing dashboard)
+  - [ ] Platform analytics (admin-level trends and forecasting)
 
-**Current MVP Completion:** **88.9%** (8 phases complete out of 9)
+**Current MVP Completion:** **94.4%** (8.5 phases complete out of 9)
 
 **Estimated MVP Launch:** ~1-3 weeks remaining
 
@@ -267,6 +333,40 @@
 ---
 
 ## 📝 Active Development Files
+
+### Phase 9 - Analytics & Tools (50% Complete 🚀)
+
+**Seller Analytics:**
+
+- `src/actions/seller-analytics.ts` - Seller analytics server actions (579 lines)
+- `src/app/seller/analytics/page.tsx` - Analytics dashboard page (400 lines)
+- `src/app/seller/analytics/revenue-chart.tsx` - Revenue trends line chart (90 lines)
+- `src/app/seller/analytics/best-sellers-table.tsx` - Top products table (150 lines)
+
+**Marketing Tools:**
+
+- `src/actions/seller-promotions.ts` - Promotion management server actions (390 lines)
+- `src/app/seller/marketing/page.tsx` - Marketing tools dashboard (300 lines)
+- `src/app/seller/marketing/promotions-table.tsx` - Promotions management UI (200 lines)
+- `src/app/seller/marketing/promotion-form.tsx` - Promotion CRUD modal (250 lines)
+- `src/app/seller/marketing/promotion-form-wrapper.tsx` - Modal wrapper (20 lines)
+
+**Seller Settings:**
+
+- `src/actions/seller-settings.ts` - Settings server actions (375 lines)
+- `src/app/seller/settings/page.tsx` - Main settings page (45 lines)
+- `src/app/seller/settings/settings-tabs.tsx` - Tab navigation component (130 lines)
+- `src/app/seller/settings/shop-profile-tab.tsx` - Shop profile form (190 lines)
+- `src/app/seller/settings/branding-tab.tsx` - Branding customization (320 lines)
+- `src/app/seller/settings/nonprofit-tab.tsx` - Nonprofit partnership (240 lines)
+- `src/app/seller/settings/nonprofit-selector-modal.tsx` - Nonprofit browser (180 lines)
+- `src/app/seller/settings/shipping-tab-simple.tsx` - Shipping profiles view (80 lines)
+- `src/app/seller/settings/account-tab.tsx` - Account settings (180 lines)
+
+**Modified:**
+
+- `src/app/api/uploadthing/core.ts` - Added shopLogo and shopBanner upload routes
+- `src/actions/orders.ts` - Fixed buyer relation naming (line 199)
 
 ### Phase 8 - Admin Panel (100% Complete ✅)
 
@@ -335,11 +435,12 @@ evercraft/
 
 ### Immediate (This Week)
 
-1. **Phase 9: Analytics & Tools** 🎯 NEXT
-   - Seller analytics dashboard (sales metrics, top products, customer insights)
-   - Marketing tools (promotion codes, discount management)
-   - Customer impact tracking (individual environmental contributions)
-   - Platform-wide analytics (trends, forecasting)
+1. **Phase 9: Analytics & Tools** 🎯 IN PROGRESS (50% complete)
+   - ✅ Seller analytics dashboard (revenue, orders, customers, impact metrics)
+   - ✅ Marketing tools (promotion codes, discount management)
+   - ✅ Seller settings page (shop profile, branding, nonprofit partnership)
+   - [ ] Customer impact tracking (buyer-facing environmental contribution dashboard)
+   - [ ] Platform analytics (admin-level trends, forecasting, growth metrics)
 
 2. **Testing & Quality**
    - ✅ Test admin panel functionality end-to-end
@@ -347,10 +448,12 @@ evercraft/
      - ✅ Nonprofit management (CRUD, verification, donation tracking)
      - ✅ Financial reporting (charts, metrics, transactions)
      - Applications and products moderation
+   - Test seller analytics dashboard end-to-end
+   - Test marketing tools (create, edit, delete promotions)
+   - Test seller settings (profile updates, branding, nonprofit selection)
    - Test impact dashboard with real orders and donations
    - Test shipping label integration end-to-end
    - Test order tracking with live Shippo data
-   - Verify all Prisma queries work with lowercase relations
 
 ### Short-term (Next 2 Weeks)
 
@@ -397,10 +500,10 @@ evercraft/
 ## 📅 Timeline
 
 - **Project Start:** October 5, 2025
-- **Current Date:** October 8, 2025
-- **Days Worked:** 4
-- **Phases Complete:** 7 of 9 (85%)
-- **Target MVP Launch:** ~December 2025 (5-7 weeks)
+- **Current Date:** October 9, 2025
+- **Days Worked:** 5
+- **Phases Complete:** 8.5 of 9 (94.4%)
+- **Target MVP Launch:** ~Late October 2025 (1-2 weeks)
 
 ---
 
@@ -408,7 +511,7 @@ evercraft/
 
 | Metric           | Target      | Actual    | Status     |
 | ---------------- | ----------- | --------- | ---------- |
-| Phases Complete  | 9/9         | 7.65/9    | 🟢 86.5%   |
+| Phases Complete  | 9/9         | 8.5/9     | 🟢 94.4%   |
 | Database Schema  | 27 models   | 27 models | ✅ 100%    |
 | Test Coverage    | 90%+        | TBD       | 🔴 Pending |
 | Lighthouse Score | 90+         | TBD       | 🔴 Pending |
@@ -438,7 +541,7 @@ evercraft/
 - Built review system
 - Updated all documentation
 
-### Session 4 (October 8, 2025) - Today
+### Session 4 (October 8, 2025)
 
 - ✅ Completed Phase 6 shipping integration (Shippo)
 - ✅ Fixed critical Prisma schema naming issue
@@ -469,15 +572,66 @@ evercraft/
 - ✅ **Updated MVP completion to 88.9%** (8 of 9 phases complete)
 - ✅ Updated documentation (CODEBASE_MAP.md, CURRENT_STATUS.md)
 
+### Session 5 (October 9, 2025) - Today
+
+- ✅ **Started Phase 9: Analytics & Tools** 🚀
+- ✅ Built Seller Analytics Dashboard (`/seller/analytics`)
+  - Created `/src/actions/seller-analytics.ts` (579 lines)
+  - Revenue overview with month-over-month growth tracking
+  - Revenue trends chart (12-month line chart)
+  - Best selling products table (by revenue or units)
+  - Customer insights (unique, new, repeat customers, top locations)
+  - Nonprofit impact tracking (total donated, order count)
+  - Environmental impact metrics (eco-score, carbon saved, plastic avoided)
+  - CSV export functionality for sales and products
+  - Fixed Prisma `count({ distinct })` errors (4 locations) by using `findMany()` + Set
+- ✅ Built Marketing Tools (`/seller/marketing`)
+  - Created `/src/actions/seller-promotions.ts` (390 lines)
+  - Promotion CRUD (create, update, delete, toggle status)
+  - Discount codes (percentage or fixed amount)
+  - Usage tracking and limits
+  - Expiration dates and minimum purchase amounts
+  - Marketing tips and stats overview
+- ✅ Built Seller Settings Page (`/seller/settings`)
+  - Created `/src/actions/seller-settings.ts` (375 lines)
+  - 5-tab navigation: Profile, Branding, Nonprofit, Shipping, Account
+  - Shop Profile: Update name, slug, bio, story with validation
+  - Branding: Logo/banner upload via UploadThing, custom brand colors with live preview
+  - Nonprofit: Browse/search verified nonprofits, set donation percentage with impact calculator
+  - Shipping: View existing profiles (full CRUD deferred due to schema complexity)
+  - Account: View Clerk info, email preferences (UI only)
+  - Created searchable nonprofit modal with category filtering
+  - Added shopLogo and shopBanner upload routes to UploadThing
+- ✅ Installed form handling dependencies: react-hook-form, @hookform/resolvers, zod
+- ✅ Fixed critical bugs:
+  - Fixed Prisma relation error in `/seller/orders` (User → buyer)
+  - Updated Shop queries to use `colors` Json field
+  - Fixed Nonprofit queries to use `isVerified` instead of `isActive`
+  - Fixed Nonprofit category handling (String[] array)
+- ✅ **Updated Phase 9 to 50% complete** ✅
+- ✅ **Updated MVP completion to 94.4%** (8.5 of 9 phases complete)
+- ✅ Updated documentation (CURRENT_STATUS.md, CODEBASE_MAP.md, DATABASE_SCHEMA.md)
+
 ---
 
 ## 🚀 Current Focus
 
-**Phase 8 (Admin Panel) - ✅ 100% Complete**
+**Phase 9 (Analytics & Tools) - 🚀 50% Complete**
 
-Core marketplace functionality is complete (Phases 0-7). Admin panel is now fully built with dashboard, user management, nonprofit management, seller applications, product moderation, and **financial reporting** all operational. The platform is **88.9% complete** toward MVP.
+Core marketplace (Phases 0-7) and admin panel (Phase 8) are complete. Now building analytics and seller tools:
 
-**Next:** Phase 9 - Analytics & Tools (Seller analytics dashboard, marketing tools, customer impact tracking, platform analytics).
+**Completed:**
+
+- ✅ Seller analytics dashboard with revenue trends, customer insights, and impact metrics
+- ✅ Marketing tools with promotion codes and discount management
+- ✅ Seller settings page with profile, branding, and nonprofit management
+
+**Remaining:**
+
+- Customer impact tracking dashboard (buyer-facing)
+- Platform analytics (admin-level trends and forecasting)
+
+The platform is **94.4% complete** toward MVP. Estimated 1-2 weeks to Phase 9 completion and MVP launch.
 
 ---
 

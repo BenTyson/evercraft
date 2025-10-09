@@ -1,21 +1,53 @@
-import { createUploadthing, type FileRouter } from "uploadthing/next";
-import { auth } from "@clerk/nextjs/server";
+import { createUploadthing, type FileRouter } from 'uploadthing/next';
+import { auth } from '@clerk/nextjs/server';
 
 const f = createUploadthing();
 
 export const ourFileRouter = {
   // Product image uploader
-  productImage: f({ image: { maxFileSize: "4MB", maxFileCount: 4 } })
+  productImage: f({ image: { maxFileSize: '4MB', maxFileCount: 4 } })
     .middleware(async () => {
       const { userId } = await auth();
 
-      if (!userId) throw new Error("Unauthorized");
+      if (!userId) throw new Error('Unauthorized');
 
       return { userId };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      console.log("Upload complete for userId:", metadata.userId);
-      console.log("file url", file.url);
+      console.log('Upload complete for userId:', metadata.userId);
+      console.log('file url', file.url);
+
+      return { uploadedBy: metadata.userId, url: file.url };
+    }),
+
+  // Shop logo uploader
+  shopLogo: f({ image: { maxFileSize: '2MB', maxFileCount: 1 } })
+    .middleware(async () => {
+      const { userId } = await auth();
+
+      if (!userId) throw new Error('Unauthorized');
+
+      return { userId };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      console.log('Shop logo uploaded for userId:', metadata.userId);
+      console.log('file url', file.url);
+
+      return { uploadedBy: metadata.userId, url: file.url };
+    }),
+
+  // Shop banner image uploader
+  shopBanner: f({ image: { maxFileSize: '4MB', maxFileCount: 1 } })
+    .middleware(async () => {
+      const { userId } = await auth();
+
+      if (!userId) throw new Error('Unauthorized');
+
+      return { userId };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      console.log('Shop banner uploaded for userId:', metadata.userId);
+      console.log('file url', file.url);
 
       return { uploadedBy: metadata.userId, url: file.url };
     }),

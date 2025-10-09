@@ -1,7 +1,7 @@
 # EVERCRAFT CODEBASE MAP
 
 **Generated:** October 8, 2025
-**Last Updated:** October 8, 2025 (Session 4 - Completed Phase 8 Admin Panel ✅)
+**Last Updated:** October 9, 2025 (Session 5 - Phase 9 Analytics & Tools 50% Complete 🚀)
 **Purpose:** Comprehensive reference for understanding the Evercraft marketplace codebase structure, implementations, and capabilities.
 
 ---
@@ -205,6 +205,37 @@
 | `/admin/applications` | ✅ Built | `/src/app/admin/applications/page.tsx` | 33    | Review seller applications                  |
 | `/admin/products`     | ✅ Built | `/src/app/admin/products/page.tsx`     | 33    | Product moderation                          |
 
+### Seller Analytics & Tools Routes ⭐ NEW
+
+| Route               | Status   | File                                 | Lines | Description                                      |
+| ------------------- | -------- | ------------------------------------ | ----- | ------------------------------------------------ |
+| `/seller/analytics` | ✅ Built | `/src/app/seller/analytics/page.tsx` | 400   | Seller analytics dashboard with metrics & charts |
+| `/seller/marketing` | ✅ Built | `/src/app/seller/marketing/page.tsx` | 300   | Marketing tools and promotion management         |
+| `/seller/settings`  | ✅ Built | `/src/app/seller/settings/page.tsx`  | 45    | Seller settings with 5-tab navigation            |
+
+**Seller Components:**
+
+**Analytics:**
+
+- `/src/app/seller/analytics/revenue-chart.tsx` - Revenue and order trends line chart (90 lines)
+- `/src/app/seller/analytics/best-sellers-table.tsx` - Top products table (150 lines)
+
+**Marketing:**
+
+- `/src/app/seller/marketing/promotions-table.tsx` - Promotions management UI (200 lines)
+- `/src/app/seller/marketing/promotion-form.tsx` - Promotion CRUD modal (250 lines)
+- `/src/app/seller/marketing/promotion-form-wrapper.tsx` - Modal wrapper (20 lines)
+
+**Settings:**
+
+- `/src/app/seller/settings/settings-tabs.tsx` - Tab navigation component (130 lines)
+- `/src/app/seller/settings/shop-profile-tab.tsx` - Shop profile form (190 lines)
+- `/src/app/seller/settings/branding-tab.tsx` - Branding customization (320 lines)
+- `/src/app/seller/settings/nonprofit-tab.tsx` - Nonprofit partnership (240 lines)
+- `/src/app/seller/settings/nonprofit-selector-modal.tsx` - Nonprofit browser (180 lines)
+- `/src/app/seller/settings/shipping-tab-simple.tsx` - Shipping profiles view (80 lines)
+- `/src/app/seller/settings/account-tab.tsx` - Account settings (180 lines)
+
 **Admin Components:**
 
 - `/src/app/admin/financial/revenue-chart.tsx` - Revenue trends line chart (70 lines) ⭐ NEW
@@ -303,6 +334,73 @@
 - ✅ Top performers tracking (sellers, categories, nonprofits)
 - ✅ Payment success rate monitoring
 - ✅ Transaction history with full breakdowns
+
+### Seller Analytics Actions ⭐ NEW
+
+**File:** `/src/actions/seller-analytics.ts` (579 lines)
+
+| Function                                | Purpose                                                 |
+| --------------------------------------- | ------------------------------------------------------- |
+| `getSellerAnalytics()`                  | Revenue, orders, customers with month-over-month growth |
+| `getSellerRevenueTrends(months)`        | Revenue and order count trends for charts               |
+| `getBestSellingProducts(limit, sortBy)` | Top products by revenue or units sold                   |
+| `getSellerCustomerStats()`              | Unique, new, repeat customers, top locations            |
+| `getSellerNonprofitImpact()`            | Donation tracking and nonprofit partnership metrics     |
+| `getSellerEnvironmentalImpact()`        | Eco-score, carbon savings, plastic avoided              |
+| `exportSellerData(dataType)`            | CSV export for sales or products data                   |
+
+**Features:**
+
+- ✅ Revenue analytics with MoM growth tracking
+- ✅ Customer insights (repeat rate, geographic distribution)
+- ✅ Nonprofit impact metrics (total donated, order count)
+- ✅ Environmental impact tracking (eco-score, carbon/plastic saved)
+- ✅ CSV export functionality
+- ✅ Fixed Prisma count({ distinct }) errors using findMany + Set pattern
+
+### Seller Promotions Actions ⭐ NEW
+
+**File:** `/src/actions/seller-promotions.ts` (390 lines)
+
+| Function                     | Purpose                                 |
+| ---------------------------- | --------------------------------------- |
+| `getShopPromotions()`        | List all promotions with usage stats    |
+| `createPromotion(input)`     | Create discount code (percentage/fixed) |
+| `updatePromotion(id, input)` | Edit existing promotion                 |
+| `deletePromotion(id)`        | Remove promotion                        |
+| `togglePromotionStatus(id)`  | Activate/deactivate promotion           |
+
+**Features:**
+
+- ✅ Discount code management (percentage or fixed amount)
+- ✅ Usage tracking and limits (max uses, current uses)
+- ✅ Expiration dates and minimum purchase amounts
+- ✅ Auto-generate promotion codes if not provided
+- ✅ Calculate usage percentage for progress bars
+- ✅ Shop ownership verification
+
+### Seller Settings Actions ⭐ NEW
+
+**File:** `/src/actions/seller-settings.ts` (375 lines)
+
+| Function                           | Purpose                               |
+| ---------------------------------- | ------------------------------------- |
+| `getShopSettings()`                | Get shop with nonprofit and shipping  |
+| `updateShopProfile(input)`         | Update name, slug, bio, story         |
+| `updateShopBranding(input)`        | Update logo, banner, colors (Json)    |
+| `updateShopNonprofit(input)`       | Set nonprofit partner and donation %  |
+| `getAvailableNonprofits(filters?)` | Browse verified nonprofits            |
+| `searchNonprofits(query)`          | Search nonprofits by name/mission     |
+| `getShippingProfiles()`            | View existing shipping configurations |
+
+**Features:**
+
+- ✅ Shop profile management with slug validation
+- ✅ Branding customization (logo/banner uploads, brand colors)
+- ✅ Nonprofit partnership (search, selection, donation percentage)
+- ✅ Uses Shop.colors Json field for brand colors
+- ✅ Nonprofit search with category filtering
+- ✅ Shipping profile viewing (CRUD deferred due to schema complexity)
 
 ### Product Actions
 
@@ -621,6 +719,9 @@
 | **Email Notifications**  | ✅ Complete | Order confirmation, status updates                             |
 | **Impact Dashboard**     | ✅ Complete | Real-time sustainability metrics                               |
 | **Seller Applications**  | ✅ Complete | Application flow, admin approval, auto shop creation           |
+| **Seller Analytics**     | ✅ Complete | Revenue, orders, customers, nonprofit & environmental impact   |
+| **Marketing Tools**      | ✅ Complete | Promotion codes, discount management, usage tracking           |
+| **Seller Settings**      | ✅ Complete | Shop profile, branding, nonprofit partnership                  |
 
 ### Admin Panel (Phase 8 - ✅ 100% Complete)
 
@@ -635,21 +736,39 @@
 | Financial Reporting     | ✅ Built | `/src/app/admin/financial/` ⭐  |
 | Charts & Visualizations | ✅ Built | Revenue trends, category pie ⭐ |
 
+### Analytics & Tools (Phase 9 - 🚀 50% Complete)
+
+| Feature                 | Status   | Location                         |
+| ----------------------- | -------- | -------------------------------- |
+| Seller Analytics        | ✅ Built | `/src/app/seller/analytics/` ⭐  |
+| Revenue Trends Chart    | ✅ Built | Revenue & orders line chart ⭐   |
+| Best Sellers Table      | ✅ Built | Top products by revenue/units ⭐ |
+| Customer Insights       | ✅ Built | Repeat rate, locations ⭐        |
+| Impact Metrics          | ✅ Built | Nonprofit & environmental ⭐     |
+| Marketing Tools         | ✅ Built | `/src/app/seller/marketing/` ⭐  |
+| Promotion Management    | ✅ Built | CRUD, usage tracking ⭐          |
+| Seller Settings         | ✅ Built | `/src/app/seller/settings/` ⭐   |
+| Shop Profile Management | ✅ Built | Name, slug, bio, story ⭐        |
+| Branding Customization  | ✅ Built | Logo, banner, colors ⭐          |
+| Nonprofit Partnership   | ✅ Built | Browse, select, donate % ⭐      |
+| Customer Impact         | ❌ Todo  | Buyer-facing dashboard           |
+| Platform Analytics      | ❌ Todo  | Admin trends & forecasting       |
+
 ### Advanced Features
 
-| Feature                    | Status          | Details                                                            |
-| -------------------------- | --------------- | ------------------------------------------------------------------ |
-| **Sustainability Scoring** | ✅ Schema Ready | `SustainabilityScore` model exists, UI displays scores             |
-| **Nonprofit Integration**  | 🚧 Partial      | Schema ready, donation tracking in orders, UI limited              |
-| **Inventory Management**   | ✅ Complete     | Track quantity, low stock alerts, auto-decrement on purchase       |
-| **Shipping Profiles**      | 🚧 Partial      | Schema exists (`ShippingProfile` model), seller UI not fully built |
-| **Promotions/Coupons**     | ❌ Not Built    | Schema exists, no UI or logic                                      |
-| **Messaging System**       | ❌ Not Built    | Schema exists (`Message` model), no UI                             |
-| **Support Tickets**        | ❌ Not Built    | Schema exists (`SupportTicket` model), no UI                       |
-| **Analytics Events**       | 🚧 Partial      | Schema exists (`AnalyticsEvent` model), tracking not implemented   |
-| **Search History**         | 🚧 Partial      | Schema exists (`SearchHistory` model), tracking not implemented    |
-| **Collections**            | ❌ Not Built    | Schema exists (user product collections), no UI                    |
-| **Favorites/Wishlist**     | 🚧 Partial      | Schema exists, UI shows heart icon but no persistence              |
+| Feature                    | Status          | Details                                                           |
+| -------------------------- | --------------- | ----------------------------------------------------------------- |
+| **Sustainability Scoring** | ✅ Schema Ready | `SustainabilityScore` model exists, UI displays scores            |
+| **Nonprofit Integration**  | ✅ Complete     | Full integration: admin mgmt, seller selection, donation tracking |
+| **Inventory Management**   | ✅ Complete     | Track quantity, low stock alerts, auto-decrement on purchase      |
+| **Shipping Profiles**      | 🚧 Partial      | Schema exists (`ShippingProfile` model), view-only UI built       |
+| **Promotions/Coupons**     | ✅ Complete     | Full CRUD, usage tracking, expiration, discount management ⭐     |
+| **Messaging System**       | ❌ Not Built    | Schema exists (`Message` model), no UI                            |
+| **Support Tickets**        | ❌ Not Built    | Schema exists (`SupportTicket` model), no UI                      |
+| **Analytics Events**       | 🚧 Partial      | Schema exists (`AnalyticsEvent` model), tracking not implemented  |
+| **Search History**         | 🚧 Partial      | Schema exists (`SearchHistory` model), tracking not implemented   |
+| **Collections**            | ❌ Not Built    | Schema exists (user product collections), no UI                   |
+| **Favorites/Wishlist**     | 🚧 Partial      | Schema exists, UI shows heart icon but no persistence             |
 
 ### Missing/Incomplete Features
 

@@ -196,7 +196,7 @@ export async function getSellerOrders() {
             },
           },
         },
-        User: {
+        buyer: {
           select: {
             name: true,
             email: true,
