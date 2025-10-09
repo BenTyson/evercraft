@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { LayoutDashboard, Package, UserCog, FileText, Heart } from 'lucide-react';
+import { LayoutDashboard, Package, UserCog, FileText, Heart, DollarSign } from 'lucide-react';
 import { SiteHeader } from '@/components/layout/site-header';
 
 export default function AdminLayout({ children }: { children: React.Node }) {
@@ -15,6 +15,9 @@ export default function AdminLayout({ children }: { children: React.Node }) {
             <nav className="space-y-1">
               <AdminNavLink href="/admin" icon={LayoutDashboard}>
                 Dashboard
+              </AdminNavLink>
+              <AdminNavLink href="/admin/financial" icon={DollarSign}>
+                Financial
               </AdminNavLink>
               <AdminNavLink href="/admin/users" icon={UserCog}>
                 Users

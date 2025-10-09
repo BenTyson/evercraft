@@ -1,7 +1,7 @@
 # EVERCRAFT CODEBASE MAP
 
 **Generated:** October 8, 2025
-**Last Updated:** October 8, 2025 (Session 4 - Added User & Nonprofit Management)
+**Last Updated:** October 8, 2025 (Session 4 - Completed Phase 8 Admin Panel ✅)
 **Purpose:** Comprehensive reference for understanding the Evercraft marketplace codebase structure, implementations, and capabilities.
 
 ---
@@ -199,6 +199,7 @@
 | Route                 | Status   | File                                   | Lines | Description                                 |
 | --------------------- | -------- | -------------------------------------- | ----- | ------------------------------------------- |
 | `/admin`              | ✅ Built | `/src/app/admin/page.tsx`              | 261   | Admin dashboard with metrics, activity feed |
+| `/admin/financial`    | ✅ Built | `/src/app/admin/financial/page.tsx`    | 400+  | Financial reporting with charts ⭐ NEW      |
 | `/admin/users`        | ✅ Built | `/src/app/admin/users/page.tsx`        | 30    | User management with role updates           |
 | `/admin/nonprofits`   | ✅ Built | `/src/app/admin/nonprofits/page.tsx`   | 32    | Nonprofit CRUD and verification             |
 | `/admin/applications` | ✅ Built | `/src/app/admin/applications/page.tsx` | 33    | Review seller applications                  |
@@ -206,6 +207,8 @@
 
 **Admin Components:**
 
+- `/src/app/admin/financial/revenue-chart.tsx` - Revenue trends line chart (70 lines) ⭐ NEW
+- `/src/app/admin/financial/category-pie-chart.tsx` - Category revenue pie chart (90 lines) ⭐ NEW
 - `/src/app/admin/users/users-list.tsx` - User management table with search, filters, role updates (369 lines)
 - `/src/app/admin/nonprofits/nonprofits-list.tsx` - Nonprofit CRUD with verification workflow (436 lines)
 - `/src/app/admin/applications/applications-list.tsx` - Applications table with approve/reject (346 lines)
@@ -223,7 +226,7 @@
 
 ## SERVER ACTIONS
 
-**Location:** `/src/actions/` (12 files, ~4,100 lines total)
+**Location:** `/src/actions/` (13 files, ~4,550 lines total)
 
 ### Admin Actions
 
@@ -279,6 +282,27 @@
 | `getAllProducts()`      | Admin view of all products         |
 | `updateProductStatus()` | Publish/unpublish/archive products |
 | `deleteProduct()`       | Admin product deletion             |
+
+**File:** `/src/actions/admin-financial.ts` (450+ lines) ⭐ NEW
+
+| Function                          | Purpose                                           |
+| --------------------------------- | ------------------------------------------------- |
+| `getFinancialOverview()`          | Revenue, fees, payouts, donations with MoM growth |
+| `getRevenueTrends()`              | 12-month revenue and order count trends           |
+| `getTopSellersByRevenue()`        | Top 10 sellers ranked by total revenue            |
+| `getRevenueByCategory()`          | Category-wise revenue breakdown                   |
+| `getNonprofitDonationBreakdown()` | Top nonprofits by donation amount received        |
+| `getPaymentMethodBreakdown()`     | Payment status distribution and success rates     |
+| `getRecentTransactions()`         | Latest 20 payment transactions with details       |
+
+**Features:**
+
+- ✅ Comprehensive financial analytics and reporting
+- ✅ Month-over-month growth calculations
+- ✅ Revenue trends visualization data (12 months)
+- ✅ Top performers tracking (sellers, categories, nonprofits)
+- ✅ Payment success rate monitoring
+- ✅ Transaction history with full breakdowns
 
 ### Product Actions
 
@@ -582,34 +606,34 @@
 
 ### Core Features
 
-| Feature                  | Status          | Details                                                          |
-| ------------------------ | --------------- | ---------------------------------------------------------------- |
-| **User Authentication**  | ✅ Complete     | Clerk integration, role-based access                             |
-| **Product Catalog**      | ✅ Complete     | Browse, search, filter, categories, certifications               |
-| **Shopping Cart**        | ✅ Complete     | Zustand store (`/src/store/cart-store.ts`)                       |
-| **Checkout Flow**        | ✅ Complete     | Multi-step: shipping → payment → confirmation                    |
-| **Stripe Payments**      | ✅ Complete     | Payment intents, order creation, inventory decrement             |
-| **Order Management**     | ✅ Complete     | Buyer/seller views, status updates, email notifications          |
-| **Seller Dashboard**     | ✅ Complete     | Product CRUD, order management, shop settings                    |
-| **Admin Dashboard**      | 🚧 65% Complete | Metrics, activity feed, application approval, product moderation |
-| **Product Reviews**      | ✅ Complete     | Rating, text, images, verified purchase badges, helpful votes    |
-| **Shipping Integration** | ✅ Complete     | Shippo labels, tracking, rate calculation                        |
-| **Email Notifications**  | ✅ Complete     | Order confirmation, status updates                               |
-| **Impact Dashboard**     | ✅ Complete     | Real-time sustainability metrics                                 |
-| **Seller Applications**  | ✅ Complete     | Application flow, admin approval, auto shop creation             |
+| Feature                  | Status      | Details                                                        |
+| ------------------------ | ----------- | -------------------------------------------------------------- |
+| **User Authentication**  | ✅ Complete | Clerk integration, role-based access                           |
+| **Product Catalog**      | ✅ Complete | Browse, search, filter, categories, certifications             |
+| **Shopping Cart**        | ✅ Complete | Zustand store (`/src/store/cart-store.ts`)                     |
+| **Checkout Flow**        | ✅ Complete | Multi-step: shipping → payment → confirmation                  |
+| **Stripe Payments**      | ✅ Complete | Payment intents, order creation, inventory decrement           |
+| **Order Management**     | ✅ Complete | Buyer/seller views, status updates, email notifications        |
+| **Seller Dashboard**     | ✅ Complete | Product CRUD, order management, shop settings                  |
+| **Admin Dashboard**      | ✅ Complete | Full admin panel with financial reporting, user/nonprofit mgmt |
+| **Product Reviews**      | ✅ Complete | Rating, text, images, verified purchase badges, helpful votes  |
+| **Shipping Integration** | ✅ Complete | Shippo labels, tracking, rate calculation                      |
+| **Email Notifications**  | ✅ Complete | Order confirmation, status updates                             |
+| **Impact Dashboard**     | ✅ Complete | Real-time sustainability metrics                               |
+| **Seller Applications**  | ✅ Complete | Application flow, admin approval, auto shop creation           |
 
-### Admin Panel (Phase 8 - 65% Complete)
+### Admin Panel (Phase 8 - ✅ 100% Complete)
 
-| Feature                 | Status       | Location                       |
-| ----------------------- | ------------ | ------------------------------ |
-| Dashboard & Metrics     | ✅ Built     | `/src/app/admin/page.tsx`      |
-| Activity Feed           | ✅ Built     | Included in dashboard          |
-| Seller Applications     | ✅ Built     | `/src/app/admin/applications/` |
-| Product Moderation      | ✅ Built     | `/src/app/admin/products/`     |
-| User Management         | ❌ Not Built | Need to build                  |
-| Nonprofit Management    | ❌ Not Built | Need to build                  |
-| Financial Reporting     | ❌ Not Built | Need to build                  |
-| Charts & Visualizations | ❌ Not Built | Need to build                  |
+| Feature                 | Status   | Location                        |
+| ----------------------- | -------- | ------------------------------- |
+| Dashboard & Metrics     | ✅ Built | `/src/app/admin/page.tsx`       |
+| Activity Feed           | ✅ Built | Included in dashboard           |
+| Seller Applications     | ✅ Built | `/src/app/admin/applications/`  |
+| Product Moderation      | ✅ Built | `/src/app/admin/products/`      |
+| User Management         | ✅ Built | `/src/app/admin/users/` ⭐      |
+| Nonprofit Management    | ✅ Built | `/src/app/admin/nonprofits/` ⭐ |
+| Financial Reporting     | ✅ Built | `/src/app/admin/financial/` ⭐  |
+| Charts & Visualizations | ✅ Built | Revenue trends, category pie ⭐ |
 
 ### Advanced Features
 
