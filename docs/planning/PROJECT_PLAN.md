@@ -966,6 +966,7 @@ Evercraft is 85% complete toward MVP launch. All core features are implemented i
   - Product context and links
 
 **Not Implemented (Future):**
+
 - [ ] Seller reviews (separate from product)
 - [ ] Review moderation (profanity filter, flagging)
 - [ ] Seller response to reviews
@@ -1068,6 +1069,7 @@ Evercraft is 85% complete toward MVP launch. All core features are implemented i
 - ✅ Integration with existing order system for verified purchases
 
 **Deferred to Future Phases:**
+
 - Seller reviews (separate system)
 - Review moderation tools
 - Favorites and collections

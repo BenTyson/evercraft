@@ -590,6 +590,7 @@ model Review {
 ```
 
 **Features:**
+
 - ⭐ 1-5 star ratings
 - ✅ Verified purchase badges
 - 📊 Rating aggregation and statistics
@@ -599,6 +600,7 @@ model Review {
 - 📋 Sorting options (recent, helpful, rating)
 
 **Key Actions:**
+
 - `createReview()` - Submit new reviews
 - `getProductReviews()` - Fetch with filtering/sorting
 - `getReviewStats()` - Calculate avg rating & distribution
@@ -639,6 +641,7 @@ model Review {
 ### Indexes Implemented
 
 All models include appropriate indexes for:
+
 - Foreign keys (userId, shopId, productId, orderId, etc.)
 - Status fields for filtering
 - Timestamps for sorting (createdAt, updatedAt)

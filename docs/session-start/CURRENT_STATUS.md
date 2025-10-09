@@ -287,12 +287,17 @@ evercraft/
 │   ├── schema.prisma (27 models, lowercase relations ✅)
 │   └── migrations/ (all applied ✅)
 ├── src/
-│   ├── actions/ (shipping.ts, orders.ts, reviews.ts, etc.)
-│   ├── app/ (Next.js 15 App Router)
-│   ├── components/ (shadcn/ui + custom)
-│   ├── lib/ (db, shippo, utils, etc.)
+│   ├── actions/ (12 files: admin, products, orders, shipping, reviews, impact, etc.)
+│   ├── app/ (Next.js 15 App Router - 25+ pages)
+│   ├── components/ (shadcn/ui + custom eco components)
+│   ├── lib/ (db, shippo, stripe, utils, stores, etc.)
 │   └── generated/prisma/ (Prisma client)
-├── docs/ (6 .md files)
+├── docs/
+│   ├── session-start/ (CURRENT_STATUS.md, CODEBASE_MAP.md) ⭐
+│   ├── reference/ (DATABASE_SCHEMA.md, TECH_STACK.md)
+│   ├── planning/ (PROJECT_PLAN.md, DESIGN_SYSTEM.md, UX_RESEARCH.md)
+│   ├── setup/ (5 integration guides)
+│   └── README.md (documentation guide for AI agents)
 ├── scripts/ (backup-db.ts)
 └── backups/ (SQL backups)
 ```
