@@ -1,6 +1,7 @@
 # EVERCRAFT CODEBASE MAP
 
 **Generated:** October 8, 2025
+**Last Updated:** October 8, 2025 (Session 4 - Added User & Nonprofit Management)
 **Purpose:** Comprehensive reference for understanding the Evercraft marketplace codebase structure, implementations, and capabilities.
 
 ---
@@ -198,26 +199,31 @@
 | Route                 | Status   | File                                   | Lines | Description                                 |
 | --------------------- | -------- | -------------------------------------- | ----- | ------------------------------------------- |
 | `/admin`              | ✅ Built | `/src/app/admin/page.tsx`              | 261   | Admin dashboard with metrics, activity feed |
+| `/admin/users`        | ✅ Built | `/src/app/admin/users/page.tsx`        | 30    | User management with role updates           |
+| `/admin/nonprofits`   | ✅ Built | `/src/app/admin/nonprofits/page.tsx`   | 32    | Nonprofit CRUD and verification             |
 | `/admin/applications` | ✅ Built | `/src/app/admin/applications/page.tsx` | 33    | Review seller applications                  |
 | `/admin/products`     | ✅ Built | `/src/app/admin/products/page.tsx`     | 33    | Product moderation                          |
 
 **Admin Components:**
 
+- `/src/app/admin/users/users-list.tsx` - User management table with search, filters, role updates (369 lines)
+- `/src/app/admin/nonprofits/nonprofits-list.tsx` - Nonprofit CRUD with verification workflow (436 lines)
 - `/src/app/admin/applications/applications-list.tsx` - Applications table with approve/reject (346 lines)
 - `/src/app/admin/products/products-list.tsx` - Product moderation interface (279 lines)
 
 ### Layouts
 
-| File                        | Lines | Description                            |
-| --------------------------- | ----- | -------------------------------------- |
-| `/src/app/layout.tsx`       | 36    | Root layout with Clerk provider        |
-| `/src/app/admin/layout.tsx` | 54    | Admin dashboard layout with navigation |
+| File                         | Lines | Description                                           |
+| ---------------------------- | ----- | ----------------------------------------------------- |
+| `/src/app/layout.tsx`        | 36    | Root layout with Clerk provider                       |
+| `/src/app/admin/layout.tsx`  | 60    | Admin dashboard layout with sidebar navigation        |
+| `/src/app/seller/layout.tsx` | -     | Seller dashboard layout (authorization, header, etc.) |
 
 ---
 
 ## SERVER ACTIONS
 
-**Location:** `/src/actions/` (10 files, 3,223 lines total)
+**Location:** `/src/actions/` (12 files, ~4,100 lines total)
 
 ### Admin Actions
 
@@ -227,6 +233,44 @@
 | ------------------------ | ---------------------------------------------------------------- |
 | `getAdminStats()`        | Dashboard metrics (revenue, orders, sellers, donations, etc.)    |
 | `getAdminActivityFeed()` | Recent platform activity (orders, applications, products, shops) |
+
+**File:** `/src/actions/admin-users.ts` (342 lines)
+
+| Function           | Purpose                                         |
+| ------------------ | ----------------------------------------------- |
+| `getAllUsers()`    | Get all users with search, role filter, sorting |
+| `getUserDetails()` | Get detailed user info with order/shop stats    |
+| `updateUserRole()` | Change user role (BUYER/SELLER/ADMIN)           |
+| `getUserStats()`   | Platform-wide user statistics (counts by role)  |
+
+**Features:**
+
+- ✅ Real-time search by name or email
+- ✅ Role-based filtering
+- ✅ Pagination support (50 users per page)
+- ✅ Admin authorization checks
+- ✅ Prevents self-role modification
+
+**File:** `/src/actions/admin-nonprofits.ts` (479 lines)
+
+| Function                        | Purpose                                         |
+| ------------------------------- | ----------------------------------------------- |
+| `getAllNonprofits()`            | Get nonprofits with search, filters, sorting    |
+| `getNonprofitById()`            | Get detailed nonprofit info with donation stats |
+| `createNonprofit()`             | Create new nonprofit with EIN validation        |
+| `updateNonprofit()`             | Update nonprofit details                        |
+| `deleteNonprofit()`             | Delete nonprofit (blocks if donations exist)    |
+| `toggleNonprofitVerification()` | Verify/unverify nonprofit status                |
+| `getNonprofitStats()`           | Platform-wide nonprofit statistics              |
+
+**Features:**
+
+- ✅ EIN validation (9-digit format)
+- ✅ Search by name, EIN, or mission
+- ✅ Verification workflow
+- ✅ Donation tracking and aggregation
+- ✅ Smart deletion (prevents if donations exist)
+- ✅ Shops supporting count
 
 **File:** `/src/actions/admin-products.ts` (119 lines)
 
@@ -350,12 +394,21 @@
 
 ### Impact Actions
 
-**File:** `/src/actions/impact.ts` (284 lines)
+**File:** `/src/actions/impact.ts` (286 lines)
 
-| Function           | Purpose                                      |
-| ------------------ | -------------------------------------------- |
-| `getImpactStats()` | Real-time sustainability impact tracking     |
-| Platform metrics   | Revenue, donations, products sold, CO2 saved |
+| Function               | Purpose                                               |
+| ---------------------- | ----------------------------------------------------- |
+| `getUserImpact()`      | User's personal impact (orders, donations, metrics)   |
+| `getCommunityImpact()` | Platform-wide impact statistics                       |
+| `getUserMilestones()`  | Achievement tracking (trees planted, plastic avoided) |
+
+**Features:**
+
+- ✅ Carbon offset calculations based on sustainability scores
+- ✅ Plastic avoided tracking
+- ✅ Trees planted estimation (1 tree per 20kg CO2)
+- ✅ Nonprofit contribution breakdown by user
+- ✅ Community-wide aggregated metrics
 
 ---
 
@@ -694,12 +747,11 @@
 
 ### What NEEDS Building
 
-❌ **High Priority (Phase 8 - Admin Panel):**
+❌ **High Priority (Phase 8 - Admin Panel - 85% Complete):**
 
-- User management interface
-- Nonprofit management CRUD
-- Financial reporting dashboard
-- Charts & visualizations
+- Financial reporting dashboard (detailed revenue breakdowns, payout management)
+- Charts & visualizations (revenue trends, order volume, category distribution)
+- Content moderation (review flagging, report handling)
 
 ❌ **Medium Priority:**
 
@@ -726,17 +778,18 @@
 ## NOTES FOR AGENTS
 
 1. **Always check this map before building** - Many features already exist!
-2. **Server Actions are comprehensive** - Most business logic is already implemented
+2. **Server Actions are comprehensive** - Most business logic is already implemented (12 action files, ~4,100 lines)
 3. **Schema is ahead of UI** - Many models exist without frontend
 4. **Integration setup is complete** - Clerk, Stripe, Shippo, Resend all working
 5. **Component library exists** - Use existing UI components before creating new ones
 6. **State management** - Use Zustand stores (`cart-store.ts`, `checkout-store.ts`)
-7. **Database is up-to-date** - 3 migrations applied, schema matches Prisma file
+7. **Database is up-to-date** - All migrations applied, schema matches Prisma file
 8. **Email service is functional** - But gracefully degrades if not configured
 9. **Shipping is fully integrated** - Shippo label generation works for sellers
 10. **Review system is complete** - Don't rebuild rating/review functionality (483 lines in reviews.ts)
-11. **Admin panel is 65% done** - Dashboard, applications, products complete; needs user/nonprofit/financial mgmt
+11. **Admin panel is 85% done** - Dashboard, users, nonprofits, applications, products complete; needs financial reporting & charts
 12. **Prisma relation names are lowercase** - NEVER run `npx prisma format` (auto-capitalizes)
+13. **Impact tracking uses OrderItem donations** - OrderItem.donationAmount and OrderItem.nonprofit relation (not separate Donation model)
 
 ---
 

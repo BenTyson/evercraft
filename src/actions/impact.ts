@@ -17,9 +17,7 @@ export async function getUserImpact() {
     // Get user's orders
     const orders = await db.order.findMany({
       where: {
-        buyer: {
-          clerkId: userId,
-        },
+        buyerId: userId,
         status: {
           not: 'CANCELLED',
         },
@@ -32,10 +30,6 @@ export async function getUserImpact() {
                 sustainabilityScore: true,
               },
             },
-          },
-        },
-        donations: {
-          include: {
             nonprofit: {
               select: {
                 id: true,
@@ -52,8 +46,7 @@ export async function getUserImpact() {
     const totalOrders = orders.length;
     const totalSpent = orders.reduce((sum, order) => sum + order.total, 0);
     const totalDonations = orders.reduce(
-      (sum, order) =>
-        sum + order.donations.reduce((donSum, donation) => donSum + donation.amount, 0),
+      (sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + item.donationAmount, 0),
       0
     );
 
@@ -75,7 +68,7 @@ export async function getUserImpact() {
       (sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0),
       0
     );
-    const plasticAvoided = Math.round((totalItems * 0.5 * 100)) / 100;
+    const plasticAvoided = Math.round(totalItems * 0.5 * 100) / 100;
 
     // Calculate trees planted (1 tree per 20kg CO2 offset)
     const treesPlanted = Math.floor(carbonSaved / 20);
@@ -89,30 +82,38 @@ export async function getUserImpact() {
         logo: string | null;
         totalDonated: number;
         orderCount: number;
+        orderIds: Set<string>;
       }
     >();
 
     orders.forEach((order) => {
-      order.donations.forEach((donation) => {
-        const existing = nonprofitMap.get(donation.nonprofit.id);
-        if (existing) {
-          existing.totalDonated += donation.amount;
-          existing.orderCount += 1;
-        } else {
-          nonprofitMap.set(donation.nonprofit.id, {
-            id: donation.nonprofit.id,
-            name: donation.nonprofit.name,
-            logo: donation.nonprofit.logo,
-            totalDonated: donation.amount,
-            orderCount: 1,
-          });
+      order.items.forEach((item) => {
+        if (item.nonprofit && item.donationAmount > 0) {
+          const existing = nonprofitMap.get(item.nonprofit.id);
+          if (existing) {
+            existing.totalDonated += item.donationAmount;
+            existing.orderIds.add(order.id);
+          } else {
+            nonprofitMap.set(item.nonprofit.id, {
+              id: item.nonprofit.id,
+              name: item.nonprofit.name,
+              logo: item.nonprofit.logo,
+              totalDonated: item.donationAmount,
+              orderCount: 1,
+              orderIds: new Set([order.id]),
+            });
+          }
         }
       });
     });
 
-    const nonprofitContributions = Array.from(nonprofitMap.values()).sort(
-      (a, b) => b.totalDonated - a.totalDonated
-    );
+    // Convert to final format with order counts
+    const nonprofitContributions = Array.from(nonprofitMap.values())
+      .map(({ orderIds, ...nonprofit }) => ({
+        ...nonprofit,
+        orderCount: orderIds.size,
+      }))
+      .sort((a, b) => b.totalDonated - a.totalDonated);
 
     return {
       success: true,
