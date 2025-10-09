@@ -15,7 +15,7 @@ interface Review {
   isVerifiedPurchase: boolean;
   helpfulCount: number;
   createdAt: Date;
-  User: {
+  user: {
     name: string | null;
   } | null;
 }
@@ -48,7 +48,7 @@ export function ProductReviews({
   initialTotalCount,
 }: ProductReviewsProps) {
   const [reviews, setReviews] = useState(initialReviews);
-  const [stats, setStats] = useState(initialStats);
+  const [stats] = useState(initialStats);
   const [totalCount, setTotalCount] = useState(initialTotalCount);
   const [isLoading, setIsLoading] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('recent');
@@ -98,7 +98,9 @@ export function ProductReviews({
       <div className="mt-12">
         <h2 className="mb-6 text-2xl font-bold">Customer Reviews</h2>
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
-          <p className="text-muted-foreground">No reviews yet. Be the first to review this product!</p>
+          <p className="text-muted-foreground">
+            No reviews yet. Be the first to review this product!
+          </p>
         </div>
       </div>
     );
@@ -193,11 +195,7 @@ export function ProductReviews({
 
           {hasMoreReviews && (
             <div className="mt-8 text-center">
-              <Button
-                variant="outline"
-                onClick={handleLoadMore}
-                disabled={isLoading}
-              >
+              <Button variant="outline" onClick={handleLoadMore} disabled={isLoading}>
                 {isLoading ? 'Loading...' : 'Load More Reviews'}
               </Button>
             </div>
@@ -249,7 +247,7 @@ function ReviewCard({ review }: { review: Review }) {
             )}
           </div>
           <div className="text-sm">
-            <span className="font-medium">{review.User?.name || 'Anonymous'}</span>
+            <span className="font-medium">{review.user?.name || 'Anonymous'}</span>
             <span className="text-muted-foreground ml-2">
               {formatDistanceToNow(new Date(review.createdAt), { addSuffix: true })}
             </span>
@@ -259,15 +257,14 @@ function ReviewCard({ review }: { review: Review }) {
 
       {/* Review Text */}
       {review.text && (
-        <p className="mb-4 whitespace-pre-wrap text-sm leading-relaxed">
-          {review.text}
-        </p>
+        <p className="mb-4 text-sm leading-relaxed whitespace-pre-wrap">{review.text}</p>
       )}
 
       {/* Review Images */}
       {review.images && review.images.length > 0 && (
         <div className="mb-4 flex gap-2">
           {review.images.map((image, index) => (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               key={index}
               src={image}
@@ -286,7 +283,7 @@ function ReviewCard({ review }: { review: Review }) {
           className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-sm transition-colors ${
             isHelpful
               ? 'bg-eco-light text-eco-dark cursor-not-allowed'
-              : 'hover:bg-gray-100 text-muted-foreground'
+              : 'text-muted-foreground hover:bg-gray-100'
           }`}
         >
           <ThumbsUp className="size-4" />

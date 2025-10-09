@@ -214,7 +214,7 @@ export async function getProductById(id: string) {
           },
           take: 10,
           include: {
-            User: {
+            user: {
               select: {
                 name: true,
               },

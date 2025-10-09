@@ -104,14 +104,13 @@ export async function getShippingRates(orderId: string) {
     const order = await db.order.findUnique({
       where: { id: orderId },
       include: {
-        OrderItem: {
+        items: {
           include: {
-            Shop: {
+            shop: {
               select: {
                 id: true,
-                sellerId: true,
-                businessName: true,
-                businessAddress: true,
+                userId: true,
+                name: true,
               },
             },
           },
@@ -124,7 +123,7 @@ export async function getShippingRates(orderId: string) {
     }
 
     // Verify seller owns at least one item in this order
-    const sellerShop = order.OrderItem.find((item) => item.Shop.sellerId === userId)?.Shop;
+    const sellerShop = order.items.find((item) => item.shop.userId === userId)?.shop;
 
     if (!sellerShop) {
       return { success: false, error: 'You do not have access to this order' };
@@ -146,23 +145,17 @@ export async function getShippingRates(orderId: string) {
       country?: string;
     };
 
-    const businessAddr = sellerShop.businessAddress as {
-      street1?: string;
-      city?: string;
-      state?: string;
-      postalCode?: string;
-      country?: string;
-    } | null;
-
+    // TODO: Shop model needs address fields for shipping
+    // For now, using placeholder address - sellers should configure their shipping address
     // Create shipment to get rates
     const shipment = await shippo.shipments.create({
       addressFrom: {
-        name: sellerShop.businessName,
-        street1: businessAddr?.street1 || '',
-        city: businessAddr?.city || '',
-        state: businessAddr?.state || '',
-        zip: businessAddr?.postalCode || '',
-        country: businessAddr?.country || 'US',
+        name: sellerShop.name,
+        street1: '123 Seller St', // TODO: Add seller address to Shop model
+        city: 'City',
+        state: 'CA',
+        zip: '90210',
+        country: 'US',
       },
       addressTo: {
         name: shippingAddr.fullName,
@@ -236,12 +229,12 @@ export async function createShippingLabel(input: {
     const order = await db.order.findUnique({
       where: { id: orderId },
       include: {
-        OrderItem: {
+        items: {
           include: {
-            Shop: {
+            shop: {
               select: {
                 id: true,
-                sellerId: true,
+                userId: true,
               },
             },
           },
@@ -254,7 +247,7 @@ export async function createShippingLabel(input: {
     }
 
     // Verify seller owns at least one item in this order
-    const hasAccess = order.OrderItem.some((item) => item.Shop.sellerId === userId);
+    const hasAccess = order.items.some((item) => item.shop.userId === userId);
 
     if (!hasAccess) {
       return { success: false, error: 'You do not have access to this order' };
@@ -334,11 +327,11 @@ export async function getTrackingInfo(orderId: string) {
         shippingLabelUrl: true,
         shippoTransactionId: true,
         status: true,
-        OrderItem: {
+        items: {
           include: {
-            Shop: {
+            shop: {
               select: {
-                sellerId: true,
+                userId: true,
               },
             },
           },
@@ -352,7 +345,7 @@ export async function getTrackingInfo(orderId: string) {
 
     // Verify user is buyer or seller
     const isBuyer = order.buyerId === userId;
-    const isSellerUser = order.OrderItem.some((item) => item.Shop.sellerId === userId);
+    const isSellerUser = order.items.some((item) => item.shop.userId === userId);
 
     if (!isBuyer && !isSellerUser) {
       return { success: false, error: 'You do not have access to this order' };
@@ -435,11 +428,11 @@ export async function voidShippingLabel(orderId: string) {
     const order = await db.order.findUnique({
       where: { id: orderId },
       include: {
-        OrderItem: {
+        items: {
           include: {
-            Shop: {
+            shop: {
               select: {
-                sellerId: true,
+                userId: true,
               },
             },
           },
@@ -452,7 +445,7 @@ export async function voidShippingLabel(orderId: string) {
     }
 
     // Verify seller owns at least one item in this order
-    const hasAccess = order.OrderItem.some((item) => item.Shop.sellerId === userId);
+    const hasAccess = order.items.some((item) => item.shop.userId === userId);
 
     if (!hasAccess) {
       return { success: false, error: 'You do not have access to this order' };

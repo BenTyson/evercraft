@@ -19,7 +19,7 @@ interface Review {
   isVerifiedPurchase: boolean;
   createdAt: Date;
   updatedAt: Date;
-  Product: {
+  product: {
     id: string;
     title: string;
     images: Array<{
@@ -69,8 +69,8 @@ export function UserReviewsList({ reviews: initialReviews }: UserReviewsListProp
             <div>
               <h3 className="mb-4 text-lg font-semibold">Edit Review</h3>
               <ReviewForm
-                productId={review.Product?.id || ''}
-                productTitle={review.Product?.title || ''}
+                productId={review.product?.id || ''}
+                productTitle={review.product?.title || ''}
                 onSuccess={handleEditSuccess}
                 onCancel={() => setEditingReviewId(null)}
               />
@@ -78,16 +78,16 @@ export function UserReviewsList({ reviews: initialReviews }: UserReviewsListProp
           ) : (
             <>
               {/* Product Info */}
-              {review.Product && (
+              {review.product && (
                 <Link
-                  href={`/products/${review.Product.id}`}
+                  href={`/products/${review.product.id}`}
                   className="mb-4 flex items-center gap-4 hover:opacity-80"
                 >
                   <div className="relative size-16 overflow-hidden rounded-md bg-gray-100">
-                    {review.Product.images[0] && (
+                    {review.product.images[0] && (
                       <Image
-                        src={review.Product.images[0].url}
-                        alt={review.Product.images[0].altText || review.Product.title}
+                        src={review.product.images[0].url}
+                        alt={review.product.images[0].altText || review.product.title}
                         fill
                         className="object-cover"
                         sizes="64px"
@@ -95,9 +95,10 @@ export function UserReviewsList({ reviews: initialReviews }: UserReviewsListProp
                     )}
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold hover:underline">{review.Product.title}</h3>
+                    <h3 className="font-semibold hover:underline">{review.product.title}</h3>
                     <p className="text-muted-foreground text-sm">
-                      Reviewed {formatDistanceToNow(new Date(review.createdAt), { addSuffix: true })}
+                      Reviewed{' '}
+                      {formatDistanceToNow(new Date(review.createdAt), { addSuffix: true })}
                     </p>
                   </div>
                 </Link>
@@ -114,7 +115,7 @@ export function UserReviewsList({ reviews: initialReviews }: UserReviewsListProp
                   )}
                 </div>
                 {review.text && (
-                  <p className="text-muted-foreground whitespace-pre-wrap text-sm leading-relaxed">
+                  <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap">
                     {review.text}
                   </p>
                 )}
@@ -155,7 +156,7 @@ export function UserReviewsList({ reviews: initialReviews }: UserReviewsListProp
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDelete(review.id, review.Product?.title || 'this product')}
+                  onClick={() => handleDelete(review.id, review.product?.title || 'this product')}
                   disabled={isPending}
                   className="flex items-center gap-2 text-red-600 hover:bg-red-50 hover:text-red-700"
                 >

@@ -1,7 +1,7 @@
 # Current Status
 
 **Last Updated:** October 9, 2025
-**Session:** Active development
+**Session:** 6 - Shop Pages & Prisma Fixes
 
 ---
 
@@ -610,9 +610,51 @@ evercraft/
 - ✅ **Updated MVP completion to 88.9%** (8 of 9 phases complete)
 - ✅ Updated documentation (CODEBASE_MAP.md, CURRENT_STATUS.md)
 
-### Session 5 (October 9, 2025) - Today
+### Session 6 (October 9, 2025) - Today
 
-- ✅ **Started Phase 9: Analytics & Tools** 🚀
+- ✅ **Shop Page Implementation** 🚀
+  - Created comprehensive shop server actions (`/src/actions/shops.ts` - 264 lines)
+    - getShopBySlug() - Fetch shop by slug or ID with related data
+    - getShopProducts() - Paginated product listing for shop
+    - getShopReviews() - Paginated seller reviews
+    - getShopReviewStats() - Calculate average ratings and distribution
+  - Built shop storefront page at `/shop/[slug]` (268 lines)
+    - Breadcrumb navigation
+    - Conditional hero component (banner vs no-banner layouts)
+    - Shop story section (optional)
+    - Products grid with load more
+    - Nonprofit partnership section (moved after products)
+    - Customer reviews section with stats
+    - About section with shop metrics
+  - Created shop components:
+    - ShopHero (175 lines) - Two distinct layouts based on banner presence
+      - WITHOUT banner: Compact horizontal header (80-96px logo, bg-neutral-50/50)
+      - WITH banner: Full hero with overlaying logo (128-160px)
+    - NonprofitCard (86 lines) - Image-focused partnership card (160px logo)
+    - ShopReviewStats (~125 lines) - Rating distribution and category ratings
+    - ShopReviewCard (83 lines) - Individual review display
+  - Design philosophy: Banner-less shops look intentional (not broken or missing elements)
+- ✅ **Fixed Critical Prisma Relation Name Errors**
+  - Fixed `/src/actions/products.ts` (line 217) - Changed `User:` to `user:` in reviews include
+  - Fixed `/src/actions/reviews.ts` (lines 85, 145) - Changed `User:` to `user:` (2 locations)
+  - Fixed `/src/actions/orders.ts` (lines 266, 340) - Changed `User:` to `buyer:` for Order relation
+  - Fixed `/src/actions/shipping.ts` - Changed `OrderItem:` to `items:`, `Shop:` to `shop:`, corrected field names
+  - Fixed `/src/components/reviews/product-reviews.tsx` - Interface and usage changed `User:` to `user:`
+  - Fixed `/src/app/account/reviews/user-reviews-list.tsx` - Changed `Product:` to `product:` throughout
+  - Root cause: All Prisma relation names must be lowercase (schema convention)
+- ✅ **Route Structure Fix**
+  - Renamed `/src/app/shops/[slug]` to `/src/app/shop/[slug]` (singular) to match product page links
+- ✅ **UI Improvements**
+  - Removed dark gradient placeholder for banner-less shops
+  - Redesigned for two distinct, intentional layouts (not placeholder-based)
+  - Moved nonprofit partnership section after products
+  - Increased nonprofit logo from 48px to 160px for visual hierarchy
+  - Changed nonprofit card to horizontal flex layout for space efficiency
+  - Constrained nonprofit section to max-w-2xl for potential multiple partnerships
+
+### Session 5 (October 9, 2025)
+
+- ✅ **Completed Phase 9: Analytics & Tools** 🚀
 - ✅ Built Seller Analytics Dashboard (`/seller/analytics`)
   - Created `/src/actions/seller-analytics.ts` (579 lines)
   - Revenue overview with month-over-month growth tracking
@@ -668,6 +710,17 @@ evercraft/
 
 ## 🚀 Current Focus
 
+**Shop Page Implementation & Prisma Relation Fixes**
+
+Working on public-facing shop storefronts and fixing critical Prisma relation naming errors across the codebase.
+
+**Recent Work:**
+
+- ✅ Built shop page at `/shop/[slug]` with conditional hero design
+- ✅ Created 4 shop components (ShopHero, NonprofitCard, ShopReviewStats, ShopReviewCard)
+- ✅ Fixed Prisma relation names across 6 files (User → user, Product → product, etc.)
+- ✅ Implemented two distinct layouts for banner vs no-banner shops
+
 **🎉 MVP COMPLETE! All 9 Phases Finished (100%)**
 
 The Evercraft MVP is **feature-complete** with all planned functionality implemented:
@@ -688,6 +741,7 @@ The Evercraft MVP is **feature-complete** with all planned functionality impleme
 **📋 Next Steps:**
 
 Focus shifts to **launch preparation**:
+
 1. Testing & QA (end-to-end, performance, cross-browser)
 2. Polish & refinement (UI/UX, error handling, accessibility)
 3. Performance optimization (queries, images, caching)

@@ -1,7 +1,7 @@
 # EVERCRAFT CODEBASE MAP
 
 **Generated:** October 8, 2025
-**Last Updated:** October 9, 2025 (Session 6 - Analytics Bug Fixes & Refactoring ✅)
+**Last Updated:** October 9, 2025 (Session 6 - Shop Pages & Prisma Fixes ✅)
 **Purpose:** Comprehensive reference for understanding the Evercraft marketplace codebase structure, implementations, and capabilities.
 
 ---
@@ -159,6 +159,7 @@
 | `/apply`                 | ✅ Built | `/src/app/apply/page.tsx`                 | 47    | Seller application form                                |
 | `/impact`                | ✅ Built | `/src/app/impact/page.tsx`                | 354   | Impact dashboard with real-time metrics                |
 | `/design-system`         | ✅ Built | `/src/app/design-system/page.tsx`         | 5     | UI component showcase                                  |
+| `/shop/[slug]`           | ✅ Built | `/src/app/shop/[slug]/page.tsx`           | 268   | Shop storefront (products, story, reviews, nonprofit)  |
 
 ### Authentication Pages
 
@@ -196,15 +197,15 @@
 
 ### Admin Dashboard
 
-| Route                 | Status   | File                                   | Lines | Description                                         |
-| --------------------- | -------- | -------------------------------------- | ----- | --------------------------------------------------- |
-| `/admin`              | ✅ Built | `/src/app/admin/page.tsx`              | 261   | Admin dashboard with metrics, activity feed         |
-| `/admin/financial`    | ✅ Built | `/src/app/admin/financial/page.tsx`    | 343   | CFO view: transactions, payouts, payment analytics  |
-| `/admin/analytics`    | ✅ Built | `/src/app/admin/analytics/page.tsx`    | 115   | Business Intelligence: 6 tabs with 14 analytics ⭐  |
-| `/admin/users`        | ✅ Built | `/src/app/admin/users/page.tsx`        | 30    | User management with role updates                   |
-| `/admin/nonprofits`   | ✅ Built | `/src/app/admin/nonprofits/page.tsx`   | 32    | Nonprofit CRUD and verification                     |
-| `/admin/applications` | ✅ Built | `/src/app/admin/applications/page.tsx` | 33    | Review seller applications                          |
-| `/admin/products`     | ✅ Built | `/src/app/admin/products/page.tsx`     | 33    | Product moderation                                  |
+| Route                 | Status   | File                                   | Lines | Description                                        |
+| --------------------- | -------- | -------------------------------------- | ----- | -------------------------------------------------- |
+| `/admin`              | ✅ Built | `/src/app/admin/page.tsx`              | 261   | Admin dashboard with metrics, activity feed        |
+| `/admin/financial`    | ✅ Built | `/src/app/admin/financial/page.tsx`    | 343   | CFO view: transactions, payouts, payment analytics |
+| `/admin/analytics`    | ✅ Built | `/src/app/admin/analytics/page.tsx`    | 115   | Business Intelligence: 6 tabs with 14 analytics ⭐ |
+| `/admin/users`        | ✅ Built | `/src/app/admin/users/page.tsx`        | 30    | User management with role updates                  |
+| `/admin/nonprofits`   | ✅ Built | `/src/app/admin/nonprofits/page.tsx`   | 32    | Nonprofit CRUD and verification                    |
+| `/admin/applications` | ✅ Built | `/src/app/admin/applications/page.tsx` | 33    | Review seller applications                         |
+| `/admin/products`     | ✅ Built | `/src/app/admin/products/page.tsx`     | 33    | Product moderation                                 |
 
 ### Seller Analytics & Tools Routes ⭐ NEW
 
@@ -240,18 +241,21 @@
 **Admin Components:**
 
 **Financial:** (Refactored for clarity - removed duplicate charts)
+
 - Financial page now focused on transactions, accounting, and money flow
 - Payment analytics display (success rate, total/successful/failed counts)
 - Nonprofit donation breakdown table
 - Recent transactions table with full breakdowns
 
 **Analytics:** ⭐ **NEW - PHASE 9 COMPLETE**
+
 - `/src/app/admin/analytics/analytics-tabs.tsx` - 6-tab navigation with comprehensive BI (600+ lines)
 - `/src/app/admin/analytics/top-sellers-table.tsx` - Seller leaderboard with revenue/orders toggle (120 lines)
 - `/src/app/admin/analytics/top-products-table.tsx` - Products table with pagination and sorting (150 lines)
 - **Features**: Revenue forecast, cohort analysis, user behavior metrics, category analytics, inventory insights, payment performance
 
 **Management:**
+
 - `/src/app/admin/users/users-list.tsx` - User management table with search, filters, role updates (369 lines)
 - `/src/app/admin/nonprofits/nonprofits-list.tsx` - Nonprofit CRUD with verification workflow (436 lines)
 - `/src/app/admin/applications/applications-list.tsx` - Applications table with approve/reject (346 lines)
@@ -347,24 +351,41 @@
 - ✅ Payment success rate monitoring
 - ✅ Transaction history with full breakdowns
 
+**File:** `/src/actions/shops.ts` (264 lines) ⭐ NEW
+
+| Function               | Purpose                                   |
+| ---------------------- | ----------------------------------------- |
+| `getShopBySlug(slug)`  | Get shop details by slug or ID            |
+| `getShopProducts()`    | Fetch shop products with pagination       |
+| `getShopReviews()`     | Fetch shop seller reviews with pagination |
+| `getShopReviewStats()` | Calculate shop rating statistics          |
+
+**Features:**
+
+- ✅ Shop storefront data fetching
+- ✅ Average rating calculation from seller reviews
+- ✅ Review count aggregation
+- ✅ Supports slug or ID lookup
+- ✅ Pagination for products and reviews
+
 **File:** `/src/actions/admin-analytics.ts` (1,225 lines) ⭐ **NEW - PHASE 9 COMPLETE**
 
-| Function                  | Purpose                                               |
-| ------------------------- | ----------------------------------------------------- |
-| `getAnalyticsOverview()`  | High-level KPIs with MoM growth (users, revenue, orders, products) |
-| `getRevenueAnalytics()`   | 12-month trends, category breakdown, fees/payouts (uses `subtotal` field) |
-| `getRevenueForecast()`    | 3-month revenue projection using linear regression    |
-| `getUserAnalytics()`      | User growth trends, role distribution, LTV metrics    |
-| `getCohortAnalysis()`     | User retention by signup cohort (simplified active user tracking) |
-| `getUserBehavior()`       | Purchase frequency, repeat purchase rate, avg days between purchases |
-| `getSellerAnalytics()`    | Seller performance metrics, active rate, avg revenue (via orderItems.order) |
-| `getTopSellers()`         | Top 20 sellers by revenue or order count (pre-fetches paid orders) |
-| `getProductAnalytics()`   | Product count metrics, avg products per shop          |
-| `getTopProducts()`        | Top 50 products by revenue or units sold (uses `subtotal`) |
-| `getCategoryAnalytics()`  | Product count and revenue by category name (resolves from `categoryId`) |
-| `getInventoryInsights()`  | Low/out of stock products (uses `inventoryQuantity` field, mapped output) |
-| `getOrderAnalytics()`     | Order velocity trends, status distribution            |
-| `getPaymentAnalytics()`   | Payment success rate, status breakdown                |
+| Function                 | Purpose                                                                     |
+| ------------------------ | --------------------------------------------------------------------------- |
+| `getAnalyticsOverview()` | High-level KPIs with MoM growth (users, revenue, orders, products)          |
+| `getRevenueAnalytics()`  | 12-month trends, category breakdown, fees/payouts (uses `subtotal` field)   |
+| `getRevenueForecast()`   | 3-month revenue projection using linear regression                          |
+| `getUserAnalytics()`     | User growth trends, role distribution, LTV metrics                          |
+| `getCohortAnalysis()`    | User retention by signup cohort (simplified active user tracking)           |
+| `getUserBehavior()`      | Purchase frequency, repeat purchase rate, avg days between purchases        |
+| `getSellerAnalytics()`   | Seller performance metrics, active rate, avg revenue (via orderItems.order) |
+| `getTopSellers()`        | Top 20 sellers by revenue or order count (pre-fetches paid orders)          |
+| `getProductAnalytics()`  | Product count metrics, avg products per shop                                |
+| `getTopProducts()`       | Top 50 products by revenue or units sold (uses `subtotal`)                  |
+| `getCategoryAnalytics()` | Product count and revenue by category name (resolves from `categoryId`)     |
+| `getInventoryInsights()` | Low/out of stock products (uses `inventoryQuantity` field, mapped output)   |
+| `getOrderAnalytics()`    | Order velocity trends, status distribution                                  |
+| `getPaymentAnalytics()`  | Payment success rate, status breakdown                                      |
 
 **Features:**
 
@@ -629,6 +650,23 @@
 | -------------- | ----------------- | -------------------------------------- |
 | `<SiteHeader>` | `site-header.tsx` | Main navigation header with cart, auth |
 
+### Shop Components ⭐ NEW
+
+**Location:** `/src/components/shop/`
+
+| Component           | File                    | Lines | Purpose                                               |
+| ------------------- | ----------------------- | ----- | ----------------------------------------------------- |
+| `<ShopHero>`        | `shop-hero.tsx`         | 175   | Conditional hero (banner vs no-banner layouts)        |
+| `<NonprofitCard>`   | `nonprofit-card.tsx`    | 86    | Image-focused nonprofit partnership card (160px logo) |
+| `<ShopReviewStats>` | `shop-review-stats.tsx` | ~125  | Shop review statistics and rating distribution        |
+| `<ShopReviewCard>`  | `shop-review-card.tsx`  | 83    | Individual shop review with category ratings          |
+
+**ShopHero Design Pattern:**
+
+- **WITHOUT banner**: Compact horizontal header (80-96px logo, bg-neutral-50/50, normal height)
+- **WITH banner**: Full hero with overlaying logo (128-160px logo, 48-64px banner height)
+- Conditional rendering based on `bannerImage` presence - two distinct, intentional layouts
+
 ### Other Components
 
 | Component                | File                                | Purpose                                        |
@@ -784,22 +822,22 @@
 
 ### Analytics & Tools (Phase 9 - ✅ 100% Complete)
 
-| Feature                 | Status   | Location                         |
-| ----------------------- | -------- | -------------------------------- |
-| Seller Analytics        | ✅ Built | `/src/app/seller/analytics/` ⭐  |
-| Revenue Trends Chart    | ✅ Built | Revenue & orders line chart ⭐   |
-| Best Sellers Table      | ✅ Built | Top products by revenue/units ⭐ |
-| Customer Insights       | ✅ Built | Repeat rate, locations ⭐        |
-| Impact Metrics          | ✅ Built | Nonprofit & environmental ⭐     |
-| Marketing Tools         | ✅ Built | `/src/app/seller/marketing/` ⭐  |
-| Promotion Management    | ✅ Built | CRUD, usage tracking ⭐          |
-| Seller Settings         | ✅ Built | `/src/app/seller/settings/` ⭐   |
-| Shop Profile Management | ✅ Built | Name, slug, bio, story ⭐        |
-| Branding Customization  | ✅ Built | Logo, banner, colors ⭐          |
-| Nonprofit Partnership   | ✅ Built | Browse, select, donate % ⭐      |
-| Platform Analytics      | ✅ Built | `/src/app/admin/analytics/` ⭐   |
-| Analytics Dashboard     | ✅ Built | 14 functions, 6 tabs, BI suite ⭐|
-| Customer Impact         | ✅ Built | `/src/app/impact/page.tsx` ⭐    |
+| Feature                 | Status   | Location                          |
+| ----------------------- | -------- | --------------------------------- |
+| Seller Analytics        | ✅ Built | `/src/app/seller/analytics/` ⭐   |
+| Revenue Trends Chart    | ✅ Built | Revenue & orders line chart ⭐    |
+| Best Sellers Table      | ✅ Built | Top products by revenue/units ⭐  |
+| Customer Insights       | ✅ Built | Repeat rate, locations ⭐         |
+| Impact Metrics          | ✅ Built | Nonprofit & environmental ⭐      |
+| Marketing Tools         | ✅ Built | `/src/app/seller/marketing/` ⭐   |
+| Promotion Management    | ✅ Built | CRUD, usage tracking ⭐           |
+| Seller Settings         | ✅ Built | `/src/app/seller/settings/` ⭐    |
+| Shop Profile Management | ✅ Built | Name, slug, bio, story ⭐         |
+| Branding Customization  | ✅ Built | Logo, banner, colors ⭐           |
+| Nonprofit Partnership   | ✅ Built | Browse, select, donate % ⭐       |
+| Platform Analytics      | ✅ Built | `/src/app/admin/analytics/` ⭐    |
+| Analytics Dashboard     | ✅ Built | 14 functions, 6 tabs, BI suite ⭐ |
+| Customer Impact         | ✅ Built | `/src/app/impact/page.tsx` ⭐     |
 
 ### Advanced Features
 
@@ -987,6 +1025,12 @@
     - Shop: Use `orderItems` relation to access orders (NOT `orders` relation)
 15. **Avoid JOIN ambiguity** - When querying OrderItem with Order.paymentStatus filter, pre-fetch paid order IDs to avoid ambiguous `subtotal` column errors
 16. **Analytics are fully functional** - All 14 admin analytics functions tested and working with proper Prisma queries
+17. **⚠️ CRITICAL PRISMA RELATION NAMES** - All relation names MUST be lowercase in queries:
+    - Review relation: Use `user:` (NOT `User:`)
+    - Order relation to User: Use `buyer:` (NOT `User:`)
+    - OrderItem relations: Use `items:`, `shop:`, `product:` (NOT capitalized)
+    - Component TypeScript interfaces: Match lowercase relation names exactly
+18. **Shop page design pattern** - Two distinct layouts based on banner presence (not placeholder-based)
 
 ---
 

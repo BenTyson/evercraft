@@ -82,7 +82,7 @@ export async function createReview(input: {
         updatedAt: new Date(),
       },
       include: {
-        User: {
+        user: {
           select: {
             name: true,
           },
@@ -108,28 +108,26 @@ export async function createReview(input: {
 /**
  * Get reviews for a product
  */
-export async function getProductReviews(productId: string, options?: {
-  limit?: number;
-  offset?: number;
-  verifiedOnly?: boolean;
-  sortBy?: 'recent' | 'helpful' | 'rating_high' | 'rating_low';
-}) {
+export async function getProductReviews(
+  productId: string,
+  options?: {
+    limit?: number;
+    offset?: number;
+    verifiedOnly?: boolean;
+    sortBy?: 'recent' | 'helpful' | 'rating_high' | 'rating_low';
+  }
+) {
   try {
-    const {
-      limit = 10,
-      offset = 0,
-      verifiedOnly = false,
-      sortBy = 'recent',
-    } = options || {};
+    const { limit = 10, offset = 0, verifiedOnly = false, sortBy = 'recent' } = options || {};
 
     // Build where clause
-    const where: any = { productId };
+    const where: Prisma.ReviewWhereInput = { productId };
     if (verifiedOnly) {
       where.isVerifiedPurchase = true;
     }
 
     // Build orderBy clause
-    let orderBy: any = { createdAt: 'desc' };
+    let orderBy: Prisma.ReviewOrderByWithRelationInput = { createdAt: 'desc' };
     if (sortBy === 'helpful') {
       orderBy = { helpfulCount: 'desc' };
     } else if (sortBy === 'rating_high') {
@@ -142,7 +140,7 @@ export async function getProductReviews(productId: string, options?: {
       db.review.findMany({
         where,
         include: {
-          User: {
+          user: {
             select: {
               name: true,
             },

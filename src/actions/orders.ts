@@ -263,7 +263,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
       where: { id: orderId },
       data: { status },
       include: {
-        User: {
+        buyer: {
           select: {
             name: true,
             email: true,
@@ -274,13 +274,13 @@ export async function updateOrderStatus(orderId: string, status: string) {
 
     // Send status update email
     try {
-      if (updatedOrder.User?.email) {
+      if (updatedOrder.buyer?.email) {
         const { sendOrderStatusUpdateEmail } = await import('@/lib/email');
         await sendOrderStatusUpdateEmail({
-          to: updatedOrder.User.email,
+          to: updatedOrder.buyer.email,
           orderNumber: updatedOrder.orderNumber,
           status: status,
-          customerName: updatedOrder.User.name || 'Customer',
+          customerName: updatedOrder.buyer.name || 'Customer',
         });
       }
     } catch (emailError) {
@@ -337,7 +337,7 @@ export async function bulkUpdateOrderStatus(orderIds: string[], status: string) 
         },
       },
       include: {
-        User: {
+        buyer: {
           select: {
             name: true,
             email: true,
@@ -365,12 +365,12 @@ export async function bulkUpdateOrderStatus(orderIds: string[], status: string) 
       const { sendOrderStatusUpdateEmail } = await import('@/lib/email');
       await Promise.all(
         orders.map(async (order) => {
-          if (order.User?.email) {
+          if (order.buyer?.email) {
             await sendOrderStatusUpdateEmail({
-              to: order.User.email,
+              to: order.buyer.email,
               orderNumber: order.orderNumber,
               status: status,
-              customerName: order.User.name || 'Customer',
+              customerName: order.buyer.name || 'Customer',
             });
           }
         })
