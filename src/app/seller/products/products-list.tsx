@@ -12,13 +12,14 @@ import {
   bulkDeleteProducts,
 } from '@/actions/seller-products';
 import { useRouter } from 'next/navigation';
+import { ProductStatus } from '@/generated/prisma';
 
 interface Product {
   id: string;
   title: string;
   description: string;
   price: number;
-  status: string;
+  status: ProductStatus;
   category: {
     id: string;
     name: string;

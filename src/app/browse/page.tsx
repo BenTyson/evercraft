@@ -9,9 +9,10 @@
 
 import { useState, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { SlidersHorizontal, X, Loader2 } from 'lucide-react';
+import { SlidersHorizontal, X, Loader2, Search } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { SiteHeader } from '@/components/layout/site-header';
 import { ProductCard } from '@/components/eco/product-card';
 import { getProducts, getCategories, getCertifications } from '@/actions/products';
@@ -161,13 +162,25 @@ export default function BrowsePage() {
     <div className="min-h-screen">
       <SiteHeader />
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold md:text-4xl">Browse Products</h1>
-          <p className="text-muted-foreground text-lg">
-            Discover sustainable products from verified eco-conscious sellers
-          </p>
+      <div className="container mx-auto px-4 py-6">
+        {/* Search-Focused Header */}
+        <div className="mb-6">
+          <div className="mx-auto max-w-3xl">
+            {/* Large Search Bar */}
+            <div className="relative">
+              <Search className="text-muted-foreground absolute left-4 top-1/2 size-5 -translate-y-1/2" />
+              <Input
+                type="search"
+                placeholder="Search eco-friendly products, brands, or categories..."
+                className="h-14 pl-12 pr-4 text-base shadow-sm"
+              />
+            </div>
+
+            {/* Quick Filters or Stats */}
+            <p className="text-muted-foreground mt-3 text-center text-sm">
+              {totalCount} sustainable products from verified eco-conscious sellers
+            </p>
+          </div>
         </div>
 
         <div className="flex gap-8">

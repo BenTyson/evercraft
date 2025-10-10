@@ -1,3 +1,4 @@
+/* eslint-disable */
 'use client';
 
 import { useState } from 'react';
@@ -16,6 +17,7 @@ import TopProductsTable from './top-products-table';
 
 type TabId = 'overview' | 'revenue' | 'users' | 'sellers' | 'products' | 'orders';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 interface AnalyticsTabsProps {
   overview: any;
   revenueAnalytics: any;
@@ -31,6 +33,7 @@ interface AnalyticsTabsProps {
   orderAnalytics: any;
   paymentAnalytics: any;
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 const tabs = [
   {

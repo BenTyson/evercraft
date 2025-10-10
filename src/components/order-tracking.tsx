@@ -21,9 +21,10 @@ interface TrackingEvent {
 }
 
 interface TrackingInfo {
-  carrier: string;
+  carrier: string | null;
   trackingNumber: string;
   status: string;
+  statusDetails?: string;
   eta?: string;
   trackingHistory?: TrackingEvent[];
 }

@@ -63,15 +63,17 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
   const certifications = await getCertifications();
 
   // Prepare initial data for the form
-  const initialData = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const initialData: any = {
     title: product.title,
     description: product.description,
     price: product.price,
     compareAtPrice: product.compareAtPrice || undefined,
     sku: product.sku || '',
-    categoryId: product.categoryId,
+    categoryId: product.categoryId || undefined,
     tags: product.tags || [],
     certificationIds: product.certifications.map((c) => c.id),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ecoAttributes: (product.ecoAttributes as Record<string, any>) || {},
     images: product.images.map((img) => img.url),
     inventoryQuantity: product.inventoryQuantity,

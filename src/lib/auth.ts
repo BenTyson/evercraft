@@ -8,6 +8,12 @@ import { auth } from '@clerk/nextjs/server';
 
 export type UserRole = 'buyer' | 'seller' | 'admin';
 
+interface ClerkSessionClaims {
+  metadata?: {
+    role?: string;
+  };
+}
+
 /**
  * Get the current user's role from Clerk session claims
  */
@@ -18,9 +24,9 @@ export async function getUserRole(): Promise<UserRole | null> {
     return null;
   }
 
-  const role = (sessionClaims as any)?.metadata?.role as string | undefined;
+  const role = (sessionClaims as ClerkSessionClaims)?.metadata?.role;
   // Handle both uppercase and lowercase role values
-  return role?.toLowerCase() as UserRole || 'buyer'; // Default to buyer if no role is set
+  return (role?.toLowerCase() as UserRole) || 'buyer'; // Default to buyer if no role is set
 }
 
 /**

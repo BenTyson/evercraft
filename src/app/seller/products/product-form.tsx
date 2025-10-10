@@ -72,7 +72,7 @@ export function ProductForm({
     try {
       // Convert image URLs to the format expected by the API
       const images = (formData.images || []).map((url, index) => ({
-        url,
+        url: typeof url === 'string' ? url : url.url,
         altText: formData.title,
         isPrimary: index === 0,
       }));
@@ -98,7 +98,7 @@ export function ProductForm({
       } else {
         setError(result.error || `Failed to ${isEditing ? 'update' : 'create'} product`);
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setIsSubmitting(false);
@@ -107,7 +107,7 @@ export function ProductForm({
 
   const handleChange = (
     field: keyof CreateProductInput,
-    value: string | number | string[] | undefined
+    value: string | number | boolean | string[] | undefined
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -215,8 +215,8 @@ export function ProductForm({
           Upload up to 4 images. The first image will be used as the primary product image.
         </p>
         <ImageUpload
-          value={formData.images || []}
-          onChange={(urls) => handleChange('images', urls)}
+          value={(formData.images || []) as unknown as string[]}
+          onChange={(urls) => handleChange('images', urls as unknown as string[])}
           disabled={isSubmitting}
         />
       </div>
@@ -284,7 +284,7 @@ export function ProductForm({
             <span className="text-sm font-medium">Track inventory for this product</span>
           </label>
           <p className="text-muted-foreground ml-7 mt-1 text-xs">
-            Evercraft will track stock levels and show "Out of Stock" when quantity reaches zero
+            Evercraft will track stock levels and show &quot;Out of Stock&quot; when quantity reaches zero
           </p>
         </div>
 

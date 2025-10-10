@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { updateOrderStatus, bulkUpdateOrderStatus } from '@/actions/orders';
 import { cn } from '@/lib/utils';
 import { ShippingLabelManager } from './shipping-label-manager';
+import { OrderStatus } from '@/generated/prisma';
 
 interface Order {
   id: string;
@@ -19,12 +20,11 @@ interface Order {
   trackingNumber?: string | null;
   trackingCarrier?: string | null;
   shippingLabelUrl?: string | null;
-  user: { name: string | null; email: string | null };
+  buyer: { name: string | null; email: string | null };
   items: Array<{
     id: string;
-    title: string;
     quantity: number;
-    price: number;
+    subtotal: number;
     product: {
       id: string;
       title: string;
@@ -96,7 +96,7 @@ export function OrdersTable({ orders: initialOrders }: OrdersTableProps) {
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     setUpdatingStatus(orderId);
     try {
-      const result = await updateOrderStatus(orderId, newStatus);
+      const result = await updateOrderStatus(orderId, newStatus as OrderStatus);
       if (result.success) {
         // Update local state
         setOrders((prev) =>
@@ -119,7 +119,7 @@ export function OrdersTable({ orders: initialOrders }: OrdersTableProps) {
     }
 
     startTransition(async () => {
-      const result = await bulkUpdateOrderStatus(Array.from(selectedIds), status);
+      const result = await bulkUpdateOrderStatus(Array.from(selectedIds), status as OrderStatus);
       if (result.success) {
         setSelectedIds(new Set());
         router.refresh();
@@ -186,9 +186,9 @@ export function OrdersTable({ orders: initialOrders }: OrdersTableProps) {
       <div className="flex items-center gap-3 px-2">
         <Checkbox
           checked={allSelected || someSelected}
-          onCheckedChange={toggleSelectAll}
+          onChange={toggleSelectAll}
           aria-label="Select all orders"
-          className={cn(someSelected && 'data-[state=checked]:bg-gray-400')}
+          className={cn(someSelected && 'bg-gray-400')}
         />
         <label className="text-muted-foreground cursor-pointer text-sm" onClick={toggleSelectAll}>
           {allSelected ? 'Deselect all' : 'Select all'}
@@ -214,7 +214,7 @@ export function OrdersTable({ orders: initialOrders }: OrdersTableProps) {
                 {/* Selection Checkbox */}
                 <Checkbox
                   checked={isSelected}
-                  onCheckedChange={() => toggleSelection(order.id)}
+                  onChange={() => toggleSelection(order.id)}
                   aria-label={`Select order ${order.id}`}
                   className="shrink-0"
                 />
@@ -252,7 +252,7 @@ export function OrdersTable({ orders: initialOrders }: OrdersTableProps) {
                       })}
                     </span>
                     <span>•</span>
-                    <span>{order.user.name || order.user.email}</span>
+                    <span>{order.buyer.name || order.buyer.email}</span>
                     <span>•</span>
                     <span className="font-semibold">${order.total.toFixed(2)}</span>
                   </div>
@@ -305,14 +305,14 @@ export function OrdersTable({ orders: initialOrders }: OrdersTableProps) {
                                 href={`/products/${item.product.id}`}
                                 className="hover:text-forest-dark font-medium transition-colors"
                               >
-                                {item.title}
+                                {item.product.title}
                               </Link>
                               <p className="text-muted-foreground text-sm">
-                                Qty: {item.quantity} × ${item.price.toFixed(2)}
+                                Qty: {item.quantity} × ${(item.subtotal / item.quantity).toFixed(2)}
                               </p>
                             </div>
                             <div className="text-sm font-semibold">
-                              ${(item.price * item.quantity).toFixed(2)}
+                              ${item.subtotal.toFixed(2)}
                             </div>
                           </div>
                         </div>

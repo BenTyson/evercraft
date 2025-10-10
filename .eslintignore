@@ -1,0 +1,13 @@
+# Generated Prisma files
+src/generated/
+
+# Node modules
+node_modules/
+
+# Build output
+.next/
+out/
+
+# Misc
+.DS_Store
+*.pem

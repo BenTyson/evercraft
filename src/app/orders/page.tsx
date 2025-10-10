@@ -87,7 +87,7 @@ export default async function OrdersPage() {
             <Package className="text-muted-foreground mx-auto mb-6 size-16" />
             <h2 className="mb-4 text-2xl font-bold">No orders yet</h2>
             <p className="text-muted-foreground mb-8">
-              When you place orders, they'll appear here.
+              When you place orders, they&apos;ll appear here.
             </p>
             <Button asChild size="lg">
               <Link href="/browse">Start Shopping</Link>
@@ -130,15 +130,17 @@ export default async function OrdersPage() {
 
                 {/* Order Items */}
                 <div className="border-t pt-4">
-                  <p className="text-muted-foreground mb-3 text-sm">
-                    Sold by{' '}
-                    <Link
-                      href={`/shop/${order.shop.slug || order.shop.id}`}
-                      className="hover:text-foreground font-medium underline"
-                    >
-                      {order.shop.name}
-                    </Link>
-                  </p>
+                  {order.items && order.items.length > 0 && order.items[0].shop && (
+                    <p className="text-muted-foreground mb-3 text-sm">
+                      Sold by{' '}
+                      <Link
+                        href={`/shop/${order.items[0].shop.slug || order.items[0].shop.id}`}
+                        className="hover:text-foreground font-medium underline"
+                      >
+                        {order.items[0].shop.name}
+                      </Link>
+                    </p>
+                  )}
                   <div className="space-y-3">
                     {order.items.map((item) => (
                       <div key={item.id} className="flex gap-4">
@@ -162,15 +164,15 @@ export default async function OrdersPage() {
                             href={`/products/${item.product.id}`}
                             className="hover:text-forest-dark font-medium transition-colors"
                           >
-                            {item.title}
+                            {item.product.title}
                           </Link>
                           <div className="text-muted-foreground mt-1 flex items-center gap-4 text-sm">
                             <span>Qty: {item.quantity}</span>
-                            <span>${item.price.toFixed(2)}</span>
+                            <span>${(item.subtotal / item.quantity).toFixed(2)}</span>
                           </div>
                         </div>
                         <div className="text-sm font-semibold">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          ${item.subtotal.toFixed(2)}
                         </div>
                       </div>
                     ))}
@@ -185,17 +187,17 @@ export default async function OrdersPage() {
                         <span className="text-muted-foreground">Subtotal</span>
                         <span>${order.subtotal.toFixed(2)}</span>
                       </div>
-                      {order.shipping > 0 && (
+                      {order.shippingCost > 0 && (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Shipping</span>
-                          <span>${order.shipping.toFixed(2)}</span>
+                          <span>${order.shippingCost.toFixed(2)}</span>
                         </div>
                       )}
-                      {order.donation > 0 && (
+                      {order.nonprofitDonation > 0 && (
                         <div className="flex justify-between">
                           <span className="text-eco-dark">Nonprofit Donation (5%)</span>
                           <span className="text-eco-dark font-semibold">
-                            ${order.donation.toFixed(2)}
+                            ${order.nonprofitDonation.toFixed(2)}
                           </span>
                         </div>
                       )}

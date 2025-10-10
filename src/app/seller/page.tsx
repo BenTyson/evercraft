@@ -5,7 +5,7 @@
  */
 
 import { auth } from '@clerk/nextjs/server';
-import { redirect } from 'next/link';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Package, DollarSign, TrendingUp, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';

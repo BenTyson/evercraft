@@ -122,9 +122,11 @@ function ProductCard({
       {...props}
     >
       {/* Product Image */}
-      <div
-        className="relative aspect-[4/3] w-full cursor-pointer overflow-hidden bg-neutral-100 dark:bg-neutral-800"
+      <button
+        type="button"
+        className="relative aspect-[4/3] w-full cursor-pointer overflow-hidden bg-neutral-100 dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-forest-dark focus:ring-offset-2"
         onClick={onProductClick}
+        aria-label={`View ${product.title}`}
       >
         <Image
           src={product.image}
@@ -142,7 +144,7 @@ function ProductCard({
         {!imageLoaded && (
           <div className="absolute inset-0 animate-pulse bg-neutral-200 dark:bg-neutral-700" />
         )}
-      </div>
+      </button>
 
       {/* Product Info */}
       <div className="flex flex-col gap-3 px-3 pb-3">
@@ -212,11 +214,11 @@ function ProductCard({
         <div className="flex items-center gap-2">
           {/* Favorite Button */}
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon-sm"
             className={cn(
               'transition-colors',
-              isFavorited && 'bg-pink-50 text-pink-600 hover:bg-pink-100 hover:text-pink-700'
+              isFavorited && 'text-pink-600 hover:bg-pink-50 hover:text-pink-700'
             )}
             onClick={(e) => {
               e.stopPropagation();
@@ -229,9 +231,9 @@ function ProductCard({
 
           {/* Quick Add Button */}
           <Button
-            variant="default"
+            variant="ghost"
             size="sm"
-            className="flex-1 gap-1.5"
+            className="text-muted-foreground hover:text-white flex-1 gap-1.5"
             onClick={(e) => {
               e.stopPropagation();
               onQuickAddClick?.();

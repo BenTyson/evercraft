@@ -79,7 +79,7 @@ export default async function AnalyticsPage() {
   const sellerAnalytics = sellerResult.success ? sellerResult.analytics! : null;
   const topSellers = topSellersResult.success ? topSellersResult.topSellers! : [];
   const productAnalytics = productResult.success ? productResult.analytics! : null;
-  const categoryAnalytics = categoryResult.success ? categoryResult.categoryBreakdown! : [];
+  const categoryAnalytics = categoryResult.success ? categoryResult.categories! : [];
   const inventoryInsights = inventoryResult.success ? inventoryResult.lowStock! : [];
   const orderAnalytics = orderResult.success ? orderResult.analytics! : null;
   const paymentAnalytics = paymentResult.success ? paymentResult.analytics : null;

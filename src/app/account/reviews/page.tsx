@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@clerk/nextjs/server';
 import { SiteHeader } from '@/components/layout/site-header';
-import { getUserReviews, deleteReview } from '@/actions/reviews';
+import { getUserReviews } from '@/actions/reviews';
 import { UserReviewsList } from './user-reviews-list';
 
 export default async function UserReviewsPage() {
@@ -41,7 +41,7 @@ export default async function UserReviewsPage() {
           <UserReviewsList reviews={result.reviews} />
         ) : (
           <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-            <p className="text-muted-foreground mb-4">You haven't written any reviews yet.</p>
+            <p className="text-muted-foreground mb-4">You haven&apos;t written any reviews yet.</p>
             <a
               href="/browse"
               className="text-eco-dark hover:underline font-semibold"

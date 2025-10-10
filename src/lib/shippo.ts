@@ -8,7 +8,8 @@ import Shippo from 'shippo';
 
 // Initialize Shippo client (returns null if API key not configured)
 const shippoClient = process.env.SHIPPO_API_KEY
-  ? new Shippo({ apiKeyHeader: process.env.SHIPPO_API_KEY })
+  ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    new (Shippo as any)({ apiKeyHeader: process.env.SHIPPO_API_KEY })
   : null;
 
 /**
@@ -21,7 +22,8 @@ export function isShippingConfigured(): boolean {
 /**
  * Get Shippo client instance
  */
-export function getShippoClient(): Shippo | null {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getShippoClient(): any {
   return shippoClient;
 }
 

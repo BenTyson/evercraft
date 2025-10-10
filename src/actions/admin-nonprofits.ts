@@ -219,7 +219,7 @@ export async function getNonprofitById(nonprofitId: string) {
       .filter((d) => d.status === 'PENDING')
       .reduce((sum, d) => sum + d.amount, 0);
     const completedDonations = nonprofit.donations
-      .filter((d) => d.status === 'COMPLETED')
+      .filter((d) => d.status === 'PAID')
       .reduce((sum, d) => sum + d.amount, 0);
 
     return {

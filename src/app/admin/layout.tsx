@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { SiteHeader } from '@/components/layout/site-header';
 
-export default function AdminLayout({ children }: { children: React.Node }) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-gray-50">
       <SiteHeader />

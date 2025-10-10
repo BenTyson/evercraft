@@ -166,10 +166,10 @@ export function ShippingLabelManager({
                 />
                 <div>
                   <div className="font-medium text-gray-900">
-                    {rate.provider} - {rate.servicelevel}
+                    {rate.provider} - {rate.servicelevel.name}
                   </div>
                   <div className="text-xs text-gray-600">
-                    {rate.estimatedDays} days • {rate.durationTerms}
+                    {rate.estimatedDays} {rate.estimatedDays === 1 ? 'day' : 'days'}
                   </div>
                 </div>
               </div>

@@ -248,8 +248,8 @@ export async function getRevenueAnalytics(months: number = 12) {
     categoryRevenue.forEach((item) => {
       const product = products.find((p) => p.id === item.productId);
       if (product && product.category) {
-        const currentTotal = categoryBreakdown.get(product.category) || 0;
-        categoryBreakdown.set(product.category, currentTotal + (item._sum.subtotal || 0));
+        const currentTotal = categoryBreakdown.get(product.category.name) || 0;
+        categoryBreakdown.set(product.category.name, currentTotal + (item._sum.subtotal || 0));
       }
     });
 
@@ -976,7 +976,13 @@ export async function getTopProducts(limit: number = 50, metric: 'revenue' | 'un
     const productMap = new Map<
       string,
       {
-        product: any;
+        product: {
+          id: string;
+          title: string;
+          price: number;
+          images: { url: string }[];
+          shop: { name: string };
+        };
         totalRevenue: number;
         unitsSold: number;
       }

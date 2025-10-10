@@ -7,18 +7,8 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import {
-  Heart,
-  ShoppingCart,
-  Star,
-  Leaf,
-  Package,
-  Truck,
-  Shield,
-  ChevronRight,
-} from 'lucide-react';
+import { Star, Package, Truck, Shield, ChevronRight } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
 import { SiteHeader } from '@/components/layout/site-header';
 import { EcoBadge } from '@/components/eco/eco-badge';
 import { SustainabilityScore } from '@/components/eco/sustainability-score';
@@ -28,6 +18,14 @@ import { getProductById, getProducts } from '@/actions/products';
 import { getProductReviews, getReviewStats, canUserReview } from '@/actions/reviews';
 import { AddToCartButton } from './add-to-cart-button';
 import { FavoriteButton } from './favorite-button';
+
+interface EcoAttributes {
+  material?: string;
+  packaging?: string;
+  carbonFootprint?: string;
+  madeIn?: string;
+  [key: string]: string | undefined;
+}
 import { ProductReviews } from '@/components/reviews/product-reviews';
 import { ReviewForm } from '@/components/reviews/review-form';
 import { auth } from '@clerk/nextjs/server';
@@ -236,7 +234,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
               {/* Certifications */}
               <div className="flex flex-wrap gap-2">
                 {product.certifications.map((cert) => (
-                  <EcoBadge key={cert.id} variant={getCertificationVariant(cert.name)} size="md" />
+                  <EcoBadge key={cert.id} variant={getCertificationVariant(cert.name)} size="default" />
                 ))}
               </div>
             </div>
@@ -332,39 +330,42 @@ export default async function ProductDetailPage({ params }: PageProps) {
         {(product.ecoAttributes || product.sustainabilityScore) && (
           <div className="mt-12 grid gap-8 lg:grid-cols-2">
             {/* Eco Attributes */}
-            {product.ecoAttributes && (
-              <div className="bg-card rounded-lg border p-6">
-                <h2 className="mb-6 text-2xl font-bold">Sustainability Details</h2>
-                <div className="space-y-4">
-                  {product.ecoAttributes.material && (
-                    <div>
-                      <p className="text-muted-foreground mb-1 text-sm font-semibold">Material</p>
-                      <p className="text-foreground">{product.ecoAttributes.material}</p>
-                    </div>
-                  )}
-                  {product.ecoAttributes.packaging && (
-                    <div>
-                      <p className="text-muted-foreground mb-1 text-sm font-semibold">Packaging</p>
-                      <p className="text-foreground">{product.ecoAttributes.packaging}</p>
-                    </div>
-                  )}
-                  {product.ecoAttributes.carbonFootprint && (
-                    <div>
-                      <p className="text-muted-foreground mb-1 text-sm font-semibold">
-                        Carbon Footprint
-                      </p>
-                      <p className="text-foreground">{product.ecoAttributes.carbonFootprint}</p>
-                    </div>
-                  )}
-                  {product.ecoAttributes.madeIn && (
-                    <div>
-                      <p className="text-muted-foreground mb-1 text-sm font-semibold">Made In</p>
-                      <p className="text-foreground">{product.ecoAttributes.madeIn}</p>
-                    </div>
-                  )}
+            {product.ecoAttributes && (() => {
+              const ecoAttrs = product.ecoAttributes as EcoAttributes;
+              return (
+                <div className="bg-card rounded-lg border p-6">
+                  <h2 className="mb-6 text-2xl font-bold">Sustainability Details</h2>
+                  <div className="space-y-4">
+                    {ecoAttrs.material && (
+                      <div>
+                        <p className="text-muted-foreground mb-1 text-sm font-semibold">Material</p>
+                        <p className="text-foreground">{ecoAttrs.material}</p>
+                      </div>
+                    )}
+                    {ecoAttrs.packaging && (
+                      <div>
+                        <p className="text-muted-foreground mb-1 text-sm font-semibold">Packaging</p>
+                        <p className="text-foreground">{ecoAttrs.packaging}</p>
+                      </div>
+                    )}
+                    {ecoAttrs.carbonFootprint && (
+                      <div>
+                        <p className="text-muted-foreground mb-1 text-sm font-semibold">
+                          Carbon Footprint
+                        </p>
+                        <p className="text-foreground">{ecoAttrs.carbonFootprint}</p>
+                      </div>
+                    )}
+                    {ecoAttrs.madeIn && (
+                      <div>
+                        <p className="text-muted-foreground mb-1 text-sm font-semibold">Made In</p>
+                        <p className="text-foreground">{ecoAttrs.madeIn}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Sustainability Score */}
             {product.sustainabilityScore && (
@@ -390,7 +391,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
           <ProductReviews
             productId={id}
             initialReviews={reviewsResult.reviews || []}
-            initialStats={statsResult}
+            initialStats={{
+              averageRating: statsResult.averageRating || 0,
+              totalReviews: statsResult.totalReviews || 0,
+              distribution: statsResult.distribution || { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+            }}
             initialTotalCount={reviewsResult.totalCount || 0}
           />
         )}

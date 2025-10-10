@@ -11,16 +11,17 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 // Define public routes that should bypass auth (even if user is signed in)
-const isPublicRoute = createRouteMatcher([
-  '/',
-  '/browse',
-  '/products(.*)',
-  '/shop(.*)',
-  '/categories',
-  '/sign-in(.*)',
-  '/sign-up(.*)',
-  '/design-system',
-]);
+// Currently unused but available for future public route logic
+// const isPublicRoute = createRouteMatcher([
+//   '/',
+//   '/browse',
+//   '/products(.*)',
+//   '/shop(.*)',
+//   '/categories',
+//   '/sign-in(.*)',
+//   '/sign-up(.*)',
+//   '/design-system',
+// ]);
 
 export default clerkMiddleware(async (auth, req) => {
   // Protect routes that require authentication

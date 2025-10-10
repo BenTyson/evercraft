@@ -35,9 +35,9 @@ export default function PromotionForm({ promotion, onClose }: PromotionFormProps
     code: promotion?.code || '',
     description: promotion?.description || '',
     discountType: promotion?.discountType || 'PERCENTAGE',
-    discountValue: promotion?.discountValue || 10,
-    minimumPurchase: promotion?.minimumPurchase || '',
-    maxUses: promotion?.maxUses || '',
+    discountValue: promotion?.discountValue?.toString() || '10',
+    minimumPurchase: promotion?.minimumPurchase?.toString() || '',
+    maxUses: promotion?.maxUses?.toString() || '',
     startDate: promotion?.startDate
       ? new Date(promotion.startDate).toISOString().slice(0, 16)
       : new Date().toISOString().slice(0, 16),

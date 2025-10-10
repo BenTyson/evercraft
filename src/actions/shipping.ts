@@ -3,6 +3,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
 import { isSeller } from '@/lib/auth';
+import { OrderStatus } from '@/generated/prisma';
 import {
   calculateCartShipping,
   type CartShippingInput,
@@ -175,14 +176,14 @@ export async function getShippingRates(orderId: string) {
     }
 
     // Format rates for display
-    const rates = shipment.rates.map((rate) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rates = shipment.rates.map((rate: any) => ({
       objectId: rate.objectId,
       provider: rate.provider,
       servicelevel: rate.servicelevel,
       amount: parseFloat(rate.amount),
       currency: rate.currency,
       estimatedDays: rate.estimatedDays,
-      durationTerms: rate.durationTerms,
     }));
 
     return {
@@ -280,7 +281,7 @@ export async function createShippingLabel(input: {
         trackingCarrier: transaction.trackingUrlProvider || undefined,
         shippingLabelUrl: transaction.labelUrl || undefined,
         shippoTransactionId: transaction.objectId || undefined,
-        status: 'SHIPPED',
+        status: OrderStatus.SHIPPED,
         updatedAt: new Date(),
       },
     });
@@ -366,16 +367,20 @@ export async function getTrackingInfo(orderId: string) {
         try {
           const track = await shippo.tracks.get(order.trackingCarrier || '', order.trackingNumber);
 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const trackingStatus: any = track.trackingStatus || {};
           return {
             success: true,
             tracking: {
               trackingNumber: order.trackingNumber,
-              carrier: order.trackingCarrier,
-              status: track.trackingStatus,
-              statusDetails: track.trackingStatus?.statusDetails || '',
-              statusDate: track.trackingStatus?.statusDate || null,
-              eta: track.eta || null,
-              trackingHistory: track.trackingHistory || [],
+              carrier: order.trackingCarrier || 'Unknown',
+              status: trackingStatus.status || 'UNKNOWN',
+              statusDetails: trackingStatus.statusDetails || '',
+              statusDate: trackingStatus.statusDate || null,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              eta: (track as any).eta || null,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              trackingHistory: (track as any).trackingHistory || [],
             },
           };
         } catch (error) {
@@ -473,7 +478,7 @@ export async function voidShippingLabel(orderId: string) {
         trackingCarrier: null,
         shippingLabelUrl: null,
         shippoTransactionId: null,
-        status: 'PROCESSING',
+        status: OrderStatus.PROCESSING,
         updatedAt: new Date(),
       },
     });

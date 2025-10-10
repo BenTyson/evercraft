@@ -79,7 +79,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
   const order = result.order;
   const shippingAddress =
-    typeof order.shippingAddress === 'object' ? (order.shippingAddress as ShippingAddress) : null;
+    typeof order.shippingAddress === 'object' ? (order.shippingAddress as unknown as ShippingAddress) : null;
 
   return (
     <>
@@ -147,14 +147,14 @@ export default async function OrderDetailPage({ params }: PageProps) {
                           href={`/products/${item.product.id}`}
                           className="hover:text-forest-dark font-semibold transition-colors"
                         >
-                          {item.title}
+                          {item.product.title}
                         </Link>
                         <p className="text-muted-foreground text-sm">Quantity: {item.quantity}</p>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm">${item.price.toFixed(2)} each</span>
+                        <span className="text-sm">${(item.subtotal / item.quantity).toFixed(2)} each</span>
                         <span className="font-semibold">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          ${item.subtotal.toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -266,30 +266,32 @@ export default async function OrderDetailPage({ params }: PageProps) {
           {/* Order Summary Sidebar */}
           <div className="space-y-6 lg:col-span-1">
             {/* Seller Info */}
-            <div className="bg-card rounded-lg border p-6">
-              <h2 className="mb-4 text-lg font-bold">Seller</h2>
-              <div className="flex items-center gap-3">
-                {order.shop.logo && (
-                  <div className="relative size-12 overflow-hidden rounded-full">
-                    <Image
-                      src={order.shop.logo}
-                      alt={order.shop.name}
-                      fill
-                      className="object-cover"
-                      sizes="48px"
-                    />
+            {order.items && order.items.length > 0 && order.items[0].shop && (
+              <div className="bg-card rounded-lg border p-6">
+                <h2 className="mb-4 text-lg font-bold">Seller</h2>
+                <div className="flex items-center gap-3">
+                  {order.items[0].shop.logo && (
+                    <div className="relative size-12 overflow-hidden rounded-full">
+                      <Image
+                        src={order.items[0].shop.logo}
+                        alt={order.items[0].shop.name}
+                        fill
+                        className="object-cover"
+                        sizes="48px"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <Link
+                      href={`/shop/${order.items[0].shop.slug || order.items[0].shop.id}`}
+                      className="hover:text-forest-dark font-semibold transition-colors"
+                    >
+                      {order.items[0].shop.name}
+                    </Link>
                   </div>
-                )}
-                <div>
-                  <Link
-                    href={`/shop/${order.shop.slug || order.shop.id}`}
-                    className="hover:text-forest-dark font-semibold transition-colors"
-                  >
-                    {order.shop.name}
-                  </Link>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Shipping Address */}
             {shippingAddress && (
@@ -318,17 +320,17 @@ export default async function OrderDetailPage({ params }: PageProps) {
                   <span className="text-muted-foreground">Subtotal</span>
                   <span>${order.subtotal.toFixed(2)}</span>
                 </div>
-                {order.shipping > 0 && (
+                {order.shippingCost > 0 && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Shipping</span>
-                    <span>${order.shipping.toFixed(2)}</span>
+                    <span>${order.shippingCost.toFixed(2)}</span>
                   </div>
                 )}
-                {order.donation > 0 && (
+                {order.nonprofitDonation > 0 && (
                   <div className="bg-eco-light/20 -mx-6 my-3 px-6 py-3">
                     <div className="mb-1 flex items-center justify-between">
                       <span className="text-eco-dark font-semibold">Nonprofit Donation (5%)</span>
-                      <span className="text-eco-dark font-bold">${order.donation.toFixed(2)}</span>
+                      <span className="text-eco-dark font-bold">${order.nonprofitDonation.toFixed(2)}</span>
                     </div>
                     <p className="text-muted-foreground text-xs">
                       Thank you for supporting environmental nonprofits!
@@ -342,18 +344,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
               </div>
             </div>
 
-            {/* Payment Info */}
-            {order.stripePaymentIntentId && (
-              <div className="bg-card rounded-lg border p-6">
-                <h2 className="mb-4 text-lg font-bold">Payment</h2>
-                <div className="text-sm">
-                  <p className="text-muted-foreground">Paid via Stripe</p>
-                  <p className="text-muted-foreground mt-1 font-mono text-xs">
-                    {order.stripePaymentIntentId.slice(0, 20)}...
-                  </p>
-                </div>
-              </div>
-            )}
+            {/* Payment Info - removed since paymentIntentId not fetched */}
           </div>
         </div>
       </div>

@@ -30,14 +30,11 @@ export async function getProducts(params: GetProductsParams = {}) {
 
   try {
     // Build where clause
-    const where: Prisma.ProductWhereInput = {
-      status: 'ACTIVE',
-      AND: [],
-    };
+    const andConditions: Prisma.ProductWhereInput[] = [];
 
     // Category filter
     if (categoryIds && categoryIds.length > 0) {
-      where.AND!.push({
+      andConditions.push({
         categoryId: {
           in: categoryIds,
         },
@@ -46,7 +43,7 @@ export async function getProducts(params: GetProductsParams = {}) {
 
     // Certification filter
     if (certificationIds && certificationIds.length > 0) {
-      where.AND!.push({
+      andConditions.push({
         certifications: {
           some: {
             id: {
@@ -59,7 +56,7 @@ export async function getProducts(params: GetProductsParams = {}) {
 
     // Search filter
     if (search) {
-      where.AND!.push({
+      andConditions.push({
         OR: [
           { title: { contains: search, mode: 'insensitive' } },
           { description: { contains: search, mode: 'insensitive' } },
@@ -67,10 +64,10 @@ export async function getProducts(params: GetProductsParams = {}) {
       });
     }
 
-    // Remove empty AND array
-    if (where.AND!.length === 0) {
-      delete where.AND;
-    }
+    const where: Prisma.ProductWhereInput = {
+      status: 'ACTIVE',
+      ...(andConditions.length > 0 && { AND: andConditions }),
+    };
 
     // Build orderBy clause
     let orderBy: Prisma.ProductOrderByWithRelationInput = { createdAt: 'desc' };
@@ -285,8 +282,8 @@ export async function getCertifications() {
       where: {
         type: 'product',
         verified: true,
-        product: {
-          status: 'ACTIVE',
+        productId: {
+          not: null,
         },
       },
       select: {
@@ -295,15 +292,21 @@ export async function getCertifications() {
         product: {
           select: {
             id: true,
+            status: true,
           },
         },
       },
     });
 
+    // Filter out certifications with inactive products
+    const activeCertifications = allCertifications.filter(
+      (cert) => cert.product?.status === 'ACTIVE'
+    );
+
     // Group by certification name and count unique products
     const certMap = new Map<string, { id: string; name: string; count: number }>();
 
-    for (const cert of allCertifications) {
+    for (const cert of activeCertifications) {
       const existing = certMap.get(cert.name);
       if (existing) {
         existing.count += 1;

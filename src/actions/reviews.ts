@@ -3,6 +3,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { Prisma } from '@/generated/prisma';
 
 /**
  * Create a new product review
@@ -263,7 +264,7 @@ export async function updateReview(
         updatedAt: new Date(),
       },
       include: {
-        User: {
+        user: {
           select: {
             name: true,
           },
@@ -377,7 +378,7 @@ export async function getUserReviews() {
     const reviews = await db.review.findMany({
       where: { userId },
       include: {
-        Product: {
+        product: {
           select: {
             id: true,
             title: true,

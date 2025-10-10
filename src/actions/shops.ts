@@ -101,15 +101,11 @@ export async function getShopProducts(
     const { categoryIds, search, sortBy = 'featured', limit = 12, offset = 0 } = params;
 
     // Build where clause
-    const where: Prisma.ProductWhereInput = {
-      shopId,
-      status: 'ACTIVE',
-      AND: [],
-    };
+    const andConditions: Prisma.ProductWhereInput[] = [];
 
     // Category filter
     if (categoryIds && categoryIds.length > 0) {
-      where.AND!.push({
+      andConditions.push({
         categoryId: {
           in: categoryIds,
         },
@@ -118,7 +114,7 @@ export async function getShopProducts(
 
     // Search filter
     if (search) {
-      where.AND!.push({
+      andConditions.push({
         OR: [
           { title: { contains: search, mode: 'insensitive' } },
           { description: { contains: search, mode: 'insensitive' } },
@@ -126,10 +122,11 @@ export async function getShopProducts(
       });
     }
 
-    // Remove empty AND array
-    if (where.AND!.length === 0) {
-      delete where.AND;
-    }
+    const where: Prisma.ProductWhereInput = {
+      shopId,
+      status: 'ACTIVE',
+      ...(andConditions.length > 0 && { AND: andConditions }),
+    };
 
     // Build orderBy clause
     let orderBy: Prisma.ProductOrderByWithRelationInput = { createdAt: 'desc' };

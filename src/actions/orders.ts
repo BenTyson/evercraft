@@ -2,6 +2,7 @@
 
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
+import { OrderStatus } from '@/generated/prisma';
 
 /**
  * Get all orders for the current user (buyer)
@@ -224,7 +225,7 @@ export async function getSellerOrders() {
 /**
  * Update order status (seller only)
  */
-export async function updateOrderStatus(orderId: string, status: string) {
+export async function updateOrderStatus(orderId: string, status: OrderStatus) {
   try {
     const { userId } = await auth();
 
@@ -304,7 +305,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
 /**
  * Bulk update order statuses (seller only)
  */
-export async function bulkUpdateOrderStatus(orderIds: string[], status: string) {
+export async function bulkUpdateOrderStatus(orderIds: string[], status: OrderStatus) {
   try {
     if (!orderIds || orderIds.length === 0) {
       return { success: false, error: 'No orders selected' };

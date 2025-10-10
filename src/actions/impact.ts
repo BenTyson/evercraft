@@ -173,7 +173,7 @@ export async function getCommunityImpact() {
     ]);
 
     const totalOrders = orderStats._count || 0;
-    const totalRevenue = orderStats._sum.total || 0;
+    // const totalRevenue = orderStats._sum.total || 0;  // Available if needed for future features
     const totalDonations = donationStats._sum.amount || 0;
 
     // Estimate carbon offset based on order volume
@@ -225,8 +225,7 @@ export async function getUserMilestones() {
       return { success: false, error: 'Failed to get impact data' };
     }
 
-    const { carbonSaved, plasticAvoided, donationsToNonprofits, treesPlanted } =
-      impactResult.impact;
+    const { plasticAvoided, donationsToNonprofits, treesPlanted } = impactResult.impact;
 
     const milestones = [];
 

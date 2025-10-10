@@ -1,7 +1,7 @@
 # EVERCRAFT CODEBASE MAP
 
 **Generated:** October 8, 2025
-**Last Updated:** October 9, 2025 (Session 6 - Shop Pages & Prisma Fixes ✅)
+**Last Updated:** October 9, 2025 (Session 7 - Category Pages & UI Polish ✅)
 **Purpose:** Comprehensive reference for understanding the Evercraft marketplace codebase structure, implementations, and capabilities.
 
 ---
@@ -142,7 +142,7 @@
 
 ## PAGE ROUTES
 
-**Location:** `/src/app/` (25 pages total)
+**Location:** `/src/app/` (27 pages total)
 
 ### Public Pages
 
@@ -160,6 +160,8 @@
 | `/impact`                | ✅ Built | `/src/app/impact/page.tsx`                | 354   | Impact dashboard with real-time metrics                |
 | `/design-system`         | ✅ Built | `/src/app/design-system/page.tsx`         | 5     | UI component showcase                                  |
 | `/shop/[slug]`           | ✅ Built | `/src/app/shop/[slug]/page.tsx`           | 268   | Shop storefront (products, story, reviews, nonprofit)  |
+| `/categories`            | ✅ Built | `/src/app/categories/page.tsx`            | 104   | Category browsing with visual grid layout              |
+| `/categories/[slug]`     | ✅ Built | `/src/app/categories/[slug]/page.tsx`     | 267   | Individual category page with products and SEO         |
 
 ### Authentication Pages
 
@@ -273,7 +275,7 @@
 
 ## SERVER ACTIONS
 
-**Location:** `/src/actions/` (13 files, ~4,550 lines total)
+**Location:** `/src/actions/` (14 files, ~4,775 lines total)
 
 ### Admin Actions
 
@@ -351,7 +353,7 @@
 - ✅ Payment success rate monitoring
 - ✅ Transaction history with full breakdowns
 
-**File:** `/src/actions/shops.ts` (264 lines) ⭐ NEW
+**File:** `/src/actions/shops.ts` (264 lines)
 
 | Function               | Purpose                                   |
 | ---------------------- | ----------------------------------------- |
@@ -367,6 +369,23 @@
 - ✅ Review count aggregation
 - ✅ Supports slug or ID lookup
 - ✅ Pagination for products and reviews
+
+**File:** `/src/actions/categories.ts` (223 lines) ⭐ NEW
+
+| Function                     | Purpose                                          |
+| ---------------------------- | ------------------------------------------------ |
+| `getCategoryHierarchy()`     | Get all categories organized by parent/child     |
+| `getTopLevelCategories()`    | Get only parent categories with children         |
+| `getCategoryBySlug(slug)`    | Get single category with metadata and relations  |
+| `getCategoryWithProducts()`  | Get category with sample products (limit 8)      |
+
+**Features:**
+
+- ✅ Hierarchical category structure support
+- ✅ Active product counts for each category
+- ✅ Subcategory relationships
+- ✅ Category metadata (description, images, SEO fields)
+- ✅ Sample products for category preview
 
 **File:** `/src/actions/admin-analytics.ts` (1,225 lines) ⭐ **NEW - PHASE 9 COMPLETE**
 
@@ -603,7 +622,7 @@
 
 ## COMPONENTS
 
-**Location:** `/src/components/` (19 files, 2,660 lines total)
+**Location:** `/src/components/` (20 files, 2,794 lines total)
 
 ### UI Components (Radix + Custom)
 
@@ -666,6 +685,23 @@
 - **WITHOUT banner**: Compact horizontal header (80-96px logo, bg-neutral-50/50, normal height)
 - **WITH banner**: Full hero with overlaying logo (128-160px logo, 48-64px banner height)
 - Conditional rendering based on `bannerImage` presence - two distinct, intentional layouts
+
+### Category Components ⭐ NEW
+
+**Location:** `/src/components/categories/`
+
+| Component        | File                 | Lines | Purpose                                            |
+| ---------------- | -------------------- | ----- | -------------------------------------------------- |
+| `<CategoryCard>` | `category-card.tsx`  | 134   | Category card with image, subcategories, products  |
+
+**Features:**
+
+- Visual category cards with images or placeholder icons
+- Product count badges
+- Subcategory pills (shows first 4, then "+X more")
+- Hover effects with scale transitions
+- Links to browse page with category filters pre-applied
+- Responsive design (1→2→3→4 columns)
 
 ### Other Components
 
@@ -1006,19 +1042,20 @@
 ## NOTES FOR AGENTS
 
 1. **Always check this map before building** - Many features already exist!
-2. **Server Actions are comprehensive** - Most business logic is already implemented (13+ action files, ~4,550+ lines)
+2. **Server Actions are comprehensive** - Most business logic is already implemented (14 action files, ~4,775 lines)
 3. **Schema is ahead of UI** - Many models exist without frontend
 4. **Integration setup is complete** - Clerk, Stripe, Shippo, Resend all working
-5. **Component library exists** - Use existing UI components before creating new ones
+5. **Component library exists** - Use existing UI components before creating new ones (20 components)
 6. **State management** - Use Zustand stores (`cart-store.ts`, `checkout-store.ts`)
-7. **Database is up-to-date** - All migrations applied, schema matches Prisma file
-8. **Email service is functional** - But gracefully degrades if not configured
-9. **Shipping is fully integrated** - Shippo label generation works for sellers
-10. **Review system is complete** - Don't rebuild rating/review functionality (483 lines in reviews.ts)
-11. **Admin panel is 100% complete** - Dashboard, users, nonprofits, applications, products, financial, analytics all built ✅
-12. **Prisma relation names are lowercase** - NEVER run `npx prisma format` (auto-capitalizes)
-13. **Impact tracking uses OrderItem donations** - OrderItem.donationAmount and OrderItem.nonprofit relation (not separate Donation model)
-14. **⚠️ CRITICAL PRISMA FIELD NAMES** - Always use correct schema field names:
+7. **Category system complete** - Full category browsing with SEO optimization and hierarchical structure
+8. **Database is up-to-date** - All migrations applied, schema matches Prisma file
+9. **Email service is functional** - But gracefully degrades if not configured
+10. **Shipping is fully integrated** - Shippo label generation works for sellers
+11. **Review system is complete** - Don't rebuild rating/review functionality (483 lines in reviews.ts)
+12. **Admin panel is 100% complete** - Dashboard, users, nonprofits, applications, products, financial, analytics all built ✅
+13. **Prisma relation names are lowercase** - NEVER run `npx prisma format` (auto-capitalizes)
+14. **Impact tracking uses OrderItem donations** - OrderItem.donationAmount and OrderItem.nonprofit relation (not separate Donation model)
+15. **⚠️ CRITICAL PRISMA FIELD NAMES** - Always use correct schema field names:
     - OrderItem: Use `subtotal` (NOT `price`)
     - Product: Use `inventoryQuantity` (NOT `quantity`)
     - Product: Use `categoryId` scalar for groupBy (NOT `category` relation)
