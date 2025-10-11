@@ -16,12 +16,8 @@ import { Input } from '@/components/ui/input';
 import { SiteHeader } from '@/components/layout/site-header';
 import { ProductCard } from '@/components/eco/product-card';
 import { EcoFilterPanel } from '@/components/eco/eco-filter-panel';
-import {
-  getProducts,
-  getCategories,
-  getCertifications,
-  type GetProductsParams,
-} from '@/actions/products';
+import { getProducts, getCategories, getCertifications } from '@/actions/products';
+import { toggleFavorite as toggleFavoriteAction, getFavorites } from '@/actions/favorites';
 
 type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'newest';
 
@@ -112,16 +108,23 @@ export default function BrowsePage() {
     async function loadInitialData() {
       try {
         setIsLoading(true);
-        const [productsData, categoriesData, certificationsData] = await Promise.all([
-          getProducts({}),
-          getCategories(),
-          getCertifications(),
-        ]);
+        const [productsData, categoriesData, certificationsData, favoritesData] = await Promise.all(
+          [getProducts({}), getCategories(), getCertifications(), getFavorites()]
+        );
 
         setProducts(productsData.products as Product[]);
         setTotalCount(productsData.total);
         setCategories(categoriesData);
         setCertifications(certificationsData);
+
+        // Build favorites map
+        if (favoritesData.success && favoritesData.favorites) {
+          const favoritesMap: Record<string, boolean> = {};
+          favoritesData.favorites.forEach((fav) => {
+            favoritesMap[fav.productId] = true;
+          });
+          setFavorited(favoritesMap);
+        }
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -150,8 +153,8 @@ export default function BrowsePage() {
 
         setProducts(productsData.products as Product[]);
         setTotalCount(productsData.total);
-      } catch (error) {
-        console.error('Error loading products:', error);
+      } catch {
+        // Error loading products
       }
     }
 
@@ -174,8 +177,24 @@ export default function BrowsePage() {
     );
   };
 
-  const toggleFavorite = (productId: string) => {
+  const toggleFavorite = async (productId: string) => {
+    // Optimistic update
+    const previousState = favorited[productId];
     setFavorited((prev) => ({ ...prev, [productId]: !prev[productId] }));
+
+    try {
+      const result = await toggleFavoriteAction(productId);
+
+      if (!result.success) {
+        // Revert on error
+        setFavorited((prev) => ({ ...prev, [productId]: previousState }));
+        alert(result.error || 'Failed to update favorite');
+      }
+    } catch (error) {
+      // Revert on error
+      setFavorited((prev) => ({ ...prev, [productId]: previousState }));
+      alert('Failed to update favorite');
+    }
   };
 
   const clearFilters = () => {

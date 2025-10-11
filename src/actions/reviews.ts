@@ -72,7 +72,6 @@ export async function createReview(input: {
     // Create review
     const review = await db.review.create({
       data: {
-        id: `${userId}-${input.productId}-${Date.now()}`,
         productId: input.productId,
         userId,
         orderId: input.orderId,
@@ -80,7 +79,6 @@ export async function createReview(input: {
         text: input.text,
         images: input.images || [],
         isVerifiedPurchase,
-        updatedAt: new Date(),
       },
       include: {
         user: {

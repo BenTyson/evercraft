@@ -16,7 +16,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Search, ShoppingCart, User, Menu, X, Leaf } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, Leaf, Heart } from 'lucide-react';
 import { UserButton, useUser } from '@clerk/nextjs';
 
 import { cn } from '@/lib/utils';
@@ -31,9 +31,10 @@ export function SiteHeader() {
   const { isSignedIn, isLoaded, user } = useUser();
   const cartItemCount = useCartStore((state) => state.getTotalItems());
 
-  // Check if user is admin
-  const userRole = (user?.publicMetadata as any)?.role as string | undefined;
+  // Check user roles
+  const userRole = (user?.publicMetadata as Record<string, unknown>)?.role as string | undefined;
   const isAdmin = userRole === 'admin';
+  const isSeller = userRole === 'seller' || userRole === 'admin'; // Admin has seller access
 
   React.useEffect(() => {
     setIsMounted(true);
@@ -82,16 +83,26 @@ export function SiteHeader() {
           >
             Impact
           </Link>
-          <Link
-            href="/apply"
-            className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
-          >
-            Become a Seller
-          </Link>
+          {!isSeller && (
+            <Link
+              href="/apply"
+              className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
+            >
+              Become a Seller
+            </Link>
+          )}
+          {isSeller && (
+            <Link
+              href="/seller"
+              className="text-forest-dark hover:text-forest-darker text-sm font-semibold transition-colors"
+            >
+              Seller Dashboard
+            </Link>
+          )}
           {isAdmin && (
             <Link
-              href="/admin/applications"
-              className="text-red-600 hover:text-red-700 text-sm font-semibold transition-colors"
+              href="/admin"
+              className="text-sm font-semibold text-red-600 transition-colors hover:text-red-700"
             >
               Admin
             </Link>
@@ -129,6 +140,14 @@ export function SiteHeader() {
                 </Button>
               )}
             </>
+          )}
+          {isSignedIn && (
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/favorites">
+                <Heart className="size-5" />
+                <span className="sr-only">Favorites</span>
+              </Link>
+            </Button>
           )}
           <Button variant="ghost" size="icon" asChild className="relative">
             <Link href="/cart">
@@ -188,17 +207,28 @@ export function SiteHeader() {
               >
                 Impact
               </Link>
-              <Link
-                href="/apply"
-                className="text-foreground hover:text-forest-dark text-base font-medium transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Become a Seller
-              </Link>
+              {!isSeller && (
+                <Link
+                  href="/apply"
+                  className="text-foreground hover:text-forest-dark text-base font-medium transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Become a Seller
+                </Link>
+              )}
+              {isSeller && (
+                <Link
+                  href="/seller"
+                  className="text-forest-dark hover:text-forest-darker text-base font-semibold transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Seller Dashboard
+                </Link>
+              )}
               {isAdmin && (
                 <Link
-                  href="/admin/applications"
-                  className="text-red-600 hover:text-red-700 text-base font-semibold transition-colors"
+                  href="/admin"
+                  className="text-base font-semibold text-red-600 transition-colors hover:text-red-700"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Admin Panel
@@ -232,6 +262,14 @@ export function SiteHeader() {
                   >
                     <ShoppingCart className="size-5" />
                     My Orders
+                  </Link>
+                  <Link
+                    href="/favorites"
+                    className="text-foreground hover:text-forest-dark flex items-center gap-2 text-base font-medium transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Heart className="size-5" />
+                    Favorites
                   </Link>
                 </>
               )}

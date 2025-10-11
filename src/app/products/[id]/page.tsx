@@ -17,6 +17,7 @@ import { ProductCard } from '@/components/eco/product-card';
 import { cn } from '@/lib/utils';
 import { getProductById, getProducts } from '@/actions/products';
 import { getProductReviews, getReviewStats, canUserReview } from '@/actions/reviews';
+import { checkIsFavorited } from '@/actions/favorites';
 import { AddToCartButton } from './add-to-cart-button';
 import { FavoriteButton } from './favorite-button';
 
@@ -83,13 +84,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
   }
 
   // Get review data
-  const [reviewsResult, statsResult, relatedProductsData] = await Promise.all([
+  const [reviewsResult, statsResult, relatedProductsData, favoriteResult] = await Promise.all([
     getProductReviews(id, { limit: 10, offset: 0, sortBy: 'recent' }),
     getReviewStats(id),
     getProducts({
       categoryIds: product.category ? [product.category.id] : undefined,
       limit: 3,
     }),
+    checkIsFavorited(id),
   ]);
 
   // Check if user can review
@@ -308,7 +310,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 shopName={product.shop.name}
                 disabled={product.trackInventory && product.inventoryQuantity === 0}
               />
-              <FavoriteButton productId={product.id} />
+              <FavoriteButton
+                productId={product.id}
+                initialIsFavorited={favoriteResult.isFavorited}
+              />
             </div>
 
             {/* Trust Badges */}

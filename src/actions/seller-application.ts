@@ -35,7 +35,10 @@ export async function createSellerApplication(input: CreateSellerApplicationInpu
     });
 
     if (existingApplication) {
-      if (existingApplication.status === 'PENDING' || existingApplication.status === 'UNDER_REVIEW') {
+      if (
+        existingApplication.status === 'PENDING' ||
+        existingApplication.status === 'UNDER_REVIEW'
+      ) {
         return { success: false, error: 'You already have a pending application' };
       }
       if (existingApplication.status === 'APPROVED') {
@@ -55,7 +58,6 @@ export async function createSellerApplication(input: CreateSellerApplicationInpu
     // Create the application
     const application = await db.sellerApplication.create({
       data: {
-        id: `app-${Date.now()}-${Math.random().toString(36).substring(7)}`,
         userId,
         businessName: input.businessName,
         businessWebsite: input.businessWebsite,
@@ -183,7 +185,6 @@ export async function updateApplicationStatus(
 
       await db.shop.create({
         data: {
-          id: `shop-${Date.now()}-${Math.random().toString(36).substring(7)}`,
           userId: application.userId,
           slug: `${slug}-${Date.now()}`,
           name: application.businessName,

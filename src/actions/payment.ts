@@ -126,7 +126,7 @@ export async function createOrder(input: CreateOrderInput) {
             id: true,
             title: true,
             trackInventory: true,
-            inventoryQuantity: true
+            inventoryQuantity: true,
           },
         });
 
@@ -137,7 +137,7 @@ export async function createOrder(input: CreateOrderInput) {
         if (product.trackInventory && product.inventoryQuantity < item.quantity) {
           return {
             success: false,
-            error: `Insufficient inventory for ${product.title}. Available: ${product.inventoryQuantity}, Requested: ${item.quantity}`
+            error: `Insufficient inventory for ${product.title}. Available: ${product.inventoryQuantity}, Requested: ${item.quantity}`,
           };
         }
 
@@ -189,7 +189,6 @@ export async function createOrder(input: CreateOrderInput) {
         // Create order item
         await tx.orderItem.create({
           data: {
-            id: `${newOrder.id}-${item.productId}`,
             orderId: newOrder.id,
             productId: item.productId,
             shopId: product.shopId,

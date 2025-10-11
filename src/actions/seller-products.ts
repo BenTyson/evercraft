@@ -7,12 +7,11 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { ProductStatus } from '@/generated/prisma';
+import { ProductStatus, Prisma } from '@/generated/prisma';
 import { revalidatePath } from 'next/cache';
 import {
   initializeProductEcoProfile,
   updateProductEcoProfile,
-  deleteProductEcoProfile,
   type ProductEcoProfileData,
 } from './product-eco-profile';
 
@@ -29,6 +28,7 @@ export interface CreateProductInput {
   inventoryQuantity?: number;
   trackInventory?: boolean;
   lowStockThreshold?: number;
+  status?: ProductStatus;
   ecoAttributes?: {
     material?: string;
     packaging?: string;
@@ -56,7 +56,6 @@ export interface UpdateProductInput extends Partial<CreateProductInput> {
 export async function createProduct(input: CreateProductInput) {
   try {
     const product = await db.product.create({
-      // @ts-expect-error - Prisma types are overly strict for auto-generated fields
       data: {
         title: input.title,
         description: input.description,
@@ -66,7 +65,7 @@ export async function createProduct(input: CreateProductInput) {
         categoryId: input.categoryId,
         shopId: input.shopId,
         tags: input.tags || [],
-        status: ProductStatus.DRAFT,
+        status: input.status || ProductStatus.DRAFT,
         inventoryQuantity: input.inventoryQuantity ?? 0,
         trackInventory: input.trackInventory ?? true,
         lowStockThreshold: input.lowStockThreshold,
@@ -254,10 +253,28 @@ export async function unpublishProduct(productId: string) {
 /**
  * Get all products for a specific shop (for seller dashboard)
  */
-export async function getSellerProducts(shopId: string) {
+export async function getSellerProducts(
+  shopId: string,
+  statusFilter?: ProductStatus,
+  userId?: string,
+  favoritesOnly?: boolean
+) {
   try {
+    const where: Prisma.ProductWhereInput = {
+      shopId,
+      ...(statusFilter && { status: statusFilter }),
+      ...(favoritesOnly &&
+        userId && {
+          favorites: {
+            some: {
+              userId,
+            },
+          },
+        }),
+    };
+
     const products = await db.product.findMany({
-      where: { shopId },
+      where,
       orderBy: { createdAt: 'desc' },
       include: {
         category: {
@@ -292,6 +309,16 @@ export async function getSellerProducts(shopId: string) {
             carbonNeutralShipping: true,
           },
         },
+        favorites: userId
+          ? {
+              where: {
+                userId,
+              },
+              select: {
+                id: true,
+              },
+            }
+          : false,
         _count: {
           select: {
             reviews: true,
@@ -307,6 +334,52 @@ export async function getSellerProducts(shopId: string) {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to fetch products',
       products: [],
+    };
+  }
+}
+
+/**
+ * Get product counts by status for a specific shop
+ */
+export async function getSellerProductCounts(shopId: string, userId?: string) {
+  try {
+    const [all, draft, active, soldOut, archived, favorites] = await Promise.all([
+      db.product.count({ where: { shopId } }),
+      db.product.count({ where: { shopId, status: ProductStatus.DRAFT } }),
+      db.product.count({ where: { shopId, status: ProductStatus.ACTIVE } }),
+      db.product.count({ where: { shopId, status: ProductStatus.SOLD_OUT } }),
+      db.product.count({ where: { shopId, status: ProductStatus.ARCHIVED } }),
+      userId
+        ? db.product.count({
+            where: {
+              shopId,
+              favorites: {
+                some: {
+                  userId,
+                },
+              },
+            },
+          })
+        : Promise.resolve(0),
+    ]);
+
+    return {
+      success: true,
+      counts: {
+        all,
+        draft,
+        active,
+        soldOut,
+        archived,
+        favorites,
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching product counts:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch counts',
+      counts: { all: 0, draft: 0, active: 0, soldOut: 0, archived: 0, favorites: 0 },
     };
   }
 }

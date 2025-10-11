@@ -1,7 +1,7 @@
 # EVERCRAFT CODEBASE MAP
 
 **Generated:** October 8, 2025
-**Last Updated:** October 11, 2025 (Session 8 - Eco-Impact V2 Migration ✅)
+**Last Updated:** October 11, 2025 (Session 9 - Favorites & Grid View ✅)
 **Purpose:** Comprehensive reference for understanding the Evercraft marketplace codebase structure, implementations, and capabilities.
 
 ---
@@ -189,6 +189,7 @@
 | `/orders`          | ✅ Built | `/src/app/orders/page.tsx`          | 216   | User's order history       |
 | `/orders/[id]`     | ✅ Built | `/src/app/orders/[id]/page.tsx`     | 353   | Order detail with tracking |
 | `/account/reviews` | ✅ Built | `/src/app/account/reviews/page.tsx` | 56    | User's reviews management  |
+| `/favorites`       | ✅ Built | `/src/app/favorites/page.tsx`       | 123   | User's favorited products  |
 
 ### Seller Dashboard
 
@@ -203,8 +204,10 @@
 **Seller Components:**
 
 - `/src/app/seller/products/product-form.tsx` - Product creation/edit form
-- `/src/app/seller/products/products-list.tsx` - Product listing table
-- `/src/app/seller/products/product-actions.tsx` - Product action buttons
+- `/src/app/seller/products/products-list.tsx` - Product listing with grid/list views ⭐
+- `/src/app/seller/products/product-actions.tsx` - Product action buttons with compact mode ⭐
+- `/src/app/seller/products/view-toggle.tsx` ⭐ NEW - Grid/list view toggle component
+- `/src/app/seller/products/status-tabs.tsx` - Status filtering with Favorites tab ⭐
 - `/src/app/seller/orders/orders-table.tsx` - Order management table (283 lines)
 - `/src/app/seller/orders/shipping-label-manager.tsx` - Shippo label generation UI (219 lines)
 
@@ -548,6 +551,24 @@
 | `getCategories()`     | List categories with product counts                         |
 | `getCertifications()` | List certifications with counts                             |
 
+### Favorites Actions ⭐ NEW
+
+**File:** `/src/actions/favorites.ts` (197 lines)
+
+| Function                      | Purpose                                        |
+| ----------------------------- | ---------------------------------------------- |
+| `toggleFavorite(productId)`   | Add/remove product from favorites              |
+| `checkIsFavorited(productId)` | Check if product is favorited by current user  |
+| `getFavorites()`              | Get user's all favorited products with details |
+| `getFavoritesCount()`         | Get count of user's favorites                  |
+
+**Features:**
+
+- ✅ Optimistic updates for instant UI feedback
+- ✅ Authentication required (redirects to sign-in)
+- ✅ Full product data with shop, category, certifications
+- ✅ Works for both buyers and sellers (sellers can favorite own products)
+
 **Features:**
 
 - ✅ 13 eco-filters: organic, recycled, vegan, biodegradable, fairTrade, plasticFree, recyclable, compostable, minimal, carbonNeutral, local, madeToOrder, renewableEnergy
@@ -555,22 +576,27 @@
 - ✅ Includes eco-profile data in queries
 - ✅ Includes shop eco-profile tier and completeness
 
-**File:** `/src/actions/seller-products.ts` (402 lines) ⭐ UPDATED
+**File:** `/src/actions/seller-products.ts` (485 lines) ⭐ UPDATED
 
-| Function                    | Purpose                                               |
-| --------------------------- | ----------------------------------------------------- |
-| `getSellerShop(userId)`     | Get seller's shop details with eco-profile ⭐         |
-| `getSellerProducts(shopId)` | Get seller's product listings with eco-profiles ⭐    |
-| `createProduct(input)`      | Create new product with eco-profile initialization ⭐ |
-| `updateProduct(id, input)`  | Update existing product and eco-profile ⭐            |
-| `deleteProduct(id)`         | Delete product                                        |
-| Product status management   | (DRAFT → ACTIVE → ARCHIVED)                           |
+| Function                                                            | Purpose                                               |
+| ------------------------------------------------------------------- | ----------------------------------------------------- |
+| `getSellerShop(userId)`                                             | Get seller's shop details with eco-profile ⭐         |
+| `getSellerProducts(shopId, statusFilter?, userId?, favoritesOnly?)` | Get seller's products with filters ⭐                 |
+| `getSellerProductCounts(shopId, userId?)`                           | Get product counts by status + favorites ⭐           |
+| `createProduct(input)`                                              | Create new product with eco-profile initialization ⭐ |
+| `updateProduct(id, input)`                                          | Update existing product and eco-profile ⭐            |
+| `deleteProduct(id)`                                                 | Delete product                                        |
+| Product status management                                           | (DRAFT → ACTIVE → ARCHIVED)                           |
+| Bulk operations                                                     | Bulk publish, unpublish, delete                       |
 
 **Features:**
 
 - ✅ Auto-initializes eco-profile on product creation
 - ✅ Updates eco-profile on product updates
 - ✅ Includes eco-profile completeness in product listings
+- ✅ Favorites filtering (sellers can filter their favorited products) ⭐
+- ✅ Status filtering with counts (All, Favorites, Draft, Active, Sold Out, Archived) ⭐
+- ✅ Includes favorite status for current user ⭐
 
 ### Order Actions
 
@@ -717,6 +743,7 @@
 | `<SustainabilityScore>`   | `sustainability-score.tsx` | ~150  | Product sustainability scoring display (legacy)            |
 | `<ImpactWidget>`          | `impact-widget.tsx`        | ~100  | Impact metrics widget                                      |
 | `<ProductCard>`           | `product-card.tsx`         | ~200  | Product grid card with ratings, certifications             |
+| `<FavoriteButton>` ⭐     | `favorite-button.tsx`      | ~65   | Product favorite toggle with optimistic updates            |
 
 ### Seller Components ⭐ NEW
 
@@ -1012,19 +1039,20 @@
 
 ### Advanced Features
 
-| Feature                    | Status          | Details                                                           |
-| -------------------------- | --------------- | ----------------------------------------------------------------- |
-| **Sustainability Scoring** | ✅ Schema Ready | `SustainabilityScore` model exists, UI displays scores            |
-| **Nonprofit Integration**  | ✅ Complete     | Full integration: admin mgmt, seller selection, donation tracking |
-| **Inventory Management**   | ✅ Complete     | Track quantity, low stock alerts, auto-decrement on purchase      |
-| **Shipping Profiles**      | 🚧 Partial      | Schema exists (`ShippingProfile` model), view-only UI built       |
-| **Promotions/Coupons**     | ✅ Complete     | Full CRUD, usage tracking, expiration, discount management ⭐     |
-| **Messaging System**       | ❌ Not Built    | Schema exists (`Message` model), no UI                            |
-| **Support Tickets**        | ❌ Not Built    | Schema exists (`SupportTicket` model), no UI                      |
-| **Analytics Events**       | 🚧 Partial      | Schema exists (`AnalyticsEvent` model), tracking not implemented  |
-| **Search History**         | 🚧 Partial      | Schema exists (`SearchHistory` model), tracking not implemented   |
-| **Collections**            | ❌ Not Built    | Schema exists (user product collections), no UI                   |
-| **Favorites/Wishlist**     | 🚧 Partial      | Schema exists, UI shows heart icon but no persistence             |
+| Feature                      | Status          | Details                                                                   |
+| ---------------------------- | --------------- | ------------------------------------------------------------------------- |
+| **Sustainability Scoring**   | ✅ Schema Ready | `SustainabilityScore` model exists, UI displays scores                    |
+| **Nonprofit Integration**    | ✅ Complete     | Full integration: admin mgmt, seller selection, donation tracking         |
+| **Inventory Management**     | ✅ Complete     | Track quantity, low stock alerts, auto-decrement on purchase              |
+| **Shipping Profiles**        | 🚧 Partial      | Schema exists (`ShippingProfile` model), view-only UI built               |
+| **Grid/List View Toggle** ⭐ | ✅ Complete     | Seller products page supports both grid and list layouts with URL state   |
+| **Promotions/Coupons**       | ✅ Complete     | Full CRUD, usage tracking, expiration, discount management ⭐             |
+| **Favorites/Wishlist** ⭐    | ✅ Complete     | Full implementation with persistence, /favorites page, optimistic updates |
+| **Messaging System**         | ❌ Not Built    | Schema exists (`Message` model), no UI                                    |
+| **Support Tickets**          | ❌ Not Built    | Schema exists (`SupportTicket` model), no UI                              |
+| **Analytics Events**         | 🚧 Partial      | Schema exists (`AnalyticsEvent` model), tracking not implemented          |
+| **Search History**           | 🚧 Partial      | Schema exists (`SearchHistory` model), tracking not implemented           |
+| **Collections**              | ❌ Not Built    | Schema exists (user product collections), no UI                           |
 
 ### Missing/Incomplete Features
 
@@ -1216,4 +1244,35 @@
 ---
 
 **End of Codebase Map**
-_Last Updated: October 11, 2025_
+_Last Updated: October 11, 2025 (Session 9)_
+
+## SESSION 9 UPDATES (October 11, 2025) ⭐
+
+### Favorites System (✅ Complete)
+
+- **New Server Actions**: `/src/actions/favorites.ts` (197 lines)
+  - `toggleFavorite()` - Add/remove with optimistic updates
+  - `checkIsFavorited()` - Check favorite status
+  - `getFavorites()` - Get all user favorites
+  - `getFavoritesCount()` - Count favorites
+- **New Page**: `/src/app/favorites/page.tsx` - Dedicated favorites page with grid layout
+- **Updated Components**:
+  - `FavoriteButton` - Connected to server actions with optimistic UI
+  - Browse page - Loads and syncs favorites
+  - Product detail page - Shows favorite status
+- **Site Header**: Added heart icon to navigation (desktop + mobile)
+- **Seller Integration**: Sellers can favorite their own products from product list
+- **Favorites Tab**: Added to seller products page with count
+
+### Grid/List View Toggle (✅ Complete)
+
+- **New Component**: `/src/app/seller/products/view-toggle.tsx` - Clean icon-based toggle
+- **Updated Components**:
+  - `ProductsList` - Supports both grid and list modes
+  - `ProductActions` - Compact mode for grid view (icon-only buttons)
+- **Features**:
+  - URL-based state (`?view=grid`)
+  - Responsive grid (1→2→3→4 columns)
+  - Icon-only buttons with tooltips in grid view
+  - List view unchanged (full-size buttons with labels)
+  - Wrapping action buttons prevent overflow
