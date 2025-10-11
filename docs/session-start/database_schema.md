@@ -1,7 +1,7 @@
 # Database Schema
 
-**Last Updated:** October 9, 2025
-**Status:** ✅ Production - Fully implemented with 27 models (Analytics-optimized)
+**Last Updated:** October 11, 2025
+**Status:** ✅ Production - Fully implemented with 30 models (Analytics-optimized with Eco-Impact V2)
 
 ---
 
@@ -125,6 +125,7 @@ model Shop {
   promotions          Promotion[]
   sellerReviews       SellerReview[]
   analyticsEvents     AnalyticsEvent[]
+  ecoProfile          ShopEcoProfile?  // Eco-Impact V2 (shop sustainability practices)
 }
 
 enum VerificationStatus {
@@ -136,6 +137,7 @@ enum VerificationStatus {
 ```
 
 **⚠️ Important Notes:**
+
 - **Accessing orders**: Shop has `orderItems` relation, not `orders` relation
 - **To filter by order status**: Navigate through `orderItems.order.paymentStatus`
 - **Example**: `shop.orderItems.some({ order: { paymentStatus: 'PAID' } })`
@@ -161,8 +163,8 @@ model Product {
   trackInventory     Boolean  @default(true)
   lowStockThreshold  Int?
   status             ProductStatus @default(DRAFT)
-  ecoScore           Int?     // 0-100
-  ecoAttributes      Json?    // Materials, certifications, packaging, etc.
+  ecoScore           Int?     // 0-100 (LEGACY - being phased out, use ecoProfile)
+  ecoAttributes      Json?    // (LEGACY - being phased out, use ecoProfile)
   metaTitle          String?
   metaDescription    String?
   createdAt          DateTime @default(now())
@@ -178,7 +180,8 @@ model Product {
   collectionProducts CollectionProduct[]
   orderItems      OrderItem[]
   certifications  Certification[]
-  sustainabilityScore SustainabilityScore?
+  sustainabilityScore SustainabilityScore?  // LEGACY (Phase 5 cleanup)
+  ecoProfile      ProductEcoProfile?       // Eco-Impact V2 (badge-based system)
 }
 
 enum ProductStatus {
@@ -190,6 +193,7 @@ enum ProductStatus {
 ```
 
 **⚠️ Important Notes:**
+
 - **Inventory field**: Use `inventoryQuantity` (NOT `quantity`)
 - **Category queries**: Use `categoryId` scalar for `groupBy` operations (NOT `category` relation)
 - **Inventory tracking**: Added in migration `20251007031524_add_product_inventory`
@@ -345,6 +349,7 @@ model OrderItem {
 ```
 
 **⚠️ Important Notes:**
+
 - **Use `subtotal` for revenue**: This field contains the line total (priceAtPurchase × quantity)
 - **No `price` field exists**: The field is `priceAtPurchase`, not `price`
 - **Ambiguous column warning**: Both Order and OrderItem have a `subtotal` field. When querying OrderItem with Order filters, pre-fetch order IDs to avoid JOIN ambiguity
@@ -508,6 +513,134 @@ model Message {
 
 ---
 
+### ShopEcoProfile
+
+Shop-level eco-profile (Eco-Impact V2 - Badge-based system).
+
+```prisma
+model ShopEcoProfile {
+  id                      String   @id @default(cuid())
+  shopId                  String   @unique
+  completenessPercent     Int      @default(0)  // 0-100
+  tier                    String   @default("starter")  // starter | verified | certified
+
+  // Tier 1: Basic Practices (70% weight)
+  plasticFreePackaging    Boolean  @default(false)
+  recycledPackaging       Boolean  @default(false)
+  biodegradablePackaging  Boolean  @default(false)
+  organicMaterials        Boolean  @default(false)
+  recycledMaterials       Boolean  @default(false)
+  fairTradeSourcing       Boolean  @default(false)
+  localSourcing           Boolean  @default(false)
+  carbonNeutralShipping   Boolean  @default(false)
+  renewableEnergy         Boolean  @default(false)
+  carbonOffset            Boolean  @default(false)
+
+  // Tier 2: Optional Details (30% weight)
+  annualCarbonEmissions   Float?
+  carbonOffsetPercent     Float?
+  renewableEnergyPercent  Float?
+  waterConservation       Boolean  @default(false)
+  fairWageCertified       Boolean  @default(false)
+  takeBackProgram         Boolean  @default(false)
+  repairService           Boolean  @default(false)
+
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  // Relations
+  shop                    Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+  @@index([tier])
+  @@index([completenessPercent])
+}
+```
+
+**Features:**
+
+- **Completeness scoring:** 0-100% based on fields filled (not quality)
+- **Tiered system:** Starter (<60%), Verified (60-84%), Certified (85%+)
+- **Two-tier disclosure:** Tier 1 (quick toggles) + Tier 2 (optional details)
+- **Auto-calculated:** Completeness and tier updated on save
+
+---
+
+### ProductEcoProfile
+
+Product-level eco-profile (Eco-Impact V2 - Badge-based system).
+
+```prisma
+model ProductEcoProfile {
+  id                      String   @id @default(cuid())
+  productId               String   @unique
+  completenessPercent     Int      @default(0)  // 0-100
+
+  // Materials (Tier 1)
+  isOrganic               Boolean  @default(false)
+  isRecycled              Boolean  @default(false)
+  isBiodegradable         Boolean  @default(false)
+  isVegan                 Boolean  @default(false)
+  isFairTrade             Boolean  @default(false)
+  organicPercent          Float?   // Tier 2 detail
+  recycledPercent         Float?   // Tier 2 detail
+
+  // Packaging (Tier 1)
+  plasticFreePackaging    Boolean  @default(false)
+  recyclablePackaging     Boolean  @default(false)
+  compostablePackaging    Boolean  @default(false)
+  minimalPackaging        Boolean  @default(false)
+
+  // Carbon & Origin (Tier 1)
+  carbonNeutralShipping   Boolean  @default(false)
+  madeLocally             Boolean  @default(false)
+  madeToOrder             Boolean  @default(false)
+  renewableEnergyMade     Boolean  @default(false)
+  carbonFootprintKg       Float?   // Tier 2 detail
+  madeIn                  String?  // Tier 2 detail
+
+  // End of Life (Tier 1)
+  isRecyclable            Boolean  @default(false)
+  isCompostable           Boolean  @default(false)
+  isRepairable            Boolean  @default(false)
+  hasDisposalInfo         Boolean  @default(false)
+  disposalInstructions    String?  // Tier 2 detail
+
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  // Relations
+  product                 Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([completenessPercent])
+  @@index([isOrganic])
+  @@index([isRecycled])
+  @@index([isVegan])
+  @@index([plasticFreePackaging])
+  @@index([carbonNeutralShipping])
+  @@index([madeLocally])
+}
+```
+
+**Features:**
+
+- **17 Tier-1 attributes:** Quick toggles for key eco-attributes
+- **5 Tier-2 details:** Optional detailed information (percentages, instructions)
+- **Completeness scoring:** 0-100% (70% from Tier 1, 30% from Tier 2)
+- **13 eco-filters:** Browse page filtering by attributes
+- **Badge-based display:** No numerical scores, just objective attributes
+
+**Calculation:**
+
+```typescript
+Tier 1: (activeCount / 17) × 70 = up to 70 points
+Tier 2: (activeCount / 5) × 30 = up to 30 points
+Total: 0-100%
+```
+
+---
+
 ### Additional Entities (See PROJECT_PLAN.md for full list)
 
 - **Addresses** - User shipping/billing addresses
@@ -517,7 +650,9 @@ model Message {
 - **CollectionProducts** - Products in collections
 - **SellerApplications** - Seller verification applications
 - **Certifications** - Product/shop eco-certifications
-- **SustainabilityScores** - Detailed eco-scoring
+- **SustainabilityScores** - Detailed eco-scoring (LEGACY - being replaced by eco-profiles)
+- **ShopEcoProfile** - Shop sustainability practices (Eco-Impact V2)
+- **ProductEcoProfile** - Product eco-attributes (Eco-Impact V2)
 - **Promotions** - Coupons and discounts
 - **AnalyticsEvents** - Event tracking
 - **SupportTickets** - Customer support
@@ -633,7 +768,7 @@ model Review {
 
 ### ✅ Completed
 
-1. **Schema design** - All 27 models defined
+1. **Schema design** - All 30 models defined (including Eco-Impact V2)
 2. **Prisma schema file** - `/prisma/schema.prisma` fully implemented
 3. **Initial migration** - Database migrated and seeded
 4. **Seed database** - Sample data for categories, nonprofits, users, shops, products, reviews
@@ -650,6 +785,7 @@ model Review {
 - **Orders & Fulfillment** - Order management, bulk processing, shipping calculator
 - **Reviews & Ratings** - Complete review system with helpful votes and verified purchases
 - **Impact Tracking** - Nonprofit donations and environmental metrics
+- **Eco-Impact V2** - Badge-based eco-profiles with completeness tracking and 13 filters
 - **Admin Tools** - Seller verification, product moderation
 
 ---
@@ -681,26 +817,31 @@ All models include appropriate indexes for:
 **⚠️ Common Mistakes to Avoid:**
 
 ### OrderItem Fields
+
 - ✅ Use `subtotal` for revenue calculations
 - ❌ NOT `price` (field doesn't exist)
 - ℹ️ `priceAtPurchase` contains the unit price at time of purchase
 - ℹ️ `subtotal` = priceAtPurchase × quantity (already calculated)
 
 ### Product Fields
+
 - ✅ Use `inventoryQuantity` for stock queries
 - ❌ NOT `quantity` (field doesn't exist)
 - ✅ Use `categoryId` scalar for `groupBy` operations
 - ❌ NOT `category` (that's the relation, not usable in groupBy)
 
 ### Shop Relations
+
 - ✅ Use `orderItems` relation to access shop's orders
 - ❌ NOT `orders` (relation doesn't exist on Shop)
 - ℹ️ To filter by order status: `shop.orderItems.some({ order: { paymentStatus: 'PAID' } })`
 
 ### Query Optimization
+
 - ⚠️ **JOIN Ambiguity**: Both Order and OrderItem have a `subtotal` field
 - ✅ **Solution**: Pre-fetch order IDs when filtering OrderItem by Order.paymentStatus
 - ✅ **Example**:
+
   ```typescript
   const paidOrders = await db.order.findMany({
     where: { paymentStatus: 'PAID' },
@@ -709,7 +850,7 @@ All models include appropriate indexes for:
   const paidOrderIds = paidOrders.map((o) => o.id);
 
   await db.orderItem.findMany({
-    where: { orderId: { in: paidOrderIds } }
+    where: { orderId: { in: paidOrderIds } },
   });
   ```
 
@@ -724,7 +865,24 @@ All models include appropriate indexes for:
 - ✅ Soft deletes not implemented (using CASCADE deletes)
 - ✅ Full ERD available in Prisma schema file
 - ✅ **All analytics queries optimized** for performance and schema compliance
+- ✅ **Eco-Impact V2 implemented** - Badge-based system with ShopEcoProfile and ProductEcoProfile models (Phase 1-4 complete)
 
 **Schema Location:** `/prisma/schema.prisma`
 **Generated Client:** `/src/generated/prisma`
 **Seed Script:** `/prisma/seed.ts`
+
+---
+
+## Migration History
+
+### Recent Migrations
+
+**Migration #4: `add_eco_profiles_v2` (October 11, 2025)**
+
+- Added `ShopEcoProfile` model (shop sustainability practices)
+- Added `ProductEcoProfile` model (product eco-attributes)
+- Added 30+ new fields across both models
+- Added indexes for filtering and performance
+- Non-breaking migration (legacy `ecoScore` and `ecoAttributes` preserved)
+
+**Status:** ✅ Complete - All 30 models operational

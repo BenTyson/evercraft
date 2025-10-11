@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Store, Palette, Heart, Package, User } from 'lucide-react';
+import { Store, Palette, Heart, Package, User, Leaf } from 'lucide-react';
 import ShopProfileTab from './shop-profile-tab';
 import BrandingTab from './branding-tab';
 import NonprofitTab from './nonprofit-tab';
 import ShippingTab from './shipping-tab-simple';
 import AccountTab from './account-tab';
+import EcoProfileTab from './eco-profile-tab';
 
 interface Shop {
   id: string;
@@ -43,7 +44,7 @@ interface SettingsTabsProps {
   shop: Shop;
 }
 
-type TabId = 'profile' | 'branding' | 'nonprofit' | 'shipping' | 'account';
+type TabId = 'profile' | 'branding' | 'eco-profile' | 'nonprofit' | 'shipping' | 'account';
 
 const tabs = [
   {
@@ -57,6 +58,12 @@ const tabs = [
     name: 'Branding',
     icon: Palette,
     description: 'Logo, colors, and visual identity',
+  },
+  {
+    id: 'eco-profile' as TabId,
+    name: 'Eco-Profile',
+    icon: Leaf,
+    description: 'Sustainability practices and credentials',
   },
   {
     id: 'nonprofit' as TabId,
@@ -122,6 +129,7 @@ export default function SettingsTabs({ shop }: SettingsTabsProps) {
         <div className="rounded-lg border bg-white p-6">
           {activeTab === 'profile' && <ShopProfileTab shop={shop} />}
           {activeTab === 'branding' && <BrandingTab shop={shop} />}
+          {activeTab === 'eco-profile' && <EcoProfileTab shopId={shop.id} />}
           {activeTab === 'nonprofit' && <NonprofitTab shop={shop} />}
           {activeTab === 'shipping' && <ShippingTab shop={shop} />}
           {activeTab === 'account' && <AccountTab />}

@@ -15,7 +15,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SiteHeader } from '@/components/layout/site-header';
 import { ProductCard } from '@/components/eco/product-card';
-import { getProducts, getCategories, getCertifications } from '@/actions/products';
+import { EcoFilterPanel } from '@/components/eco/eco-filter-panel';
+import {
+  getProducts,
+  getCategories,
+  getCertifications,
+  type GetProductsParams,
+} from '@/actions/products';
 
 type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'newest';
 
@@ -25,9 +31,36 @@ interface Product {
   price: number;
   compareAtPrice: number | null;
   images: Array<{ url: string; altText: string | null }>;
-  shop: { id: string; name: string; slug: string | null };
-  certifications: Array<{ id: string; name: string }>;
+  shop: {
+    id: string;
+    name: string;
+    slug: string | null;
+    ecoProfile: {
+      completenessPercent: number;
+      tier: string;
+    } | null;
+  };
+  certifications: Array<{ id: string; name: string; verified: boolean }>;
   sustainabilityScore: { totalScore: number } | null;
+  ecoProfile: {
+    completenessPercent: number;
+    isOrganic?: boolean;
+    isRecycled?: boolean;
+    isBiodegradable?: boolean;
+    isVegan?: boolean;
+    isFairTrade?: boolean;
+    plasticFreePackaging?: boolean;
+    recyclablePackaging?: boolean;
+    compostablePackaging?: boolean;
+    minimalPackaging?: boolean;
+    carbonNeutralShipping?: boolean;
+    madeLocally?: boolean;
+    madeToOrder?: boolean;
+    renewableEnergyMade?: boolean;
+    isRecyclable?: boolean;
+    isCompostable?: boolean;
+    isRepairable?: boolean;
+  } | null;
 }
 
 interface Category {
@@ -42,6 +75,23 @@ interface Certification {
   count: number;
 }
 
+interface EcoFilters {
+  organic?: boolean;
+  recycled?: boolean;
+  vegan?: boolean;
+  biodegradable?: boolean;
+  fairTrade?: boolean;
+  plasticFree?: boolean;
+  recyclable?: boolean;
+  compostable?: boolean;
+  minimal?: boolean;
+  carbonNeutral?: boolean;
+  local?: boolean;
+  madeToOrder?: boolean;
+  renewableEnergy?: boolean;
+  minCompleteness?: number;
+}
+
 export default function BrowsePage() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
@@ -49,6 +99,7 @@ export default function BrowsePage() {
   const [certifications, setCertifications] = useState<Certification[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedCertifications, setSelectedCertifications] = useState<string[]>([]);
+  const [ecoFilters, setEcoFilters] = useState<EcoFilters>({});
   const [sortBy, setSortBy] = useState<SortOption>('featured');
   const [favorited, setFavorited] = useState<Record<string, boolean>>({});
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
@@ -85,9 +136,15 @@ export default function BrowsePage() {
   useEffect(() => {
     async function loadProducts() {
       try {
+        // Convert ecoFilters to getProducts format
+        const { minCompleteness, ...filters } = ecoFilters;
+        const hasEcoFilters = Object.values(filters).some(Boolean);
+
         const productsData = await getProducts({
           categoryIds: selectedCategories.length > 0 ? selectedCategories : undefined,
           certificationIds: selectedCertifications.length > 0 ? selectedCertifications : undefined,
+          ecoFilters: hasEcoFilters ? filters : undefined,
+          minEcoCompleteness: minCompleteness,
           sortBy,
         });
 
@@ -103,7 +160,7 @@ export default function BrowsePage() {
         loadProducts();
       });
     }
-  }, [selectedCategories, selectedCertifications, sortBy, isLoading]);
+  }, [selectedCategories, selectedCertifications, ecoFilters, sortBy, isLoading]);
 
   const toggleCategory = (categoryId: string) => {
     setSelectedCategories((prev) =>
@@ -124,9 +181,14 @@ export default function BrowsePage() {
   const clearFilters = () => {
     setSelectedCategories([]);
     setSelectedCertifications([]);
+    setEcoFilters({});
   };
 
-  const activeFilterCount = selectedCategories.length + selectedCertifications.length;
+  const activeEcoFilterCount = Object.values(ecoFilters).filter(
+    (v) => v === true || (typeof v === 'number' && v > 0)
+  ).length;
+  const activeFilterCount =
+    selectedCategories.length + selectedCertifications.length + activeEcoFilterCount;
 
   // Convert certification names to badge variants
   const getCertificationVariant = (name: string) => {
@@ -168,11 +230,11 @@ export default function BrowsePage() {
           <div className="mx-auto max-w-3xl">
             {/* Large Search Bar */}
             <div className="relative">
-              <Search className="text-muted-foreground absolute left-4 top-1/2 size-5 -translate-y-1/2" />
+              <Search className="text-muted-foreground absolute top-1/2 left-4 size-5 -translate-y-1/2" />
               <Input
                 type="search"
                 placeholder="Search eco-friendly products, brands, or categories..."
-                className="h-14 pl-12 pr-4 text-base shadow-sm"
+                className="h-14 pr-4 pl-12 text-base shadow-sm"
               />
             </div>
 
@@ -218,7 +280,7 @@ export default function BrowsePage() {
               </div>
 
               {/* Certifications */}
-              <div>
+              <div className="mb-6">
                 <h3 className="mb-3 text-sm font-semibold tracking-wide uppercase">
                   Certifications
                 </h3>
@@ -236,6 +298,19 @@ export default function BrowsePage() {
                     </label>
                   ))}
                 </div>
+              </div>
+
+              {/* Eco Attributes */}
+              <div>
+                <h3 className="mb-3 text-sm font-semibold tracking-wide uppercase">
+                  Eco Attributes
+                </h3>
+                <EcoFilterPanel
+                  filters={ecoFilters}
+                  onFilterChange={setEcoFilters}
+                  resultCount={totalCount}
+                  showClearAll={false}
+                />
               </div>
             </div>
           </aside>
@@ -419,6 +494,17 @@ export default function BrowsePage() {
                   </label>
                 ))}
               </div>
+            </div>
+
+            {/* Eco Attributes */}
+            <div className="mb-6">
+              <h3 className="mb-3 text-sm font-semibold tracking-wide uppercase">Eco Attributes</h3>
+              <EcoFilterPanel
+                filters={ecoFilters}
+                onFilterChange={setEcoFilters}
+                resultCount={totalCount}
+                showClearAll={false}
+              />
             </div>
 
             {/* Actions */}

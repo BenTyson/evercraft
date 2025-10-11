@@ -16,6 +16,24 @@ export interface GetProductsParams {
   sortBy?: 'featured' | 'price-low' | 'price-high' | 'rating' | 'newest';
   limit?: number;
   offset?: number;
+
+  // Eco-filtering options
+  ecoFilters?: {
+    organic?: boolean;
+    recycled?: boolean;
+    vegan?: boolean;
+    biodegradable?: boolean;
+    fairTrade?: boolean;
+    plasticFree?: boolean;
+    recyclable?: boolean;
+    compostable?: boolean;
+    minimal?: boolean;
+    carbonNeutral?: boolean;
+    local?: boolean;
+    madeToOrder?: boolean;
+    renewableEnergy?: boolean;
+  };
+  minEcoCompleteness?: number; // 0-100
 }
 
 export async function getProducts(params: GetProductsParams = {}) {
@@ -26,6 +44,8 @@ export async function getProducts(params: GetProductsParams = {}) {
     sortBy = 'featured',
     limit = 20,
     offset = 0,
+    ecoFilters,
+    minEcoCompleteness,
   } = params;
 
   try {
@@ -61,6 +81,118 @@ export async function getProducts(params: GetProductsParams = {}) {
           { title: { contains: search, mode: 'insensitive' } },
           { description: { contains: search, mode: 'insensitive' } },
         ],
+      });
+    }
+
+    // Eco-filters
+    if (ecoFilters) {
+      const ecoConditions: Prisma.ProductWhereInput[] = [];
+
+      if (ecoFilters.organic) {
+        ecoConditions.push({
+          ecoProfile: {
+            isOrganic: true,
+          },
+        });
+      }
+      if (ecoFilters.recycled) {
+        ecoConditions.push({
+          ecoProfile: {
+            isRecycled: true,
+          },
+        });
+      }
+      if (ecoFilters.vegan) {
+        ecoConditions.push({
+          ecoProfile: {
+            isVegan: true,
+          },
+        });
+      }
+      if (ecoFilters.biodegradable) {
+        ecoConditions.push({
+          ecoProfile: {
+            isBiodegradable: true,
+          },
+        });
+      }
+      if (ecoFilters.fairTrade) {
+        ecoConditions.push({
+          ecoProfile: {
+            isFairTrade: true,
+          },
+        });
+      }
+      if (ecoFilters.plasticFree) {
+        ecoConditions.push({
+          ecoProfile: {
+            plasticFreePackaging: true,
+          },
+        });
+      }
+      if (ecoFilters.recyclable) {
+        ecoConditions.push({
+          ecoProfile: {
+            recyclablePackaging: true,
+          },
+        });
+      }
+      if (ecoFilters.compostable) {
+        ecoConditions.push({
+          ecoProfile: {
+            compostablePackaging: true,
+          },
+        });
+      }
+      if (ecoFilters.minimal) {
+        ecoConditions.push({
+          ecoProfile: {
+            minimalPackaging: true,
+          },
+        });
+      }
+      if (ecoFilters.carbonNeutral) {
+        ecoConditions.push({
+          ecoProfile: {
+            carbonNeutralShipping: true,
+          },
+        });
+      }
+      if (ecoFilters.local) {
+        ecoConditions.push({
+          ecoProfile: {
+            madeLocally: true,
+          },
+        });
+      }
+      if (ecoFilters.madeToOrder) {
+        ecoConditions.push({
+          ecoProfile: {
+            madeToOrder: true,
+          },
+        });
+      }
+      if (ecoFilters.renewableEnergy) {
+        ecoConditions.push({
+          ecoProfile: {
+            renewableEnergyMade: true,
+          },
+        });
+      }
+
+      if (ecoConditions.length > 0) {
+        andConditions.push({ AND: ecoConditions });
+      }
+    }
+
+    // Minimum eco-completeness filter
+    if (minEcoCompleteness !== undefined && minEcoCompleteness > 0) {
+      andConditions.push({
+        ecoProfile: {
+          completenessPercent: {
+            gte: minEcoCompleteness,
+          },
+        },
       });
     }
 
@@ -102,6 +234,12 @@ export async function getProducts(params: GetProductsParams = {}) {
             id: true,
             name: true,
             slug: true,
+            ecoProfile: {
+              select: {
+                completenessPercent: true,
+                tier: true,
+              },
+            },
           },
         },
         category: {
@@ -115,6 +253,7 @@ export async function getProducts(params: GetProductsParams = {}) {
             id: true,
             name: true,
             type: true,
+            verified: true,
           },
         },
         images: {
@@ -125,6 +264,27 @@ export async function getProducts(params: GetProductsParams = {}) {
           select: {
             url: true,
             altText: true,
+          },
+        },
+        ecoProfile: {
+          select: {
+            completenessPercent: true,
+            isOrganic: true,
+            isRecycled: true,
+            isBiodegradable: true,
+            isVegan: true,
+            isFairTrade: true,
+            plasticFreePackaging: true,
+            recyclablePackaging: true,
+            compostablePackaging: true,
+            minimalPackaging: true,
+            carbonNeutralShipping: true,
+            madeLocally: true,
+            madeToOrder: true,
+            renewableEnergyMade: true,
+            isRecyclable: true,
+            isCompostable: true,
+            isRepairable: true,
           },
         },
         sustainabilityScore: {
@@ -166,6 +326,16 @@ export async function getProductById(id: string) {
             bio: true,
             logo: true,
             createdAt: true,
+            ecoProfile: {
+              select: {
+                completenessPercent: true,
+                tier: true,
+                plasticFreePackaging: true,
+                organicMaterials: true,
+                carbonNeutralShipping: true,
+                renewableEnergy: true,
+              },
+            },
           },
         },
         category: {
@@ -179,6 +349,8 @@ export async function getProductById(id: string) {
             id: true,
             name: true,
             type: true,
+            verified: true,
+            verifiedAt: true,
           },
         },
         images: {
@@ -192,6 +364,7 @@ export async function getProductById(id: string) {
             isPrimary: true,
           },
         },
+        ecoProfile: true,
         sustainabilityScore: {
           select: {
             totalScore: true,

@@ -14,10 +14,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ImageUpload } from '@/components/image-upload';
 import {
-  createProduct,
-  updateProduct,
-  type CreateProductInput,
-} from '@/actions/seller-products';
+  ProductEcoProfileForm,
+  type ProductEcoProfileData,
+} from '@/components/seller/product-eco-profile-form';
+import { createProduct, updateProduct, type CreateProductInput } from '@/actions/seller-products';
 
 interface ProductFormProps {
   shopId: string;
@@ -51,6 +51,7 @@ export function ProductForm({
     tags: initialData?.tags || [],
     certificationIds: initialData?.certificationIds || [],
     ecoAttributes: initialData?.ecoAttributes || {},
+    ecoProfile: initialData?.ecoProfile || {},
     images: initialData?.images || [],
     inventoryQuantity: initialData?.inventoryQuantity ?? 0,
     trackInventory: initialData?.trackInventory ?? true,
@@ -122,6 +123,10 @@ export function ProductForm({
     }));
   };
 
+  const handleEcoProfileChange = (ecoProfile: Partial<ProductEcoProfileData>) => {
+    setFormData((prev) => ({ ...prev, ecoProfile }));
+  };
+
   const toggleCertification = (certId: string) => {
     setFormData((prev) => {
       const current = prev.certificationIds || [];
@@ -169,7 +174,7 @@ export function ProductForm({
             placeholder="Describe your product, its features, and sustainability benefits..."
             required
             rows={4}
-            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[80px] w-full rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[80px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           />
         </div>
 
@@ -183,7 +188,7 @@ export function ProductForm({
               value={formData.categoryId}
               onChange={(e) => handleChange('categoryId', e.target.value)}
               required
-              className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="">Select a category</option>
               {categories.map((cat) => (
@@ -262,9 +267,7 @@ export function ProductForm({
               }
               placeholder="34.99"
             />
-            <p className="text-muted-foreground mt-1 text-xs">
-              Show original price for discounts
-            </p>
+            <p className="text-muted-foreground mt-1 text-xs">Show original price for discounts</p>
           </div>
         </div>
       </div>
@@ -279,12 +282,13 @@ export function ProductForm({
               type="checkbox"
               checked={formData.trackInventory ?? true}
               onChange={(e) => handleChange('trackInventory', e.target.checked)}
-              className="size-4 rounded border-gray-300 text-forest-dark focus:ring-forest-dark"
+              className="text-forest-dark focus:ring-forest-dark size-4 rounded border-gray-300"
             />
             <span className="text-sm font-medium">Track inventory for this product</span>
           </label>
-          <p className="text-muted-foreground ml-7 mt-1 text-xs">
-            Evercraft will track stock levels and show &quot;Out of Stock&quot; when quantity reaches zero
+          <p className="text-muted-foreground mt-1 ml-7 text-xs">
+            Evercraft will track stock levels and show &quot;Out of Stock&quot; when quantity
+            reaches zero
           </p>
         </div>
 
@@ -300,10 +304,7 @@ export function ProductForm({
                 min="0"
                 value={formData.inventoryQuantity ?? 0}
                 onChange={(e) =>
-                  handleChange(
-                    'inventoryQuantity',
-                    e.target.value ? parseInt(e.target.value) : 0
-                  )
+                  handleChange('inventoryQuantity', e.target.value ? parseInt(e.target.value) : 0)
                 }
                 placeholder="100"
                 required
@@ -335,80 +336,32 @@ export function ProductForm({
         )}
       </div>
 
-      {/* Sustainability Details */}
+      {/* Certifications */}
       <div className="bg-card space-y-4 rounded-lg border p-6">
-        <h2 className="text-xl font-bold">Sustainability Details</h2>
-
-        <div>
-          <label className="mb-3 block text-sm font-medium">Certifications</label>
-          <div className="grid gap-3 md:grid-cols-2">
-            {certifications.map((cert) => (
-              <label
-                key={cert.id}
-                className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-neutral-50"
-              >
-                <input
-                  type="checkbox"
-                  checked={formData.certificationIds?.includes(cert.id)}
-                  onChange={() => toggleCertification(cert.id)}
-                  className="size-4 rounded border-gray-300 text-forest-dark focus:ring-forest-dark"
-                />
-                <span className="text-sm font-medium">{cert.name}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label htmlFor="material" className="mb-2 block text-sm font-medium">
-              Material
+        <h2 className="text-xl font-bold">Certifications</h2>
+        <p className="text-muted-foreground text-sm">
+          Select any certifications that apply to this product.
+        </p>
+        <div className="grid gap-3 md:grid-cols-2">
+          {certifications.map((cert) => (
+            <label
+              key={cert.id}
+              className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-neutral-50"
+            >
+              <input
+                type="checkbox"
+                checked={formData.certificationIds?.includes(cert.id)}
+                onChange={() => toggleCertification(cert.id)}
+                className="text-forest-dark focus:ring-forest-dark size-4 rounded border-gray-300"
+              />
+              <span className="text-sm font-medium">{cert.name}</span>
             </label>
-            <Input
-              id="material"
-              value={formData.ecoAttributes?.material || ''}
-              onChange={(e) => handleEcoAttributeChange('material', e.target.value)}
-              placeholder="e.g., 100% Organic Cotton"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="packaging" className="mb-2 block text-sm font-medium">
-              Packaging
-            </label>
-            <Input
-              id="packaging"
-              value={formData.ecoAttributes?.packaging || ''}
-              onChange={(e) => handleEcoAttributeChange('packaging', e.target.value)}
-              placeholder="e.g., Compostable"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="carbonFootprint" className="mb-2 block text-sm font-medium">
-              Carbon Footprint
-            </label>
-            <Input
-              id="carbonFootprint"
-              value={formData.ecoAttributes?.carbonFootprint || ''}
-              onChange={(e) => handleEcoAttributeChange('carbonFootprint', e.target.value)}
-              placeholder="e.g., Carbon neutral shipping"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="madeIn" className="mb-2 block text-sm font-medium">
-              Made In
-            </label>
-            <Input
-              id="madeIn"
-              value={formData.ecoAttributes?.madeIn || ''}
-              onChange={(e) => handleEcoAttributeChange('madeIn', e.target.value)}
-              placeholder="e.g., USA"
-            />
-          </div>
+          ))}
         </div>
       </div>
+
+      {/* Product Eco-Profile */}
+      <ProductEcoProfileForm value={formData.ecoProfile || {}} onChange={handleEcoProfileChange} />
 
       {/* Form Actions */}
       <div className="flex items-center justify-between">

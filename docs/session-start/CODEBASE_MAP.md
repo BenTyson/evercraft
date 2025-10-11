@@ -1,7 +1,7 @@
 # EVERCRAFT CODEBASE MAP
 
 **Generated:** October 8, 2025
-**Last Updated:** October 9, 2025 (Session 7 - Category Pages & UI Polish ✅)
+**Last Updated:** October 11, 2025 (Session 8 - Eco-Impact V2 Migration ✅)
 **Purpose:** Comprehensive reference for understanding the Evercraft marketplace codebase structure, implementations, and capabilities.
 
 ---
@@ -49,9 +49,9 @@
 
 ## DATABASE SCHEMA
 
-**Location:** `/prisma/schema.prisma` (620 lines)
+**Location:** `/prisma/schema.prisma` (742 lines)
 
-### Models (28 total)
+### Models (30 total)
 
 #### Core User & Shop Models
 
@@ -89,46 +89,56 @@
 9. **SustainabilityScore** - Detailed eco scoring
    - Fields: totalScore, materialsScore, packagingScore, carbonScore, certificationScore, breakdownJson
 
+10. **ShopEcoProfile** ⭐ NEW - Shop-level sustainability practices
+    - Fields: 10 tier-1 toggles (plasticFreePackaging, organicMaterials, etc.), 7 tier-2 details (carbon metrics, programs)
+    - Calculated: completenessPercent (0-100), tier (starter/verified/certified)
+    - Relations: Shop (one-to-one)
+
+11. **ProductEcoProfile** ⭐ NEW - Product-level eco-attributes
+    - Fields: 17 tier-1 toggles (isOrganic, isRecycled, packaging, carbon, end-of-life), 5 tier-2 details (percentages, footprint)
+    - Calculated: completenessPercent (0-100)
+    - Relations: Product (one-to-one)
+
 #### Order & Payment Models
 
-10. **Order** - Customer orders
+12. **Order** - Customer orders
     - Fields: orderNumber, status, subtotal, shippingCost, tax, total, nonprofitDonation, paymentStatus, trackingNumber, trackingCarrier, shippingLabelUrl, shippoTransactionId
     - Status: PROCESSING, SHIPPED, DELIVERED, CANCELLED, REFUNDED
     - Payment Status: PENDING, PAID, FAILED, REFUNDED
 
-11. **OrderItem** - Individual items in orders
+13. **OrderItem** - Individual items in orders
     - Fields: quantity, priceAtPurchase, subtotal, donationAmount
 
-12. **Payment** - Payment records
+14. **Payment** - Payment records
     - Fields: stripePaymentIntentId, amount, platformFee, sellerPayout, nonprofitDonation
 
 #### Social & Engagement Models
 
-13. **Review** - Product reviews
+15. **Review** - Product reviews
     - Fields: rating (1-5), text, images, isVerifiedPurchase, helpfulCount
 
-14. **SellerReview** - Shop ratings
+16. **SellerReview** - Shop ratings
     - Fields: rating, shippingSpeedRating, communicationRating, itemAsDescribedRating
 
-15. **Favorite** - User product favorites/wishlist
+17. **Favorite** - User product favorites/wishlist
 
-16. **Collection** - User product collections
+18. **Collection** - User product collections
     - Fields: name, description, isPublic
 
 #### Supporting Models
 
-17. **Address** - User shipping/billing addresses
-18. **ShippingProfile** - Seller shipping configurations
-19. **Promotion** - Discount codes
-20. **Nonprofit** - Charity organizations
-21. **Donation** - Nonprofit donation records
-22. **Message** - User-to-user messaging
-23. **SupportTicket** - Customer support system
-24. **NotificationPreference** - User notification settings
-25. **AnalyticsEvent** - Platform analytics tracking
-26. **SearchHistory** - User search history
-27. **AdminLog** - Admin action logging
-28. **CollectionProduct** - Junction table for collections
+19. **Address** - User shipping/billing addresses
+20. **ShippingProfile** - Seller shipping configurations
+21. **Promotion** - Discount codes
+22. **Nonprofit** - Charity organizations
+23. **Donation** - Nonprofit donation records
+24. **Message** - User-to-user messaging
+25. **SupportTicket** - Customer support system
+26. **NotificationPreference** - User notification settings
+27. **AnalyticsEvent** - Platform analytics tracking
+28. **SearchHistory** - User search history
+29. **AdminLog** - Admin action logging
+30. **CollectionProduct** - Junction table for collections
 
 ### Migrations History
 
@@ -137,6 +147,7 @@
 1. **20251006151154_init** - Initial schema
 2. **20251007031524_add_product_inventory** - Added inventory tracking fields
 3. **20251007232813_add_shipping_tracking_fields** - Added Shippo integration fields (trackingNumber, trackingCarrier, shippingLabelUrl, shippoTransactionId)
+4. **20251011000632_add_eco_profiles_v2** ⭐ NEW - Added ShopEcoProfile and ProductEcoProfile models, enhanced Certification with verification fields
 
 ---
 
@@ -146,22 +157,22 @@
 
 ### Public Pages
 
-| Route                    | Status   | File                                      | Lines | Description                                            |
-| ------------------------ | -------- | ----------------------------------------- | ----- | ------------------------------------------------------ |
-| `/`                      | ✅ Built | `/src/app/page.tsx`                       | 203   | Homepage with hero, featured products, impact stats    |
-| `/home`                  | ✅ Built | `/src/app/home/page.tsx`                  | 331   | Alternative homepage layout                            |
-| `/browse`                | ✅ Built | `/src/app/browse/page.tsx`                | 436   | Product catalog with filters, sorting, search          |
-| `/products/[id]`         | ✅ Built | `/src/app/products/[id]/page.tsx`         | 444   | Product detail page with reviews, sustainability score |
-| `/cart`                  | ✅ Built | `/src/app/cart/page.tsx`                  | 207   | Shopping cart management                               |
-| `/checkout`              | ✅ Built | `/src/app/checkout/page.tsx`              | 367   | Checkout flow (shipping address)                       |
-| `/checkout/payment`      | ✅ Built | `/src/app/checkout/payment/page.tsx`      | 207   | Payment processing with Stripe                         |
-| `/checkout/confirmation` | ✅ Built | `/src/app/checkout/confirmation/page.tsx` | 161   | Order confirmation page                                |
-| `/apply`                 | ✅ Built | `/src/app/apply/page.tsx`                 | 47    | Seller application form                                |
-| `/impact`                | ✅ Built | `/src/app/impact/page.tsx`                | 354   | Impact dashboard with real-time metrics                |
-| `/design-system`         | ✅ Built | `/src/app/design-system/page.tsx`         | 5     | UI component showcase                                  |
-| `/shop/[slug]`           | ✅ Built | `/src/app/shop/[slug]/page.tsx`           | 268   | Shop storefront (products, story, reviews, nonprofit)  |
-| `/categories`            | ✅ Built | `/src/app/categories/page.tsx`            | 104   | Category browsing with visual grid layout              |
-| `/categories/[slug]`     | ✅ Built | `/src/app/categories/[slug]/page.tsx`     | 267   | Individual category page with products and SEO         |
+| Route                    | Status   | File                                      | Lines | Description                                             |
+| ------------------------ | -------- | ----------------------------------------- | ----- | ------------------------------------------------------- |
+| `/`                      | ✅ Built | `/src/app/page.tsx`                       | 203   | Homepage with hero, featured products, impact stats     |
+| `/home`                  | ✅ Built | `/src/app/home/page.tsx`                  | 331   | Alternative homepage layout                             |
+| `/browse`                | ✅ Built | `/src/app/browse/page.tsx`                | 436   | Product catalog with 13 eco-filters, sorting, search ⭐ |
+| `/products/[id]`         | ✅ Built | `/src/app/products/[id]/page.tsx`         | 444   | Product detail with eco-profile section, reviews ⭐     |
+| `/cart`                  | ✅ Built | `/src/app/cart/page.tsx`                  | 207   | Shopping cart management                                |
+| `/checkout`              | ✅ Built | `/src/app/checkout/page.tsx`              | 367   | Checkout flow (shipping address)                        |
+| `/checkout/payment`      | ✅ Built | `/src/app/checkout/payment/page.tsx`      | 207   | Payment processing with Stripe                          |
+| `/checkout/confirmation` | ✅ Built | `/src/app/checkout/confirmation/page.tsx` | 161   | Order confirmation page                                 |
+| `/apply`                 | ✅ Built | `/src/app/apply/page.tsx`                 | 47    | Seller application form                                 |
+| `/impact`                | ✅ Built | `/src/app/impact/page.tsx`                | 354   | Impact dashboard with real-time metrics                 |
+| `/design-system`         | ✅ Built | `/src/app/design-system/page.tsx`         | 5     | UI component showcase                                   |
+| `/shop/[slug]`           | ✅ Built | `/src/app/shop/[slug]/page.tsx`           | 268   | Shop storefront (products, story, reviews, nonprofit)   |
+| `/categories`            | ✅ Built | `/src/app/categories/page.tsx`            | 104   | Category browsing with visual grid layout               |
+| `/categories/[slug]`     | ✅ Built | `/src/app/categories/[slug]/page.tsx`     | 267   | Individual category page with products and SEO          |
 
 ### Authentication Pages
 
@@ -215,7 +226,7 @@
 | ------------------- | -------- | ------------------------------------ | ----- | ------------------------------------------------ |
 | `/seller/analytics` | ✅ Built | `/src/app/seller/analytics/page.tsx` | 400   | Seller analytics dashboard with metrics & charts |
 | `/seller/marketing` | ✅ Built | `/src/app/seller/marketing/page.tsx` | 300   | Marketing tools and promotion management         |
-| `/seller/settings`  | ✅ Built | `/src/app/seller/settings/page.tsx`  | 45    | Seller settings with 5-tab navigation            |
+| `/seller/settings`  | ✅ Built | `/src/app/seller/settings/page.tsx`  | 45    | Seller settings with 6-tab navigation ⭐         |
 
 **Seller Components:**
 
@@ -232,9 +243,10 @@
 
 **Settings:**
 
-- `/src/app/seller/settings/settings-tabs.tsx` - Tab navigation component (130 lines)
+- `/src/app/seller/settings/settings-tabs.tsx` - Tab navigation component (140 lines)
 - `/src/app/seller/settings/shop-profile-tab.tsx` - Shop profile form (190 lines)
 - `/src/app/seller/settings/branding-tab.tsx` - Branding customization (320 lines)
+- `/src/app/seller/settings/eco-profile-tab.tsx` ⭐ NEW - Shop eco-profile management (108 lines)
 - `/src/app/seller/settings/nonprofit-tab.tsx` - Nonprofit partnership (240 lines)
 - `/src/app/seller/settings/nonprofit-selector-modal.tsx` - Nonprofit browser (180 lines)
 - `/src/app/seller/settings/shipping-tab-simple.tsx` - Shipping profiles view (80 lines)
@@ -275,7 +287,7 @@
 
 ## SERVER ACTIONS
 
-**Location:** `/src/actions/` (14 files, ~4,775 lines total)
+**Location:** `/src/actions/` (16 files, ~5,400 lines total)
 
 ### Admin Actions
 
@@ -372,12 +384,12 @@
 
 **File:** `/src/actions/categories.ts` (223 lines) ⭐ NEW
 
-| Function                     | Purpose                                          |
-| ---------------------------- | ------------------------------------------------ |
-| `getCategoryHierarchy()`     | Get all categories organized by parent/child     |
-| `getTopLevelCategories()`    | Get only parent categories with children         |
-| `getCategoryBySlug(slug)`    | Get single category with metadata and relations  |
-| `getCategoryWithProducts()`  | Get category with sample products (limit 8)      |
+| Function                    | Purpose                                         |
+| --------------------------- | ----------------------------------------------- |
+| `getCategoryHierarchy()`    | Get all categories organized by parent/child    |
+| `getTopLevelCategories()`   | Get only parent categories with children        |
+| `getCategoryBySlug(slug)`   | Get single category with metadata and relations |
+| `getCategoryWithProducts()` | Get category with sample products (limit 8)     |
 
 **Features:**
 
@@ -488,27 +500,77 @@
 - ✅ Nonprofit search with category filtering
 - ✅ Shipping profile viewing (CRUD deferred due to schema complexity)
 
+### Eco-Profile Actions ⭐ NEW
+
+**File:** `/src/actions/shop-eco-profile.ts` (205 lines)
+
+| Function                             | Purpose                                                    |
+| ------------------------------------ | ---------------------------------------------------------- |
+| `getShopEcoProfile(shopId)`          | Get shop eco-profile by shop ID                            |
+| `updateShopEcoProfile(shopId, data)` | Update shop eco-profile with completeness/tier calculation |
+| `getMyShopEcoProfile()`              | Get current user's shop eco-profile                        |
+| `updateMyShopEcoProfile(data)`       | Update current user's shop eco-profile                     |
+| `initializeShopEcoProfile(shopId)`   | Initialize eco-profile for new shop                        |
+
+**Features:**
+
+- ✅ Shop ownership verification
+- ✅ Auto-calculates completeness percentage (0-100)
+- ✅ Auto-assigns tier (starter <60%, verified 60-84%, certified 85%+)
+- ✅ 10 tier-1 toggles + 7 tier-2 details
+- ✅ Revalidates shop pages on update
+
+**File:** `/src/actions/product-eco-profile.ts` (197 lines)
+
+| Function                                        | Purpose                                      |
+| ----------------------------------------------- | -------------------------------------------- |
+| `getProductEcoProfile(productId)`               | Get product eco-profile by product ID        |
+| `updateProductEcoProfile(productId, data)`      | Update product eco-profile with completeness |
+| `initializeProductEcoProfile(productId, data?)` | Initialize eco-profile for new product       |
+| `deleteProductEcoProfile(productId)`            | Delete product eco-profile (cleanup)         |
+| `batchUpdateProductEcoProfiles(updates)`        | Batch update multiple product eco-profiles   |
+
+**Features:**
+
+- ✅ Auto-calculates completeness percentage (0-100)
+- ✅ 17 tier-1 toggles + 5 tier-2 details
+- ✅ Revalidates product/browse pages on update
+- ✅ Batch operations support for migrations
+
 ### Product Actions
 
-**File:** `/src/actions/products.ts` (324 lines)
+**File:** `/src/actions/products.ts` (348 lines) ⭐ UPDATED
 
-| Function              | Purpose                                                           |
-| --------------------- | ----------------------------------------------------------------- |
-| `getProducts(params)` | Fetch products with filtering, sorting, pagination                |
-| `getProductById(id)`  | Get product details with reviews, shop info, sustainability score |
-| `getCategories()`     | List categories with product counts                               |
-| `getCertifications()` | List certifications with counts                                   |
+| Function              | Purpose                                                     |
+| --------------------- | ----------------------------------------------------------- |
+| `getProducts(params)` | Fetch products with 13 eco-filters, sorting, pagination ⭐  |
+| `getProductById(id)`  | Get product details with eco-profile, reviews, shop info ⭐ |
+| `getCategories()`     | List categories with product counts                         |
+| `getCertifications()` | List certifications with counts                             |
 
-**File:** `/src/actions/seller-products.ts` (402 lines)
+**Features:**
 
-| Function                    | Purpose                       |
-| --------------------------- | ----------------------------- |
-| `getSellerShop(userId)`     | Get seller's shop details     |
-| `getSellerProducts(shopId)` | Get seller's product listings |
-| `createProduct(input)`      | Create new product            |
-| `updateProduct(id, input)`  | Update existing product       |
-| `deleteProduct(id)`         | Delete product                |
-| Product status management   | (DRAFT → ACTIVE → ARCHIVED)   |
+- ✅ 13 eco-filters: organic, recycled, vegan, biodegradable, fairTrade, plasticFree, recyclable, compostable, minimal, carbonNeutral, local, madeToOrder, renewableEnergy
+- ✅ Minimum eco-completeness filter (0-100%)
+- ✅ Includes eco-profile data in queries
+- ✅ Includes shop eco-profile tier and completeness
+
+**File:** `/src/actions/seller-products.ts` (402 lines) ⭐ UPDATED
+
+| Function                    | Purpose                                               |
+| --------------------------- | ----------------------------------------------------- |
+| `getSellerShop(userId)`     | Get seller's shop details with eco-profile ⭐         |
+| `getSellerProducts(shopId)` | Get seller's product listings with eco-profiles ⭐    |
+| `createProduct(input)`      | Create new product with eco-profile initialization ⭐ |
+| `updateProduct(id, input)`  | Update existing product and eco-profile ⭐            |
+| `deleteProduct(id)`         | Delete product                                        |
+| Product status management   | (DRAFT → ACTIVE → ARCHIVED)                           |
+
+**Features:**
+
+- ✅ Auto-initializes eco-profile on product creation
+- ✅ Updates eco-profile on product updates
+- ✅ Includes eco-profile completeness in product listings
 
 ### Order Actions
 
@@ -622,33 +684,48 @@
 
 ## COMPONENTS
 
-**Location:** `/src/components/` (20 files, 2,794 lines total)
+**Location:** `/src/components/` (26 files, ~4,000 lines total)
 
 ### UI Components (Radix + Custom)
 
 **Location:** `/src/components/ui/`
 
-| Component     | File            | Purpose                         |
-| ------------- | --------------- | ------------------------------- |
-| `<Button>`    | `button.tsx`    | Primary UI button with variants |
-| `<Badge>`     | `badge.tsx`     | Status/label badges             |
-| `<Card>`      | `card.tsx`      | Card container component        |
-| `<Input>`     | `input.tsx`     | Form input field                |
-| `<Label>`     | `label.tsx`     | Form label                      |
-| `<Select>`    | `select.tsx`    | Dropdown select (Radix)         |
-| `<Separator>` | `separator.tsx` | Horizontal/vertical divider     |
-| `<Textarea>`  | `textarea.tsx`  | Multi-line text input           |
+| Component          | File              | Purpose                         |
+| ------------------ | ----------------- | ------------------------------- |
+| `<Button>`         | `button.tsx`      | Primary UI button with variants |
+| `<Badge>`          | `badge.tsx`       | Status/label badges             |
+| `<Card>`           | `card.tsx`        | Card container component        |
+| `<Input>`          | `input.tsx`       | Form input field                |
+| `<Label>`          | `label.tsx`       | Form label                      |
+| `<Select>`         | `select.tsx`      | Dropdown select (Radix)         |
+| `<Separator>`      | `separator.tsx`   | Horizontal/vertical divider     |
+| `<Textarea>`       | `textarea.tsx`    | Multi-line text input           |
+| `<Collapsible>` ⭐ | `collapsible.tsx` | Expandable content sections     |
+| `<Slider>` ⭐      | `slider.tsx`      | Range slider input              |
 
 ### Eco/Sustainability Components
 
 **Location:** `/src/components/eco/`
 
-| Component               | File                       | Purpose                                         |
-| ----------------------- | -------------------------- | ----------------------------------------------- |
-| `<EcoBadge>`            | `eco-badge.tsx`            | Certification badges (B-Corp, Fair Trade, etc.) |
-| `<SustainabilityScore>` | `sustainability-score.tsx` | Product sustainability scoring display          |
-| `<ImpactWidget>`        | `impact-widget.tsx`        | Impact metrics widget                           |
-| `<ProductCard>`         | `product-card.tsx`         | Product grid card with ratings, certifications  |
+| Component                 | File                       | Lines | Purpose                                                    |
+| ------------------------- | -------------------------- | ----- | ---------------------------------------------------------- |
+| `<EcoBadge>`              | `eco-badge.tsx`            | ~80   | Certification badges (B-Corp, Fair Trade, etc.)            |
+| `<EcoCompletenessBar>` ⭐ | `eco-completeness-bar.tsx` | 169   | Progress bar with tier badges (starter/verified/certified) |
+| `<EcoProfileBadges>` ⭐   | `eco-profile-badges.tsx`   | 239   | Priority-based badge display (shows top 3)                 |
+| `<EcoFilterPanel>` ⭐     | `eco-filter-panel.tsx`     | 188   | 13-filter panel for browse page                            |
+| `<EcoDetailSection>` ⭐   | `eco-detail-section.tsx`   | 411   | Comprehensive eco-profile display for PDP                  |
+| `<SustainabilityScore>`   | `sustainability-score.tsx` | ~150  | Product sustainability scoring display (legacy)            |
+| `<ImpactWidget>`          | `impact-widget.tsx`        | ~100  | Impact metrics widget                                      |
+| `<ProductCard>`           | `product-card.tsx`         | ~200  | Product grid card with ratings, certifications             |
+
+### Seller Components ⭐ NEW
+
+**Location:** `/src/components/seller/`
+
+| Component                    | File                           | Lines | Purpose                                      |
+| ---------------------------- | ------------------------------ | ----- | -------------------------------------------- |
+| `<ShopEcoProfileForm>` ⭐    | `shop-eco-profile-form.tsx`    | 340   | Shop eco-profile form with live calculations |
+| `<ProductEcoProfileForm>` ⭐ | `product-eco-profile-form.tsx` | 438   | Product eco-profile form with 17 toggles     |
 
 ### Review Components
 
@@ -690,9 +767,9 @@
 
 **Location:** `/src/components/categories/`
 
-| Component        | File                 | Lines | Purpose                                            |
-| ---------------- | -------------------- | ----- | -------------------------------------------------- |
-| `<CategoryCard>` | `category-card.tsx`  | 134   | Category card with image, subcategories, products  |
+| Component        | File                | Lines | Purpose                                           |
+| ---------------- | ------------------- | ----- | ------------------------------------------------- |
+| `<CategoryCard>` | `category-card.tsx` | 134   | Category card with image, subcategories, products |
 
 **Features:**
 
@@ -715,15 +792,23 @@
 
 ## LIBRARY & UTILITIES
 
-**Location:** `/src/lib/` (8 files, 721 lines total)
+**Location:** `/src/lib/` (9 files, 821 lines total)
 
 ### Core Libraries
 
-| File       | Lines | Exports                                    | Purpose                   |
-| ---------- | ----- | ------------------------------------------ | ------------------------- |
-| `db.ts`    | 24    | `db` (PrismaClient)                        | Database client singleton |
-| `auth.ts`  | 79    | `isSeller()`, `isAdmin()`, `getUserRole()` | Auth helper functions     |
-| `utils.ts` | 6     | `cn()`                                     | Tailwind class merging    |
+| File                     | Lines | Exports                                    | Purpose                   |
+| ------------------------ | ----- | ------------------------------------------ | ------------------------- |
+| `db.ts`                  | 24    | `db` (PrismaClient)                        | Database client singleton |
+| `auth.ts`                | 79    | `isSeller()`, `isAdmin()`, `getUserRole()` | Auth helper functions     |
+| `utils.ts`               | 6     | `cn()`                                     | Tailwind class merging    |
+| `eco-calculations.ts` ⭐ | 100   | Completeness & tier calculation functions  | Eco-profile calculations  |
+
+**Eco Calculations:**
+
+- ✅ `calculateShopCompleteness(profile)` - Shop completeness percentage (0-100)
+- ✅ `calculateShopTier(completeness)` - Shop tier assignment (starter/verified/certified)
+- ✅ `calculateProductCompleteness(profile)` - Product completeness percentage (0-100)
+- ✅ Client-safe utility functions (not server actions)
 
 ### Integration Libraries
 
@@ -841,7 +926,8 @@
 | **Seller Applications**  | ✅ Complete | Application flow, admin approval, auto shop creation           |
 | **Seller Analytics**     | ✅ Complete | Revenue, orders, customers, nonprofit & environmental impact   |
 | **Marketing Tools**      | ✅ Complete | Promotion codes, discount management, usage tracking           |
-| **Seller Settings**      | ✅ Complete | Shop profile, branding, nonprofit partnership                  |
+| **Seller Settings**      | ✅ Complete | Shop profile, branding, nonprofit partnership, eco-profile ⭐  |
+| **Eco-Impact V2**        | ✅ Complete | Badge-based system, completeness tracking, 13 eco-filters ⭐   |
 
 ### Admin Panel (Phase 8 - ✅ 100% Complete)
 
@@ -874,6 +960,55 @@
 | Platform Analytics      | ✅ Built | `/src/app/admin/analytics/` ⭐    |
 | Analytics Dashboard     | ✅ Built | 14 functions, 6 tabs, BI suite ⭐ |
 | Customer Impact         | ✅ Built | `/src/app/impact/page.tsx` ⭐     |
+
+### Eco-Impact V2 System (✅ Complete - October 11, 2025) ⭐
+
+**Design Philosophy:**
+
+- ❌ OLD: Numerical eco-scoring (0-100), tedious free-text forms
+- ✅ NEW: Badge-based system, objective completeness %, tiered toggles
+
+**Key Features:**
+
+| Feature                  | Status   | Details                                                                |
+| ------------------------ | -------- | ---------------------------------------------------------------------- |
+| Shop Eco-Profiles        | ✅ Built | 10 tier-1 + 7 tier-2 fields, auto-tiering (starter/verified/certified) |
+| Product Eco-Profiles     | ✅ Built | 17 tier-1 + 5 tier-2 fields, completeness tracking                     |
+| 13 Eco-Filters           | ✅ Built | Browse page filtering by eco-attributes                                |
+| Completeness Calculation | ✅ Built | Auto-calculated 0-100% based on fields filled                          |
+| Tier System              | ✅ Built | Starter (<60%), Verified (60-84%), Certified (85%+)                    |
+| Badge Display            | ✅ Built | Priority-based top 3 badges on product cards                           |
+| Eco-Detail Section       | ✅ Built | Comprehensive PDP section with expandable details                      |
+| Settings Integration     | ✅ Built | New "Eco-Profile" tab in seller settings                               |
+| Product Form Integration | ✅ Built | Integrated eco-profile form in product CRUD                            |
+
+**13 Eco-Filters:**
+
+1. Organic
+2. Recycled
+3. Vegan
+4. Biodegradable
+5. Fair Trade
+6. Plastic-Free
+7. Recyclable
+8. Compostable
+9. Minimal Packaging
+10. Carbon-Neutral Shipping
+11. Made Locally
+12. Made-to-Order
+13. Renewable Energy
+
+**Completeness Scoring:**
+
+- **Tier 1 (70%):** Boolean toggles (quick setup, 2 minutes)
+- **Tier 2 (30%):** Optional details (percentages, metrics, text)
+- **Objective:** Rewards transparency, not subjective "goodness"
+
+**Non-Breaking Migration:**
+
+- ✅ Legacy fields preserved (ecoScore, ecoAttributes, sustainabilityScore)
+- ✅ New system runs in parallel
+- ⏳ Phase 5 cleanup (2-week monitoring, then deprecation)
 
 ### Advanced Features
 
@@ -962,16 +1097,17 @@
 
 ### Migration History
 
-- **3 migrations** total
-- Latest: Added Shippo tracking fields (Oct 7, 2025)
+- **4 migrations** total
+- Latest: Eco-Impact V2 (ShopEcoProfile, ProductEcoProfile) - Oct 11, 2025
 - Database fully migrated and ready
 
 ### Key Metrics
 
-- **28 Database Models** (comprehensive schema)
+- **30 Database Models** (comprehensive schema) ⭐
 - **25 Page Routes** (all major flows complete)
-- **10 Server Action Files** (3,223 lines of business logic)
-- **19 UI Components** (reusable component library)
+- **16 Server Action Files** (~5,400 lines of business logic) ⭐
+- **26 UI Components** (reusable component library) ⭐
+- **9 Utility Libraries** (eco-calculations, auth, email, shipping, etc.) ⭐
 - **6 Major Integrations** (Clerk, Stripe, Shippo, Resend, UploadThing, Prisma)
 
 ---
@@ -1060,16 +1196,24 @@
     - Product: Use `inventoryQuantity` (NOT `quantity`)
     - Product: Use `categoryId` scalar for groupBy (NOT `category` relation)
     - Shop: Use `orderItems` relation to access orders (NOT `orders` relation)
-15. **Avoid JOIN ambiguity** - When querying OrderItem with Order.paymentStatus filter, pre-fetch paid order IDs to avoid ambiguous `subtotal` column errors
-16. **Analytics are fully functional** - All 14 admin analytics functions tested and working with proper Prisma queries
-17. **⚠️ CRITICAL PRISMA RELATION NAMES** - All relation names MUST be lowercase in queries:
+16. **Avoid JOIN ambiguity** - When querying OrderItem with Order.paymentStatus filter, pre-fetch paid order IDs to avoid ambiguous `subtotal` column errors
+17. **Analytics are fully functional** - All 14 admin analytics functions tested and working with proper Prisma queries
+18. **⚠️ CRITICAL PRISMA RELATION NAMES** - All relation names MUST be lowercase in queries:
     - Review relation: Use `user:` (NOT `User:`)
     - Order relation to User: Use `buyer:` (NOT `User:`)
     - OrderItem relations: Use `items:`, `shop:`, `product:` (NOT capitalized)
     - Component TypeScript interfaces: Match lowercase relation names exactly
-18. **Shop page design pattern** - Two distinct layouts based on banner presence (not placeholder-based)
+19. **Shop page design pattern** - Two distinct layouts based on banner presence (not placeholder-based)
+20. **⭐ Eco-Impact V2 is COMPLETE** - Badge-based system with:
+    - ShopEcoProfile and ProductEcoProfile models in database
+    - 6 new UI components (completeness bar, filter panel, detail section, forms)
+    - 2 new server action files (shop-eco-profile.ts, product-eco-profile.ts)
+    - 13 eco-filters on browse page
+    - Completeness tracking (0-100%) and tier system (starter/verified/certified)
+    - Non-breaking migration: Legacy fields still present, Phase 5 cleanup pending
+    - Calculation functions in `/src/lib/eco-calculations.ts` (client-safe utilities)
 
 ---
 
 **End of Codebase Map**
-_Last Updated: October 8, 2025_
+_Last Updated: October 11, 2025_

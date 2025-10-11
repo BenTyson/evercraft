@@ -9,6 +9,12 @@
 import { db } from '@/lib/db';
 import { ProductStatus } from '@/generated/prisma';
 import { revalidatePath } from 'next/cache';
+import {
+  initializeProductEcoProfile,
+  updateProductEcoProfile,
+  deleteProductEcoProfile,
+  type ProductEcoProfileData,
+} from './product-eco-profile';
 
 export interface CreateProductInput {
   title: string;
@@ -31,6 +37,7 @@ export interface CreateProductInput {
     madeIn?: string;
     origin?: string;
   };
+  ecoProfile?: Partial<ProductEcoProfileData>;
   images?: {
     url: string;
     altText?: string;
@@ -87,6 +94,14 @@ export async function createProduct(input: CreateProductInput) {
       },
     });
 
+    // Initialize eco-profile if data provided
+    if (input.ecoProfile) {
+      await initializeProductEcoProfile(product.id, input.ecoProfile);
+    } else {
+      // Initialize with empty profile
+      await initializeProductEcoProfile(product.id);
+    }
+
     revalidatePath('/seller/products');
     revalidatePath('/browse');
 
@@ -105,7 +120,7 @@ export async function createProduct(input: CreateProductInput) {
  */
 export async function updateProduct(productId: string, input: CreateProductInput) {
   try {
-    const { certificationIds, images, ...data } = input;
+    const { certificationIds, images, ecoProfile, ...data } = input;
 
     // Get current product to find existing certifications
     const currentProduct = await db.product.findUnique({
@@ -147,6 +162,11 @@ export async function updateProduct(productId: string, input: CreateProductInput
         images: true,
       },
     });
+
+    // Update eco-profile if data provided
+    if (ecoProfile) {
+      await updateProductEcoProfile(productId, ecoProfile);
+    }
 
     revalidatePath('/seller/products');
     revalidatePath('/browse');
@@ -250,6 +270,7 @@ export async function getSellerProducts(shopId: string) {
           select: {
             id: true,
             name: true,
+            verified: true,
           },
         },
         images: {
@@ -260,6 +281,15 @@ export async function getSellerProducts(shopId: string) {
           select: {
             url: true,
             altText: true,
+          },
+        },
+        ecoProfile: {
+          select: {
+            completenessPercent: true,
+            isOrganic: true,
+            isRecycled: true,
+            plasticFreePackaging: true,
+            carbonNeutralShipping: true,
           },
         },
         _count: {
@@ -294,6 +324,12 @@ export async function getSellerShop(userId: string) {
             id: true,
             name: true,
             logo: true,
+          },
+        },
+        ecoProfile: {
+          select: {
+            completenessPercent: true,
+            tier: true,
           },
         },
         _count: {

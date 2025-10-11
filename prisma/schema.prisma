@@ -82,6 +82,8 @@ model Certification {
   expiryDate  DateTime?
   certificate String?
   verified    Boolean   @default(false)
+  verifiedBy  String?
+  verifiedAt  DateTime?
   createdAt   DateTime  @default(now())
   product     Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
@@ -306,6 +308,7 @@ model Product {
   variants            ProductVariant[]
   reviews             Review[]
   sustainabilityScore SustainabilityScore?
+  ecoProfile          ProductEcoProfile?
 
   @@index([categoryId])
   @@index([createdAt])
@@ -490,6 +493,7 @@ model Shop {
   shippingProfiles   ShippingProfile[]
   nonprofit          Nonprofit?         @relation(fields: [nonprofitId], references: [id])
   user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ecoProfile         ShopEcoProfile?
 
   @@index([isVerified])
   @@index([nonprofitId])
@@ -530,6 +534,94 @@ model SustainabilityScore {
 
   @@index([totalScore])
   @@index([updatedAt])
+}
+
+model ShopEcoProfile {
+  id                     String   @id @default(cuid())
+  shopId                 String   @unique
+
+  // Tier 1: Basic toggles (10 fields = 70% max)
+  plasticFreePackaging   Boolean  @default(false)
+  recycledPackaging      Boolean  @default(false)
+  biodegradablePackaging Boolean  @default(false)
+  organicMaterials       Boolean  @default(false)
+  recycledMaterials      Boolean  @default(false)
+  fairTradeSourcing      Boolean  @default(false)
+  localSourcing          Boolean  @default(false)
+  carbonNeutralShipping  Boolean  @default(false)
+  renewableEnergy        Boolean  @default(false)
+  carbonOffset           Boolean  @default(false)
+
+  // Tier 2: Optional details (30% max)
+  annualCarbonEmissions  Float?
+  carbonOffsetPercent    Int?
+  renewableEnergyPercent Int?
+  waterConservation      Boolean  @default(false)
+  fairWageCertified      Boolean  @default(false)
+  takeBackProgram        Boolean  @default(false)
+  repairService          Boolean  @default(false)
+
+  // Calculated metrics
+  completenessPercent    Int      @default(0)
+  tier                   String   @default("starter")
+
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  shop                   Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([completenessPercent])
+  @@index([tier])
+  @@index([shopId])
+}
+
+model ProductEcoProfile {
+  id                     String   @id @default(cuid())
+  productId              String   @unique
+
+  // Materials (5 toggles + 2 optional %)
+  isOrganic              Boolean  @default(false)
+  isRecycled             Boolean  @default(false)
+  isBiodegradable        Boolean  @default(false)
+  isVegan                Boolean  @default(false)
+  isFairTrade            Boolean  @default(false)
+  organicPercent         Int?
+  recycledPercent        Int?
+
+  // Packaging (4 toggles)
+  plasticFreePackaging   Boolean  @default(false)
+  recyclablePackaging    Boolean  @default(false)
+  compostablePackaging   Boolean  @default(false)
+  minimalPackaging       Boolean  @default(false)
+
+  // Carbon & Origin (4 toggles + 2 optional fields)
+  carbonNeutralShipping  Boolean  @default(false)
+  madeLocally            Boolean  @default(false)
+  madeToOrder            Boolean  @default(false)
+  renewableEnergyMade    Boolean  @default(false)
+  carbonFootprintKg      Float?
+  madeIn                 String?
+
+  // End of Life (4 toggles + 1 optional text)
+  isRecyclable           Boolean  @default(false)
+  isCompostable          Boolean  @default(false)
+  isRepairable           Boolean  @default(false)
+  hasDisposalInfo        Boolean  @default(false)
+  disposalInstructions   String?
+
+  // Calculated
+  completenessPercent    Int      @default(0)
+
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  product                Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([isOrganic])
+  @@index([plasticFreePackaging])
+  @@index([carbonNeutralShipping])
+  @@index([completenessPercent])
+  @@index([productId])
 }
 
 model User {
