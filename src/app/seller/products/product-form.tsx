@@ -17,12 +17,28 @@ import {
   ProductEcoProfileForm,
   type ProductEcoProfileData,
 } from '@/components/seller/product-eco-profile-form';
+import { CascadingCategorySelect } from '@/components/categories/cascading-category-select';
 import { createProduct, updateProduct, type CreateProductInput } from '@/actions/seller-products';
 import { ProductStatus } from '@/generated/prisma';
 
+interface HierarchicalCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  count: number;
+  children: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+    count: number;
+  }>;
+}
+
 interface ProductFormProps {
   shopId: string;
-  categories: Array<{ id: string; name: string; description: string | null; count: number }>;
+  categories: HierarchicalCategory[];
   certifications: Array<{ id: string; name: string; count: number }>;
   initialData?: Partial<CreateProductInput>;
   productId?: string;
@@ -131,16 +147,6 @@ export function ProductForm({
     setFormData((prev) => ({ ...prev, ecoProfile }));
   };
 
-  const toggleCertification = (certId: string) => {
-    setFormData((prev) => {
-      const current = prev.certificationIds || [];
-      const updated = current.includes(certId)
-        ? current.filter((id) => id !== certId)
-        : [...current, certId];
-      return { ...prev, certificationIds: updated };
-    });
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       {/* Error Message */}
@@ -182,38 +188,26 @@ export function ProductForm({
           />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label htmlFor="category" className="mb-2 block text-sm font-medium">
-              Category <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="category"
-              value={formData.categoryId}
-              onChange={(e) => handleChange('categoryId', e.target.value)}
-              required
-              className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="">Select a category</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          </div>
+        {/* Category Selection - Cascading Dropdowns */}
+        <CascadingCategorySelect
+          categories={categories}
+          value={formData.categoryId}
+          onChange={(categoryId) => handleChange('categoryId', categoryId || '')}
+          disabled={isSubmitting}
+          required
+        />
 
-          <div>
-            <label htmlFor="sku" className="mb-2 block text-sm font-medium">
-              SKU (optional)
-            </label>
-            <Input
-              id="sku"
-              value={formData.sku}
-              onChange={(e) => handleChange('sku', e.target.value)}
-              placeholder="e.g., TOTE-ORG-001"
-            />
-          </div>
+        {/* SKU */}
+        <div>
+          <label htmlFor="sku" className="mb-2 block text-sm font-medium">
+            SKU (optional)
+          </label>
+          <Input
+            id="sku"
+            value={formData.sku}
+            onChange={(e) => handleChange('sku', e.target.value)}
+            placeholder="e.g., TOTE-ORG-001"
+          />
         </div>
       </div>
 
@@ -221,11 +215,12 @@ export function ProductForm({
       <div className="bg-card space-y-4 rounded-lg border p-6">
         <h2 className="text-xl font-bold">Product Images</h2>
         <p className="text-muted-foreground text-sm">
-          Upload up to 4 images. The first image will be used as the primary product image.
+          Upload up to 10 images. The first image will be used as the primary product image.
         </p>
         <ImageUpload
           value={(formData.images || []) as unknown as string[]}
           onChange={(urls) => handleChange('images', urls as unknown as string[])}
+          maxImages={10}
           disabled={isSubmitting}
         />
       </div>
@@ -338,30 +333,6 @@ export function ProductForm({
             </div>
           </div>
         )}
-      </div>
-
-      {/* Certifications */}
-      <div className="bg-card space-y-4 rounded-lg border p-6">
-        <h2 className="text-xl font-bold">Certifications</h2>
-        <p className="text-muted-foreground text-sm">
-          Select any certifications that apply to this product.
-        </p>
-        <div className="grid gap-3 md:grid-cols-2">
-          {certifications.map((cert) => (
-            <label
-              key={cert.id}
-              className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-neutral-50"
-            >
-              <input
-                type="checkbox"
-                checked={formData.certificationIds?.includes(cert.id)}
-                onChange={() => toggleCertification(cert.id)}
-                className="text-forest-dark focus:ring-forest-dark size-4 rounded border-gray-300"
-              />
-              <span className="text-sm font-medium">{cert.name}</span>
-            </label>
-          ))}
-        </div>
       </div>
 
       {/* Product Eco-Profile */}

@@ -1,7 +1,7 @@
 # EVERCRAFT CODEBASE MAP
 
 **Generated:** October 8, 2025
-**Last Updated:** October 11, 2025 (Session 9 - Favorites & Grid View ✅)
+**Last Updated:** October 12, 2025 (Session 11 - Category System ✅)
 **Purpose:** Comprehensive reference for understanding the Evercraft marketplace codebase structure, implementations, and capabilities.
 
 ---
@@ -1451,3 +1451,170 @@ npx tsx scripts/sync-seller-roles.ts
   - Icon-only buttons with tooltips in grid view
   - List view unchanged (full-size buttons with labels)
   - Wrapping action buttons prevent overflow
+
+## SESSION 11 UPDATES (October 12, 2025) ⭐
+
+### Category Hierarchy System (✅ Complete)
+
+**Overview:**
+Built industry-standard 2-level category taxonomy with full admin CRUD interface and cascading product form selectors.
+
+**New Files Created (11 total):**
+
+1. **Category Seed Data**
+   - `/prisma/seed-categories.ts` (450 lines) - Comprehensive 82-category taxonomy
+     - 13 top-level categories
+     - 69 subcategories
+     - Position ordering, descriptions, SEO slugs
+
+2. **Admin Management UI (5 files)**
+   - `/src/app/admin/categories/page.tsx` (120 lines) - Main admin page with statistics
+   - `/src/app/admin/categories/category-tree-view.tsx` (220 lines) - Hierarchical tree with expand/collapse
+   - `/src/app/admin/categories/category-form-dialog.tsx` (180 lines) - Create/edit modal
+   - `/src/app/admin/categories/create-category-button.tsx` (30 lines) - Button component
+   - `/src/app/admin/categories/delete-category-dialog.tsx` (120 lines) - Delete confirmation with safety checks
+
+3. **Server Actions**
+   - `/src/actions/admin-categories.ts` (450 lines)
+     - `getAllCategoriesHierarchy()` - Fetch full tree for admin
+     - `getCategoryStats()` - Statistics dashboard
+     - `createCategory()` - Create with slug validation
+     - `updateCategory()` - Edit existing
+     - `deleteCategory()` - Delete with product/child checks
+     - `reorderCategories()` - Update positions
+     - `getCategoryById()` - Single fetch for editing
+
+4. **Product Form Integration**
+   - `/src/components/categories/cascading-category-select.tsx` (200 lines)
+     - Two-level dropdown (Parent → Subcategory)
+     - Auto-filtering based on parent selection
+     - Clear/reset functionality
+     - Visual confirmation of selection
+   - Updated `/src/actions/products.ts` - Added `getCategoriesHierarchical()`
+
+5. **Documentation**
+   - `/docs/session-start/CATEGORIES_SYSTEM.md` (400+ lines)
+     - Complete taxonomy breakdown
+     - Usage patterns and examples
+     - Admin workflow documentation
+     - SEO benefits and architecture
+
+**Updated Files:**
+
+- `/src/app/admin/layout.tsx` - Added "Categories" link to sidebar
+- `/src/app/seller/products/product-form.tsx` - Integrated cascading selector
+- `/src/app/seller/products/new/page.tsx` - Use hierarchical categories
+- `/src/app/seller/products/[id]/edit/page.tsx` - Use hierarchical categories
+- `/prisma/seed.ts` - Updated to use new category seed
+
+**Admin Features:**
+
+- ✅ View all 82 categories in hierarchical tree
+- ✅ Expand/collapse parent categories
+- ✅ Create top-level categories
+- ✅ Add subcategories to any parent
+- ✅ Edit category details (name, slug, description)
+- ✅ Delete with safety checks (prevents if has products/children)
+- ✅ View product counts per category
+- ✅ Statistics dashboard (top-level, subcategories, totals)
+- ✅ Auto-generate slugs from names
+- ✅ Real-time updates with router refresh
+
+**Seller Features:**
+
+- ✅ Cascading category dropdowns on product form
+- ✅ First dropdown: Select parent (13 options)
+- ✅ Second dropdown: Auto-populated subcategories (filtered by parent)
+- ✅ Required field validation
+- ✅ Clear visual hierarchy
+- ✅ Selected category confirmation display
+
+**SEO Benefits:**
+
+- Each category has dedicated landing page: `/categories/[slug]`
+- JSON-LD structured data (CollectionPage schema)
+- Breadcrumb navigation with schema markup
+- Custom meta titles and descriptions
+- Product grid per category
+
+### Seed Script Updates (✅ Complete)
+
+**Updated:** `/prisma/seed.ts`
+
+**ShopEcoProfile Integration:**
+
+- All 3 shops now created with complete ShopEcoProfile
+  - Shop 1 (EcoMaker Studio): 69% completeness → Verified tier
+  - Shop 2 (Green Living Co): 91% completeness → Certified tier
+  - Shop 3 (Ethical Grounds): 58% completeness → Starter tier
+- Includes tier-1 toggles (10 fields) + tier-2 details (percentages, metrics)
+
+**ProductEcoProfile Integration:**
+
+- All 4 products now created with complete ProductEcoProfile
+  - Product 1 (Tote Bag): 82% completeness
+  - Product 2 (Bamboo Cutlery): 71% completeness
+  - Product 3 (Coffee): 59% completeness
+  - Product 4 (Beeswax Wraps): 94% completeness
+- Includes materials, packaging, carbon, end-of-life data
+- Optional fields: percentages, footprints, disposal instructions
+
+**Category Assignments Fixed:**
+
+- Products now assigned to specific subcategories (not top-level)
+- Tote Bag → Fashion & Accessories > Bags & Purses
+- Bamboo Cutlery → Kitchen & Dining > Dinnerware
+- Coffee → Food & Beverages > Coffee & Tea
+- Beeswax Wraps → Kitchen & Dining > Dinnerware
+
+**Additional Improvements:**
+
+- Added `inventoryQuantity` and `trackInventory` to all products
+- Maintained backward compatibility with legacy `sustainabilityScore`
+- Updated summary output to reflect 82 categories
+
+**Seed Summary:**
+
+```
+✅ 82 categories (13 top-level + 69 subcategories)
+✅ 4 nonprofits
+✅ 5 users (1 admin, 1 buyer, 3 sellers)
+✅ 3 shops with ShopEcoProfile
+✅ 5 certifications
+✅ 4 products with ProductEcoProfile & sustainability scores
+✅ 3 product reviews
+✅ 1 seller review
+✅ 1 collection
+```
+
+### Technical Improvements
+
+**Database:**
+
+- Category model already supported self-referential hierarchy
+- No schema changes required (existing structure was perfect)
+- Proper indexing on `parentId`, `slug`, `position`
+
+**Performance:**
+
+- Single query with nested includes for tree fetching
+- Aggregated product counts via Prisma `_count`
+- Path revalidation after CRUD operations
+
+**Type Safety:**
+
+- Full TypeScript types for hierarchical categories
+- Interface definitions in all components
+- Proper null handling for optional fields
+
+**UX/UI:**
+
+- Consistent spacing and visual hierarchy
+- Icon-based actions (edit, delete, add)
+- Clear error messages with actionable feedback
+- Loading states on all async operations
+- Confirmation dialogs for destructive actions
+
+---
+
+**End of Session 11 Updates**

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { PrismaClient, Role, ProductStatus, VerificationStatus } from '../src/generated/prisma';
+import { seedCategories } from './seed-categories';
 
 const prisma = new PrismaClient();
 
@@ -31,51 +32,22 @@ async function main() {
 
   console.log('🗑️  Cleaned up existing data');
 
-  // Create categories
+  // Create comprehensive category hierarchy
+  await seedCategories();
+
+  // Fetch specific categories for product assignments
   const categories = await Promise.all([
-    prisma.category.create({
-      data: {
-        name: 'Home & Living',
-        slug: 'home-living',
-        description: 'Sustainable home goods and decor',
-        position: 0,
-      },
-    }),
-    prisma.category.create({
-      data: {
-        name: 'Kitchen & Dining',
-        slug: 'kitchen-dining',
-        description: 'Eco-friendly kitchenware and dining essentials',
-        position: 1,
-      },
-    }),
-    prisma.category.create({
-      data: {
-        name: 'Personal Care',
-        slug: 'personal-care',
-        description: 'Natural and organic personal care products',
-        position: 2,
-      },
-    }),
-    prisma.category.create({
-      data: {
-        name: 'Fashion & Accessories',
-        slug: 'fashion-accessories',
-        description: 'Sustainable clothing and accessories',
-        position: 3,
-      },
-    }),
-    prisma.category.create({
-      data: {
-        name: 'Food & Beverages',
-        slug: 'food-beverages',
-        description: 'Organic and fair-trade food products',
-        position: 4,
-      },
-    }),
+    prisma.category.findUnique({ where: { slug: 'candles-fragrance' } }), // [0] - Home & Living > Candles
+    prisma.category.findUnique({ where: { slug: 'dinnerware' } }), // [1] - Kitchen & Dining > Dinnerware
+    prisma.category.findUnique({ where: { slug: 'personal-care-beauty' } }), // [2] - Personal Care (top-level)
+    prisma.category.findUnique({ where: { slug: 'bags-purses' } }), // [3] - Fashion > Bags & Purses
+    prisma.category.findUnique({ where: { slug: 'coffee-tea' } }), // [4] - Food & Beverages > Coffee & Tea
   ]);
 
-  console.log(`✅ Created ${categories.length} categories`);
+  // Ensure all categories were found
+  if (categories.some((cat) => !cat)) {
+    throw new Error('Failed to find required categories for product seeding');
+  }
 
   // Create nonprofits
   const nonprofits = await Promise.all([
@@ -180,7 +152,7 @@ async function main() {
 
   console.log('✅ Created 5 users');
 
-  // Create shops
+  // Create shops with ShopEcoProfile
   const shop1 = await prisma.shop.create({
     data: {
       name: 'EcoMaker Studio',
@@ -209,6 +181,28 @@ async function main() {
             { region: 'international', method: 'standard', rate: 15.99, estimatedDays: 14 },
           ],
           carbonNeutralPrice: 2.0,
+        },
+      },
+      ecoProfile: {
+        create: {
+          // Tier 1: Basic toggles (8/10 = 56% from tier 1)
+          plasticFreePackaging: true,
+          recycledPackaging: true,
+          biodegradablePackaging: false,
+          organicMaterials: true,
+          recycledMaterials: true,
+          fairTradeSourcing: true,
+          localSourcing: true,
+          carbonNeutralShipping: true,
+          renewableEnergy: false,
+          carbonOffset: true,
+          // Tier 2: Optional details (3/7 fields = ~13% from tier 2)
+          renewableEnergyPercent: 50,
+          waterConservation: true,
+          fairWageCertified: true,
+          // Total: ~69% completeness = Verified tier
+          completenessPercent: 69,
+          tier: 'verified',
         },
       },
     },
@@ -244,6 +238,30 @@ async function main() {
           carbonNeutralPrice: 1.5,
         },
       },
+      ecoProfile: {
+        create: {
+          // Tier 1: Basic toggles (10/10 = 70% from tier 1)
+          plasticFreePackaging: true,
+          recycledPackaging: true,
+          biodegradablePackaging: true,
+          organicMaterials: true,
+          recycledMaterials: true,
+          fairTradeSourcing: true,
+          localSourcing: true,
+          carbonNeutralShipping: true,
+          renewableEnergy: true,
+          carbonOffset: true,
+          // Tier 2: Optional details (5/7 fields = ~21% from tier 2)
+          annualCarbonEmissions: 2.5,
+          carbonOffsetPercent: 100,
+          renewableEnergyPercent: 80,
+          waterConservation: true,
+          takeBackProgram: true,
+          // Total: ~91% completeness = Certified tier
+          completenessPercent: 91,
+          tier: 'certified',
+        },
+      },
     },
   });
 
@@ -275,6 +293,27 @@ async function main() {
             { region: 'international', method: 'standard', rate: 18.99, estimatedDays: 10 },
           ],
           carbonNeutralPrice: 3.0,
+        },
+      },
+      ecoProfile: {
+        create: {
+          // Tier 1: Basic toggles (7/10 = 49% from tier 1)
+          plasticFreePackaging: false,
+          recycledPackaging: true,
+          biodegradablePackaging: false,
+          organicMaterials: true,
+          recycledMaterials: false,
+          fairTradeSourcing: true,
+          localSourcing: true,
+          carbonNeutralShipping: true,
+          renewableEnergy: true,
+          carbonOffset: true,
+          // Tier 2: Optional details (2/7 fields = ~9% from tier 2)
+          renewableEnergyPercent: 60,
+          fairWageCertified: true,
+          // Total: ~58% completeness = Starter tier
+          completenessPercent: 58,
+          tier: 'starter',
         },
       },
     },
@@ -330,7 +369,7 @@ async function main() {
 
   console.log('✅ Created 5 certifications');
 
-  // Create products
+  // Create products with ProductEcoProfile
   const product1 = await prisma.product.create({
     data: {
       title: 'Organic Cotton Tote Bag - Reusable Shopping Bag',
@@ -339,8 +378,10 @@ async function main() {
       price: 24.99,
       compareAtPrice: 34.99,
       shopId: shop1.id,
-      categoryId: categories[0].id,
+      categoryId: categories[3]!.id, // Fashion > Bags & Purses
       status: ProductStatus.ACTIVE,
+      inventoryQuantity: 50,
+      trackInventory: true,
       ecoAttributes: {
         material: '100% Organic Cotton',
         packaging: 'Compostable',
@@ -372,6 +413,36 @@ async function main() {
           },
         },
       },
+      ecoProfile: {
+        create: {
+          // Materials (4/5 toggles + 1 percentage)
+          isOrganic: true,
+          isRecycled: false,
+          isBiodegradable: true,
+          isVegan: true,
+          isFairTrade: false,
+          organicPercent: 100,
+          // Packaging (4/4 toggles)
+          plasticFreePackaging: true,
+          recyclablePackaging: true,
+          compostablePackaging: true,
+          minimalPackaging: true,
+          // Carbon & Origin (3/4 toggles + 1 field)
+          carbonNeutralShipping: false,
+          madeLocally: true,
+          madeToOrder: true,
+          renewableEnergyMade: false,
+          madeIn: 'USA',
+          // End of Life (3/4 toggles + 1 text)
+          isRecyclable: false,
+          isCompostable: true,
+          isRepairable: true,
+          hasDisposalInfo: true,
+          disposalInstructions: 'Compost at end of life or recycle as textile',
+          // Completeness: 14/17 toggles + 3 optional fields = ~82%
+          completenessPercent: 82,
+        },
+      },
       certifications: {
         connect: [{ id: plasticFreeCert.id }, { id: organicCert.id }],
       },
@@ -385,8 +456,10 @@ async function main() {
         'Complete bamboo cutlery set with fork, knife, spoon, and chopsticks. Comes in a compact carrying case. Perfect for on-the-go meals.',
       price: 18.5,
       shopId: shop2.id,
-      categoryId: categories[1].id,
+      categoryId: categories[1]!.id, // Kitchen & Dining > Dinnerware (close enough) or could be Utensils
       status: ProductStatus.ACTIVE,
+      inventoryQuantity: 100,
+      trackInventory: true,
       ecoAttributes: {
         material: 'Sustainably harvested bamboo',
         packaging: 'Recycled cardboard',
@@ -418,6 +491,35 @@ async function main() {
           },
         },
       },
+      ecoProfile: {
+        create: {
+          // Materials (3/5 toggles)
+          isOrganic: false,
+          isRecycled: false,
+          isBiodegradable: true,
+          isVegan: true,
+          isFairTrade: false,
+          // Packaging (3/4 toggles)
+          plasticFreePackaging: true,
+          recyclablePackaging: true,
+          compostablePackaging: false,
+          minimalPackaging: true,
+          // Carbon & Origin (2/4 toggles)
+          carbonNeutralShipping: true,
+          madeLocally: false,
+          madeToOrder: false,
+          renewableEnergyMade: true,
+          madeIn: 'China',
+          // End of Life (4/4 toggles + 1 text)
+          isRecyclable: true,
+          isCompostable: true,
+          isRepairable: false,
+          hasDisposalInfo: true,
+          disposalInstructions: 'Compost or recycle bamboo material. Carrying case is recyclable.',
+          // Completeness: 12/17 toggles + 2 optional fields = ~71%
+          completenessPercent: 71,
+        },
+      },
       certifications: {
         connect: [{ id: plasticFreeCert.id }, { id: zeroWasteCert.id }],
       },
@@ -431,8 +533,10 @@ async function main() {
         'Rich, bold dark roast coffee beans from Fair Trade certified farms. Notes of chocolate and caramel. Roasted fresh to order.',
       price: 15.99,
       shopId: shop3.id,
-      categoryId: categories[4].id,
+      categoryId: categories[4]!.id, // Food & Beverages > Coffee & Tea
       status: ProductStatus.ACTIVE,
+      inventoryQuantity: 200,
+      trackInventory: true,
       ecoAttributes: {
         material: 'Organic coffee beans',
         packaging: 'Recyclable aluminum bag',
@@ -464,6 +568,36 @@ async function main() {
           },
         },
       },
+      ecoProfile: {
+        create: {
+          // Materials (2/5 toggles + 1 percentage)
+          isOrganic: true,
+          isRecycled: false,
+          isBiodegradable: false,
+          isVegan: true,
+          isFairTrade: true,
+          organicPercent: 100,
+          // Packaging (2/4 toggles)
+          plasticFreePackaging: true,
+          recyclablePackaging: true,
+          compostablePackaging: false,
+          minimalPackaging: false,
+          // Carbon & Origin (3/4 toggles + 1 field)
+          carbonNeutralShipping: true,
+          madeLocally: false,
+          madeToOrder: true,
+          renewableEnergyMade: true,
+          madeIn: 'Colombia',
+          // End of Life (2/4 toggles + 1 text)
+          isRecyclable: true,
+          isCompostable: false,
+          isRepairable: false,
+          hasDisposalInfo: true,
+          disposalInstructions: 'Recycle aluminum bag. Coffee grounds can be composted.',
+          // Completeness: 10/17 toggles + 3 optional fields = ~59%
+          completenessPercent: 59,
+        },
+      },
       certifications: {
         connect: [{ id: fairTradeCert.id }, { id: organicCert.id }],
       },
@@ -477,8 +611,10 @@ async function main() {
         'Natural alternative to plastic wrap. Made with organic cotton, beeswax, jojoba oil, and tree resin. Washable and reusable for up to a year.',
       price: 22.0,
       shopId: shop1.id,
-      categoryId: categories[1].id,
+      categoryId: categories[1]!.id, // Kitchen & Dining > Dinnerware (or Food Storage)
       status: ProductStatus.ACTIVE,
+      inventoryQuantity: 75,
+      trackInventory: true,
       ecoAttributes: {
         material: 'Organic cotton, beeswax, jojoba oil',
         packaging: 'Compostable paper',
@@ -508,6 +644,37 @@ async function main() {
             carbon: 'Low energy production',
             certifications: 'Certified organic cotton',
           },
+        },
+      },
+      ecoProfile: {
+        create: {
+          // Materials (4/5 toggles + 1 percentage)
+          isOrganic: true,
+          isRecycled: false,
+          isBiodegradable: true,
+          isVegan: false, // Contains beeswax
+          isFairTrade: false,
+          organicPercent: 80,
+          // Packaging (4/4 toggles)
+          plasticFreePackaging: true,
+          recyclablePackaging: true,
+          compostablePackaging: true,
+          minimalPackaging: true,
+          // Carbon & Origin (4/4 toggles + 1 field)
+          carbonNeutralShipping: true,
+          madeLocally: true,
+          madeToOrder: false,
+          renewableEnergyMade: true,
+          madeIn: 'USA',
+          // End of Life (4/4 toggles + 1 text)
+          isRecyclable: false,
+          isCompostable: true,
+          isRepairable: false,
+          hasDisposalInfo: true,
+          disposalInstructions:
+            'Fully compostable at end of life. Cut into strips for faster composting.',
+          // Completeness: 16/17 toggles + 3 optional fields = ~94%
+          completenessPercent: 94,
         },
       },
       certifications: {
@@ -581,12 +748,12 @@ async function main() {
   console.log('🎉 Database seeded successfully!');
   console.log('');
   console.log('📊 Summary:');
-  console.log(`   - ${categories.length} categories`);
+  console.log(`   - 82 categories (13 top-level + 69 subcategories)`);
   console.log(`   - ${nonprofits.length} nonprofits`);
   console.log(`   - 5 users (1 admin, 1 buyer, 3 sellers)`);
-  console.log(`   - 3 shops`);
+  console.log(`   - 3 shops with ShopEcoProfile`);
   console.log(`   - 5 certifications`);
-  console.log(`   - 4 products with sustainability scores`);
+  console.log(`   - 4 products with ProductEcoProfile & sustainability scores`);
   console.log(`   - 3 product reviews`);
   console.log(`   - 1 seller review`);
   console.log(`   - 1 collection`);

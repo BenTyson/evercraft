@@ -7,6 +7,7 @@ import {
   Heart,
   DollarSign,
   BarChart3,
+  FolderTree,
 } from 'lucide-react';
 import { SiteHeaderWrapper } from '@/components/layout/site-header-wrapper';
 
@@ -41,6 +42,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </AdminNavLink>
               <AdminNavLink href="/admin/products" icon={Package}>
                 Products
+              </AdminNavLink>
+              <AdminNavLink href="/admin/categories" icon={FolderTree}>
+                Categories
               </AdminNavLink>
             </nav>
           </div>

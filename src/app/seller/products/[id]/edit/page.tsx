@@ -6,7 +6,7 @@
 
 import { auth } from '@clerk/nextjs/server';
 import { redirect, notFound } from 'next/navigation';
-import { getCategories, getCertifications } from '@/actions/products';
+import { getCategoriesHierarchical, getCertifications } from '@/actions/products';
 import { getSellerShop } from '@/actions/seller-products';
 import { db } from '@/lib/db';
 import { ProductForm } from '../../product-form';
@@ -46,6 +46,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
           url: true,
         },
       },
+      ecoProfile: true, // Include eco profile data for editing
     },
   });
 
@@ -58,8 +59,8 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
     redirect('/seller/products');
   }
 
-  // Fetch categories and certifications for the form
-  const categories = await getCategories();
+  // Fetch hierarchical categories and certifications for the form
+  const categories = await getCategoriesHierarchical();
   const certifications = await getCertifications();
 
   // Prepare initial data for the form
@@ -75,10 +76,12 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
     certificationIds: product.certifications.map((c) => c.id),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ecoAttributes: (product.ecoAttributes as Record<string, any>) || {},
+    ecoProfile: product.ecoProfile || {},
     images: product.images.map((img) => img.url),
     inventoryQuantity: product.inventoryQuantity,
     trackInventory: product.trackInventory,
     lowStockThreshold: product.lowStockThreshold ?? undefined,
+    status: product.status,
   };
 
   return (

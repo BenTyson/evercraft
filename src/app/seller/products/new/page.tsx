@@ -6,7 +6,7 @@
 
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
-import { getCategories, getCertifications } from '@/actions/products';
+import { getCategoriesHierarchical, getCertifications } from '@/actions/products';
 import { getSellerShop } from '@/actions/seller-products';
 import { ProductForm } from '../product-form';
 
@@ -23,24 +23,18 @@ export default async function NewProductPage() {
     redirect('/seller');
   }
 
-  // Fetch categories and certifications for the form
-  const categories = await getCategories();
+  // Fetch hierarchical categories and certifications for the form
+  const categories = await getCategoriesHierarchical();
   const certifications = await getCertifications();
 
   return (
     <div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Create New Product</h1>
-        <p className="text-muted-foreground mt-1">
-          Add a new sustainable product to your shop
-        </p>
+        <p className="text-muted-foreground mt-1">Add a new sustainable product to your shop</p>
       </div>
 
-      <ProductForm
-        shopId={shop.id}
-        categories={categories}
-        certifications={certifications}
-      />
+      <ProductForm shopId={shop.id} categories={categories} certifications={certifications} />
     </div>
   );
 }

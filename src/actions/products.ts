@@ -446,6 +446,68 @@ export async function getCategories() {
   }
 }
 
+/**
+ * Get categories in hierarchical structure for cascading selects
+ * Returns top-level categories with their children
+ */
+export async function getCategoriesHierarchical() {
+  try {
+    const topLevelCategories = await db.category.findMany({
+      where: {
+        parentId: null,
+      },
+      orderBy: {
+        position: 'asc',
+      },
+      include: {
+        children: {
+          orderBy: {
+            position: 'asc',
+          },
+          include: {
+            _count: {
+              select: {
+                products: {
+                  where: {
+                    status: 'ACTIVE',
+                  },
+                },
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            products: {
+              where: {
+                status: 'ACTIVE',
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return topLevelCategories.map((parent) => ({
+      id: parent.id,
+      name: parent.name,
+      slug: parent.slug,
+      description: parent.description,
+      count: parent._count.products,
+      children: parent.children.map((child) => ({
+        id: child.id,
+        name: child.name,
+        slug: child.slug,
+        description: child.description,
+        count: child._count.products,
+      })),
+    }));
+  } catch (error) {
+    console.error('Error fetching hierarchical categories:', error);
+    throw new Error('Failed to fetch hierarchical categories');
+  }
+}
+
 export async function getCertifications() {
   try {
     // Get all unique certifications from products
