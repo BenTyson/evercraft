@@ -9,7 +9,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
-import { SiteHeader } from '@/components/layout/site-header';
+import { SiteHeaderWrapper } from '@/components/layout/site-header-wrapper';
 import { ProductCard } from '@/components/eco/product-card';
 import { ShopHero } from '@/components/shop/shop-hero';
 import { NonprofitCard } from '@/components/shop/nonprofit-card';
@@ -81,7 +81,7 @@ export default async function ShopPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen">
-      <SiteHeader />
+      <SiteHeaderWrapper />
 
       {/* Breadcrumb */}
       <div className="border-b">

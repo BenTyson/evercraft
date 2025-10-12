@@ -411,23 +411,31 @@ model SearchHistory {
 }
 
 model SellerApplication {
-  id                  String            @id @default(cuid())
-  userId              String
-  businessName        String
-  businessWebsite     String?
-  businessDescription String
-  ecoQuestions        Json
-  preferredNonprofit  String?
-  donationPercentage  Float             @default(1.0)
-  status              ApplicationStatus @default(PENDING)
-  reviewNotes         String?
-  reviewedAt          DateTime?
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                    String            @id @default(cuid())
+  userId                String
+  businessName          String
+  businessWebsite       String?
+  businessDescription   String
+  ecoQuestions          Json // Legacy: unstructured text answers (deprecated)
+  shopEcoProfileData    Json? // New: structured ShopEcoProfile data
+  preferredNonprofit    String?
+  donationPercentage    Float             @default(1.0)
+  status                ApplicationStatus @default(PENDING)
+  reviewNotes           String?
+  reviewedAt            DateTime?
+  // Smart Gate fields
+  completenessScore     Int               @default(0) // 0-100% based on ShopEcoProfile
+  tier                  String            @default("starter") // starter | verified | certified
+  autoApprovalEligible  Boolean           @default(false)
+  rejectionReason       String? // Educational feedback for rejections
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([completenessScore])
   @@index([createdAt])
   @@index([status])
+  @@index([tier])
   @@index([userId])
 }
 

@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { ArrowRight, Leaf, Heart, TrendingUp } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { SiteHeader } from '@/components/layout/site-header';
+import { SiteHeaderWrapper } from '@/components/layout/site-header-wrapper';
 import { getProducts } from '@/actions/products';
 import { FeaturedProducts } from './featured-products';
 
@@ -19,7 +19,7 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen">
-      <SiteHeader />
+      <SiteHeaderWrapper />
 
       {/* Hero Section */}
       <section className="from-eco-light/30 to-background border-b bg-gradient-to-b">

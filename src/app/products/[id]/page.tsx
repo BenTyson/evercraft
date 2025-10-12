@@ -9,7 +9,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Star, Package, Truck, Shield, ChevronRight } from 'lucide-react';
 
-import { SiteHeader } from '@/components/layout/site-header';
+import { SiteHeaderWrapper } from '@/components/layout/site-header-wrapper';
 import { EcoBadge } from '@/components/eco/eco-badge';
 import { SustainabilityScore } from '@/components/eco/sustainability-score';
 import { EcoDetailSection } from '@/components/eco/eco-detail-section';
@@ -131,7 +131,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen">
-      <SiteHeader />
+      <SiteHeaderWrapper />
 
       <div className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}

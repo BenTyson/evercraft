@@ -11,7 +11,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronRight, ArrowRight } from 'lucide-react';
 
-import { SiteHeader } from '@/components/layout/site-header';
+import { SiteHeaderWrapper } from '@/components/layout/site-header-wrapper';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/eco/product-card';
 import { CategoryCard } from '@/components/categories/category-card';
@@ -125,13 +125,16 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <SiteHeader />
+      <SiteHeaderWrapper />
 
       {/* Breadcrumbs */}
       <div className="border-b bg-neutral-50/50">
         <div className="container mx-auto px-4 py-3">
           <nav className="flex items-center gap-2 text-sm">
-            <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link
+              href="/"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
               Home
             </Link>
             <ChevronRight className="text-muted-foreground size-4" />
@@ -174,7 +177,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
               <div className="mb-6 flex items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold text-forest-dark">
+                  <span className="text-forest-dark text-2xl font-bold">
                     {category.productCount}
                   </span>
                   <span className="text-muted-foreground text-sm">
@@ -186,7 +189,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                   <>
                     <span className="text-muted-foreground">•</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-forest-dark">
+                      <span className="text-forest-dark text-2xl font-bold">
                         {category.children.length}
                       </span>
                       <span className="text-muted-foreground text-sm">

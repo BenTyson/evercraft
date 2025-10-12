@@ -3,17 +3,24 @@
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { syncUserToDatabase } from '@/lib/auth';
+import { promoteToSeller } from '@/lib/user-roles';
+import { scoreApplication } from '@/lib/application-scoring';
+import { ShopEcoProfileData } from '@/components/seller/shop-eco-profile-form';
 
 export interface CreateSellerApplicationInput {
   businessName: string;
   businessWebsite?: string;
   businessDescription: string;
-  ecoQuestions: {
+  // Legacy: unstructured text answers (deprecated, kept for backward compat)
+  ecoQuestions?: {
     sustainabilityPractices: string;
     materialSourcing: string;
     packagingApproach: string;
     carbonFootprint: string;
   };
+  // New: structured ShopEcoProfile data (Smart Gate)
+  shopEcoProfileData?: ShopEcoProfileData;
   preferredNonprofit?: string;
   donationPercentage: number;
 }
@@ -28,6 +35,9 @@ export async function createSellerApplication(input: CreateSellerApplicationInpu
     if (!userId) {
       return { success: false, error: 'Not authenticated' };
     }
+
+    // Sync user to database (creates User record if it doesn't exist)
+    await syncUserToDatabase(userId);
 
     // Check if user already has an application
     const existingApplication = await db.sellerApplication.findFirst({
@@ -55,6 +65,21 @@ export async function createSellerApplication(input: CreateSellerApplicationInpu
       return { success: false, error: 'You already have a shop' };
     }
 
+    // Calculate application score using Smart Gate system
+    let completenessScore = 0;
+    let tier = 'starter';
+    let autoApprovalEligible = false;
+
+    if (input.shopEcoProfileData) {
+      const score = scoreApplication(input.shopEcoProfileData, input.businessDescription);
+      completenessScore = score.completeness;
+      tier = score.tier;
+      autoApprovalEligible = score.autoApprovalEligible;
+    }
+
+    // Determine initial status based on auto-approval eligibility
+    const initialStatus = autoApprovalEligible ? 'APPROVED' : 'PENDING';
+
     // Create the application
     const application = await db.sellerApplication.create({
       data: {
@@ -62,13 +87,83 @@ export async function createSellerApplication(input: CreateSellerApplicationInpu
         businessName: input.businessName,
         businessWebsite: input.businessWebsite,
         businessDescription: input.businessDescription,
-        ecoQuestions: input.ecoQuestions,
+        // Store both old and new formats for backward compatibility
+        ecoQuestions: input.ecoQuestions || {},
+        shopEcoProfileData: input.shopEcoProfileData
+          ? (input.shopEcoProfileData as Record<string, unknown>)
+          : undefined,
         preferredNonprofit: input.preferredNonprofit,
         donationPercentage: input.donationPercentage,
-        status: 'PENDING',
+        // Smart Gate fields
+        completenessScore,
+        tier,
+        autoApprovalEligible,
+        status: initialStatus,
+        reviewedAt: autoApprovalEligible ? new Date() : null,
+        reviewNotes: autoApprovalEligible
+          ? 'Auto-approved: High completeness score and passed all checks'
+          : null,
         updatedAt: new Date(),
       },
     });
+
+    // If auto-approved, create the shop immediately
+    if (autoApprovalEligible) {
+      const slug = input.businessName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+
+      const newShop = await db.shop.create({
+        data: {
+          userId,
+          slug: `${slug}-${Date.now()}`,
+          name: input.businessName,
+          bio: input.businessDescription,
+          isVerified: false,
+          verificationStatus: 'PENDING',
+          donationPercentage: input.donationPercentage,
+          nonprofitId: input.preferredNonprofit,
+          updatedAt: new Date(),
+        },
+      });
+
+      // Create shop eco-profile from application data
+      if (input.shopEcoProfileData) {
+        const ecoData = input.shopEcoProfileData;
+
+        await db.shopEcoProfile.create({
+          data: {
+            shopId: newShop.id,
+            // Tier 1: Basic practices
+            plasticFreePackaging: ecoData.plasticFreePackaging || false,
+            recycledPackaging: ecoData.recycledPackaging || false,
+            biodegradablePackaging: ecoData.biodegradablePackaging || false,
+            organicMaterials: ecoData.organicMaterials || false,
+            recycledMaterials: ecoData.recycledMaterials || false,
+            fairTradeSourcing: ecoData.fairTradeSourcing || false,
+            localSourcing: ecoData.localSourcing || false,
+            carbonNeutralShipping: ecoData.carbonNeutralShipping || false,
+            renewableEnergy: ecoData.renewableEnergy || false,
+            carbonOffset: ecoData.carbonOffset || false,
+            // Tier 2: Optional details
+            annualCarbonEmissions: ecoData.annualCarbonEmissions || null,
+            carbonOffsetPercent: ecoData.carbonOffsetPercent || null,
+            renewableEnergyPercent: ecoData.renewableEnergyPercent || null,
+            waterConservation: ecoData.waterConservation || false,
+            fairWageCertified: ecoData.fairWageCertified || false,
+            takeBackProgram: ecoData.takeBackProgram || false,
+            repairService: ecoData.repairService || false,
+            // Store the completeness score and tier
+            completenessPercent: completenessScore,
+            tier: tier,
+          },
+        });
+      }
+
+      // Promote user to SELLER role in both database and Clerk
+      await promoteToSeller(userId);
+    }
 
     revalidatePath('/apply');
     revalidatePath('/admin/applications');
@@ -176,26 +271,69 @@ export async function updateApplicationStatus(
       },
     });
 
-    // If approved, create the shop
+    // If approved, create the shop (if it doesn't already exist)
     if (status === 'APPROVED') {
-      const slug = application.businessName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
-
-      await db.shop.create({
-        data: {
-          userId: application.userId,
-          slug: `${slug}-${Date.now()}`,
-          name: application.businessName,
-          bio: application.businessDescription,
-          isVerified: false,
-          verificationStatus: 'PENDING',
-          donationPercentage: application.donationPercentage,
-          nonprofitId: application.preferredNonprofit,
-          updatedAt: new Date(),
-        },
+      // Check if shop already exists
+      const existingShop = await db.shop.findUnique({
+        where: { userId: application.userId },
       });
+
+      if (!existingShop) {
+        const slug = application.businessName
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '');
+
+        const newShop = await db.shop.create({
+          data: {
+            userId: application.userId,
+            slug: `${slug}-${Date.now()}`,
+            name: application.businessName,
+            bio: application.businessDescription,
+            isVerified: false,
+            verificationStatus: 'PENDING',
+            donationPercentage: application.donationPercentage,
+            nonprofitId: application.preferredNonprofit,
+            updatedAt: new Date(),
+          },
+        });
+
+        // If application has structured eco-profile data, create shop eco-profile
+        if (application.shopEcoProfileData) {
+          const ecoData = application.shopEcoProfileData as Record<string, unknown>;
+
+          await db.shopEcoProfile.create({
+            data: {
+              shopId: newShop.id,
+              // Tier 1: Basic practices
+              plasticFreePackaging: ecoData.plasticFreePackaging || false,
+              recycledPackaging: ecoData.recycledPackaging || false,
+              biodegradablePackaging: ecoData.biodegradablePackaging || false,
+              organicMaterials: ecoData.organicMaterials || false,
+              recycledMaterials: ecoData.recycledMaterials || false,
+              fairTradeSourcing: ecoData.fairTradeSourcing || false,
+              localSourcing: ecoData.localSourcing || false,
+              carbonNeutralShipping: ecoData.carbonNeutralShipping || false,
+              renewableEnergy: ecoData.renewableEnergy || false,
+              carbonOffset: ecoData.carbonOffset || false,
+              // Tier 2: Optional details
+              annualCarbonEmissions: ecoData.annualCarbonEmissions || null,
+              carbonOffsetPercent: ecoData.carbonOffsetPercent || null,
+              renewableEnergyPercent: ecoData.renewableEnergyPercent || null,
+              waterConservation: ecoData.waterConservation || false,
+              fairWageCertified: ecoData.fairWageCertified || false,
+              takeBackProgram: ecoData.takeBackProgram || false,
+              repairService: ecoData.repairService || false,
+              // Store the completeness score and tier from application
+              completenessPercent: application.completenessScore,
+              tier: application.tier,
+            },
+          });
+        }
+
+        // Promote user to SELLER role in both database and Clerk
+        await promoteToSeller(application.userId);
+      }
     }
 
     revalidatePath('/admin/applications');

@@ -7,7 +7,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Home, Package, Settings, BarChart3, Leaf, ShoppingBag } from 'lucide-react';
-import { SiteHeader } from '@/components/layout/site-header';
+import { SiteHeaderWrapper } from '@/components/layout/site-header-wrapper';
 import { cn } from '@/lib/utils';
 import { isSeller } from '@/lib/auth';
 
@@ -28,7 +28,7 @@ export default async function SellerLayout({ children }: { children: React.React
 
   return (
     <div className="min-h-screen">
-      <SiteHeader />
+      <SiteHeaderWrapper />
 
       <div className="border-b bg-neutral-50 dark:bg-neutral-900">
         <div className="container mx-auto px-4">

@@ -24,15 +24,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCartStore } from '@/store/cart-store';
 
-export function SiteHeader() {
+interface SiteHeaderProps {
+  /**
+   * User role from database (server-side)
+   * If provided, this takes precedence over Clerk publicMetadata
+   */
+  databaseRole?: string;
+}
+
+export function SiteHeader({ databaseRole }: SiteHeaderProps = {}) {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
   const { isSignedIn, isLoaded, user } = useUser();
   const cartItemCount = useCartStore((state) => state.getTotalItems());
 
-  // Check user roles
-  const userRole = (user?.publicMetadata as Record<string, unknown>)?.role as string | undefined;
+  // Check user roles - prioritize database role, fall back to Clerk publicMetadata
+  const clerkRole = (user?.publicMetadata as Record<string, unknown>)?.role as string | undefined;
+  const userRole = databaseRole || clerkRole;
   const isAdmin = userRole === 'admin';
   const isSeller = userRole === 'seller' || userRole === 'admin'; // Admin has seller access
 

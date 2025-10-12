@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { Leaf, Heart, Droplet, TreePine } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { SiteHeader } from '@/components/layout/site-header';
+import { SiteHeaderWrapper } from '@/components/layout/site-header-wrapper';
 import { cn } from '@/lib/utils';
 import { auth } from '@clerk/nextjs/server';
 import { getUserImpact, getCommunityImpact, getUserMilestones } from '@/actions/impact';
@@ -35,10 +35,10 @@ export default async function ImpactDashboardPage() {
   if (!impactResult.success || !impactResult.impact) {
     return (
       <div className="min-h-screen">
-        <SiteHeader />
+        <SiteHeaderWrapper />
         <div className="container mx-auto px-4 py-12">
           <h1 className="text-3xl font-bold text-red-600">Error loading impact data</h1>
-          <p className="text-gray-600 mt-2">{impactResult.error}</p>
+          <p className="mt-2 text-gray-600">{impactResult.error}</p>
         </div>
       </div>
     );
@@ -114,7 +114,7 @@ export default async function ImpactDashboardPage() {
 
   return (
     <div className="min-h-screen">
-      <SiteHeader />
+      <SiteHeaderWrapper />
 
       <div className="container mx-auto px-4 py-8">
         {/* Hero Section */}
@@ -254,9 +254,7 @@ export default async function ImpactDashboardPage() {
           ) : (
             <div className="bg-card rounded-lg border p-12 text-center">
               <Heart className="mx-auto mb-4 size-12 text-gray-300" />
-              <p className="text-muted-foreground mb-4">
-                You haven&apos;t made any purchases yet
-              </p>
+              <p className="text-muted-foreground mb-4">You haven&apos;t made any purchases yet</p>
               <Button asChild>
                 <Link href="/browse">Start Shopping</Link>
               </Button>

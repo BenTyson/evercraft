@@ -9,6 +9,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { syncUserToDatabase } from '@/lib/auth';
 
 /**
  * Toggle favorite status for a product
@@ -24,6 +25,9 @@ export async function toggleFavorite(productId: string) {
         error: 'You must be signed in to favorite products',
       };
     }
+
+    // Sync user to database (creates User record if it doesn't exist)
+    await syncUserToDatabase(userId);
 
     // Check if already favorited
     const existingFavorite = await db.favorite.findUnique({
@@ -135,6 +139,7 @@ export async function getFavorites() {
               select: {
                 id: true,
                 name: true,
+                slug: true,
                 logo: true,
               },
             },

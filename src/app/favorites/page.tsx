@@ -7,7 +7,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { Heart } from 'lucide-react';
-import { SiteHeader } from '@/components/layout/site-header';
+import { SiteHeaderWrapper } from '@/components/layout/site-header-wrapper';
 import { ProductCard } from '@/components/eco/product-card';
 import { Button } from '@/components/ui/button';
 import { getFavorites } from '@/actions/favorites';
@@ -41,7 +41,7 @@ export default async function FavoritesPage() {
   if (!success || !favorites) {
     return (
       <div className="min-h-screen">
-        <SiteHeader />
+        <SiteHeaderWrapper />
         <div className="container mx-auto px-4 py-16">
           <div className="text-center">
             <p className="text-muted-foreground text-lg">{error || 'Failed to load favorites'}</p>
@@ -53,7 +53,7 @@ export default async function FavoritesPage() {
 
   return (
     <div className="min-h-screen">
-      <SiteHeader />
+      <SiteHeaderWrapper />
 
       <div className="container mx-auto px-4 py-8">
         {/* Header */}

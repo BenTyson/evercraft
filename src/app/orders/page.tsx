@@ -9,7 +9,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Package, ShoppingBag } from 'lucide-react';
 import { auth } from '@clerk/nextjs/server';
-import { SiteHeader } from '@/components/layout/site-header';
+import { SiteHeaderWrapper } from '@/components/layout/site-header-wrapper';
 import { Button } from '@/components/ui/button';
 import { getUserOrders } from '@/actions/orders';
 import { cn } from '@/lib/utils';
@@ -60,7 +60,7 @@ export default async function OrdersPage() {
   if (!result.success) {
     return (
       <>
-        <SiteHeader />
+        <SiteHeaderWrapper />
         <div className="container mx-auto px-4 py-16">
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-muted-foreground mb-4">Failed to load orders</p>
@@ -75,7 +75,7 @@ export default async function OrdersPage() {
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeaderWrapper />
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="mb-2 text-3xl font-bold">Order History</h1>
@@ -83,7 +83,7 @@ export default async function OrdersPage() {
         </div>
 
         {orders.length === 0 ? (
-          <div className="mx-auto max-w-2xl text-center py-16">
+          <div className="mx-auto max-w-2xl py-16 text-center">
             <Package className="text-muted-foreground mx-auto mb-6 size-16" />
             <h2 className="mb-4 text-2xl font-bold">No orders yet</h2>
             <p className="text-muted-foreground mb-8">
@@ -113,7 +113,8 @@ export default async function OrdersPage() {
                     </div>
                     <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-sm">
                       <span>
-                        Placed {new Date(order.createdAt).toLocaleDateString('en-US', {
+                        Placed{' '}
+                        {new Date(order.createdAt).toLocaleDateString('en-US', {
                           month: 'long',
                           day: 'numeric',
                           year: 'numeric',
@@ -171,16 +172,14 @@ export default async function OrdersPage() {
                             <span>${(item.subtotal / item.quantity).toFixed(2)}</span>
                           </div>
                         </div>
-                        <div className="text-sm font-semibold">
-                          ${item.subtotal.toFixed(2)}
-                        </div>
+                        <div className="text-sm font-semibold">${item.subtotal.toFixed(2)}</div>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 {/* Order Totals */}
-                <div className="border-t mt-4 pt-4">
+                <div className="mt-4 border-t pt-4">
                   <div className="flex justify-end">
                     <div className="w-full max-w-xs space-y-2 text-sm">
                       <div className="flex justify-between">
@@ -201,7 +200,7 @@ export default async function OrdersPage() {
                           </span>
                         </div>
                       )}
-                      <div className="border-t pt-2 flex justify-between font-semibold">
+                      <div className="flex justify-between border-t pt-2 font-semibold">
                         <span>Total</span>
                         <span>${order.total.toFixed(2)}</span>
                       </div>

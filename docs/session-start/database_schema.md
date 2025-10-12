@@ -866,6 +866,8 @@ All models include appropriate indexes for:
 - ✅ Full ERD available in Prisma schema file
 - ✅ **All analytics queries optimized** for performance and schema compliance
 - ✅ **Eco-Impact V2 implemented** - Badge-based system with ShopEcoProfile and ProductEcoProfile models (Phase 1-4 complete)
+- ✅ **Smart Gate System implemented** - Auto-scoring, tiered approval, structured eco-profile data in SellerApplication
+- ⚠️ **CRITICAL: Role Management** - User.role must stay in sync with Clerk publicMetadata.role (use `/src/lib/user-roles.ts` helper functions)
 
 **Schema Location:** `/prisma/schema.prisma`
 **Generated Client:** `/src/generated/prisma`
@@ -876,6 +878,17 @@ All models include appropriate indexes for:
 ## Migration History
 
 ### Recent Migrations
+
+**Migration #5: `add_smart_gate_fields_to_seller_application` (October 12, 2025)**
+
+- Added Smart Gate fields to `SellerApplication` model:
+  - `completenessScore Int @default(0)` - 0-100% application completeness
+  - `tier String @default("starter")` - starter/verified/certified classification
+  - `autoApprovalEligible Boolean @default(false)` - Auto-approval flag
+  - `shopEcoProfileData Json?` - Structured eco-profile data (replaces unstructured ecoQuestions)
+  - `rejectionReason String?` - Educational feedback for rejections
+- Added indexes on `completenessScore`, `tier` for filtering/sorting
+- Migration supports tiered application approval system
 
 **Migration #4: `add_eco_profiles_v2` (October 11, 2025)**
 

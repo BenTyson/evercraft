@@ -6,7 +6,7 @@
 
 import { redirect } from 'next/navigation';
 import { getAllApplications } from '@/actions/seller-application';
-import { ApplicationsList } from './applications-list';
+import { ApplicationsListEnhanced } from './applications-list-enhanced';
 import { isAdmin } from '@/lib/auth';
 
 export default async function AdminApplicationsPage() {
@@ -21,13 +21,13 @@ export default async function AdminApplicationsPage() {
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Seller Applications</h1>
-        <p className="text-muted-foreground mt-2">
-          Review and manage seller applications
+        <h1 className="text-3xl font-bold text-gray-900">Seller Applications</h1>
+        <p className="mt-2 text-gray-600">
+          Smart Gate system - Auto-scores applications by completeness and tier
         </p>
       </div>
 
-      <ApplicationsList applications={applications || []} />
+      <ApplicationsListEnhanced applications={applications || []} />
     </div>
   );
 }

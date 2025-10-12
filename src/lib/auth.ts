@@ -4,7 +4,8 @@
  * Helper functions for role-based access control with Clerk.
  */
 
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
+import { db } from '@/lib/db';
 
 export type UserRole = 'buyer' | 'seller' | 'admin';
 
@@ -81,5 +82,59 @@ export async function requireSeller(): Promise<void> {
   const seller = await isSeller();
   if (!seller) {
     throw new Error('Seller access required');
+  }
+}
+
+/**
+ * Sync Clerk user to database
+ * Creates a User record in the database if it doesn't exist
+ * This ensures foreign key constraints are satisfied
+ */
+export async function syncUserToDatabase(clerkUserId: string) {
+  try {
+    // Check if user already exists in database
+    const existingUser = await db.user.findUnique({
+      where: { id: clerkUserId },
+    });
+
+    if (existingUser) {
+      return existingUser;
+    }
+
+    // User doesn't exist, fetch from Clerk and create in database
+    const clerk = await clerkClient();
+    const clerkUser = await clerk.users.getUser(clerkUserId);
+
+    // Get primary email
+    const email =
+      clerkUser.emailAddresses.find((e) => e.id === clerkUser.primaryEmailAddressId)
+        ?.emailAddress || clerkUser.emailAddresses[0]?.emailAddress;
+
+    if (!email) {
+      throw new Error('User has no email address');
+    }
+
+    // Create user in database
+    const newUser = await db.user.create({
+      data: {
+        id: clerkUserId,
+        email,
+        name: clerkUser.firstName
+          ? `${clerkUser.firstName} ${clerkUser.lastName || ''}`.trim()
+          : null,
+        avatar: clerkUser.imageUrl,
+        emailVerified:
+          clerkUser.emailAddresses.find((e) => e.id === clerkUser.primaryEmailAddressId)
+            ?.verification?.status === 'verified'
+            ? new Date()
+            : null,
+        role: 'BUYER', // Default role
+      },
+    });
+
+    return newUser;
+  } catch (error) {
+    console.error('Error syncing user to database:', error);
+    throw error;
   }
 }

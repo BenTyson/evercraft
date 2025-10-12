@@ -7,9 +7,10 @@
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { getUserApplication } from '@/actions/seller-application';
-import { SiteHeader } from '@/components/layout/site-header';
+import { SiteHeaderWrapper } from '@/components/layout/site-header-wrapper';
 import { ApplicationForm } from './application-form';
 import { ApplicationStatus } from './application-status';
+import { db } from '@/lib/db';
 
 export default async function ApplyPage() {
   const { userId } = await auth();
@@ -18,12 +19,21 @@ export default async function ApplyPage() {
     redirect('/sign-in?redirect_url=/apply');
   }
 
+  // Check if user already has a shop - if so, redirect to seller dashboard
+  const existingShop = await db.shop.findUnique({
+    where: { userId },
+  });
+
+  if (existingShop) {
+    redirect('/seller');
+  }
+
   // Check if user has existing application
   const { application } = await getUserApplication();
 
   return (
     <div className="min-h-screen">
-      <SiteHeader />
+      <SiteHeaderWrapper />
 
       <div className="container mx-auto px-4 py-12">
         <div className="mx-auto max-w-3xl">
@@ -35,11 +45,7 @@ export default async function ApplyPage() {
             </p>
           </div>
 
-          {application ? (
-            <ApplicationStatus application={application} />
-          ) : (
-            <ApplicationForm />
-          )}
+          {application ? <ApplicationStatus application={application} /> : <ApplicationForm />}
         </div>
       </div>
     </div>

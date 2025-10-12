@@ -57,6 +57,10 @@ export interface ShopEcoProfileFormProps {
    */
   onSubmit: (data: ShopEcoProfileData) => Promise<void>;
   /**
+   * Callback when form data changes (for live updates)
+   */
+  onChange?: (data: ShopEcoProfileData) => void;
+  /**
    * Show save button (false for auto-save mode)
    */
   showSaveButton?: boolean;
@@ -89,6 +93,7 @@ const DEFAULT_PROFILE: ShopEcoProfileData = {
 export function ShopEcoProfileForm({
   initialData,
   onSubmit,
+  onChange,
   showSaveButton = true,
   isLoading = false,
 }: ShopEcoProfileFormProps) {
@@ -101,6 +106,24 @@ export function ShopEcoProfileForm({
 
   const completeness = calculateShopCompleteness(formData);
   const tier = calculateShopTier(completeness);
+
+  // Store onChange callback in a ref to avoid re-render loops
+  const onChangeRef = React.useRef(onChange);
+  React.useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  // Track if component has mounted to avoid calling onChange on initial render
+  const hasMounted = React.useRef(false);
+
+  // Call onChange callback when formData changes (after render, skip initial mount)
+  React.useEffect(() => {
+    if (hasMounted.current) {
+      onChangeRef.current?.(formData);
+    } else {
+      hasMounted.current = true;
+    }
+  }, [formData]);
 
   const handleToggle = (field: keyof ShopEcoProfileData) => {
     setFormData((prev) => ({
@@ -139,8 +162,11 @@ export function ShopEcoProfileForm({
     formData.carbonOffset,
   ].filter(Boolean).length;
 
+  // Use div wrapper when embedded in another form (showSaveButton=false)
+  const Wrapper = showSaveButton ? 'form' : 'div';
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <Wrapper {...(showSaveButton ? { onSubmit: handleSubmit } : {})} className="space-y-6">
       {/* Completeness bar */}
       <EcoCompletenessBar percent={completeness} tier={tier} showTierBadge />
 
@@ -322,7 +348,7 @@ export function ShopEcoProfileForm({
           </Button>
         </div>
       )}
-    </form>
+    </Wrapper>
   );
 }
 
@@ -338,7 +364,9 @@ function CheckboxField({ label, checked, onChange, description }: CheckboxFieldP
     <label
       className={cn(
         'flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors',
-        checked ? 'border-eco-dark bg-eco-light/20' : 'hover:bg-accent'
+        checked
+          ? 'border-eco-dark bg-eco-light/20'
+          : 'hover:border-forest-light hover:bg-eco-light/10 border-neutral-200'
       )}
     >
       <input
@@ -348,9 +376,9 @@ function CheckboxField({ label, checked, onChange, description }: CheckboxFieldP
         className="text-forest-dark focus:ring-forest-dark mt-0.5 size-5 rounded border-gray-300"
       />
       <div className="flex-1">
-        <span className="block text-sm font-medium">{label}</span>
+        <span className="block text-sm font-medium text-neutral-800">{label}</span>
         {description && (
-          <span className="text-muted-foreground mt-0.5 block text-xs">{description}</span>
+          <span className="mt-0.5 block text-xs text-neutral-600">{description}</span>
         )}
       </div>
     </label>

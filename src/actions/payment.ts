@@ -7,6 +7,7 @@ import { ShippingAddress } from '@/store/checkout-store';
 import { sendOrderConfirmationEmail } from '@/lib/email';
 import { calculateCartShipping } from '@/lib/shipping';
 import { Prisma } from '@/generated/prisma';
+import { syncUserToDatabase } from '@/lib/auth';
 
 interface CartItem {
   id: string;
@@ -92,6 +93,9 @@ export async function createOrder(input: CreateOrderInput) {
       return { success: false, error: 'Not authenticated' };
     }
 
+    // Sync user to database (creates User record if it doesn't exist)
+    await syncUserToDatabase(userId);
+
     // Verify payment intent
     const paymentIntent = await stripe.paymentIntents.retrieve(input.paymentIntentId);
 
@@ -158,7 +162,6 @@ export async function createOrder(input: CreateOrderInput) {
     const order = await db.$transaction(async (tx) => {
       // Create the order
       const newOrder = await tx.order.create({
-        // @ts-expect-error - Prisma types are overly strict for auto-generated fields
         data: {
           orderNumber,
           buyerId: userId,

@@ -8,7 +8,7 @@
 import { Metadata } from 'next';
 import { Leaf, Grid3x3 } from 'lucide-react';
 
-import { SiteHeader } from '@/components/layout/site-header';
+import { SiteHeaderWrapper } from '@/components/layout/site-header-wrapper';
 import { CategoryCard } from '@/components/categories/category-card';
 import { getTopLevelCategories } from '@/actions/categories';
 
@@ -29,7 +29,7 @@ export default async function CategoriesPage() {
 
   return (
     <div className="min-h-screen">
-      <SiteHeader />
+      <SiteHeaderWrapper />
 
       {/* Hero Section */}
       <section className="from-eco-light/30 to-background border-b bg-gradient-to-b">

@@ -819,16 +819,18 @@
 
 ## LIBRARY & UTILITIES
 
-**Location:** `/src/lib/` (9 files, 821 lines total)
+**Location:** `/src/lib/` (11 files, ~1,375 lines total)
 
 ### Core Libraries
 
-| File                     | Lines | Exports                                    | Purpose                   |
-| ------------------------ | ----- | ------------------------------------------ | ------------------------- |
-| `db.ts`                  | 24    | `db` (PrismaClient)                        | Database client singleton |
-| `auth.ts`                | 79    | `isSeller()`, `isAdmin()`, `getUserRole()` | Auth helper functions     |
-| `utils.ts`               | 6     | `cn()`                                     | Tailwind class merging    |
-| `eco-calculations.ts` ⭐ | 100   | Completeness & tier calculation functions  | Eco-profile calculations  |
+| File                        | Lines | Exports                                                            | Purpose                           |
+| --------------------------- | ----- | ------------------------------------------------------------------ | --------------------------------- |
+| `db.ts`                     | 24    | `db` (PrismaClient)                                                | Database client singleton         |
+| `auth.ts`                   | 140   | `isSeller()`, `isAdmin()`, `getUserRole()`, `syncUserToDatabase()` | Auth helper functions + user sync |
+| `utils.ts`                  | 6     | `cn()`                                                             | Tailwind class merging            |
+| `eco-calculations.ts` ⭐    | 100   | Completeness & tier calculation functions                          | Eco-profile calculations          |
+| `user-roles.ts` ⭐          | 127   | `promoteToSeller()`, `promoteToAdmin()`, `syncUserRole()`          | Role management & Clerk sync      |
+| `application-scoring.ts` ⭐ | 427   | `scoreApplication()`, `checkAutoApproval()`, red flag detection    | Smart Gate scoring engine         |
 
 **Eco Calculations:**
 
@@ -836,6 +838,27 @@
 - ✅ `calculateShopTier(completeness)` - Shop tier assignment (starter/verified/certified)
 - ✅ `calculateProductCompleteness(profile)` - Product completeness percentage (0-100)
 - ✅ Client-safe utility functions (not server actions)
+
+**Role Management (`user-roles.ts`):**
+
+- ✅ `promoteToSeller(userId)` - Updates Prisma DB + Clerk publicMetadata
+- ✅ `promoteToAdmin(userId)` - Same for admin promotion
+- ✅ `demoteToBuyer(userId)` - Demotion function
+- ✅ `syncUserRole(userId)` - Syncs DB role to Clerk if out of sync
+- ✅ Ensures both systems stay synchronized
+
+**Application Scoring (`application-scoring.ts`):**
+
+- ✅ `scoreApplication(ecoData, description)` - Returns completeness, tier, auto-approval status
+- ✅ `calculateApplicationCompleteness(ecoData)` - 70% tier-1 + 30% tier-2
+- ✅ `determineTier(completeness)` - starter/verified/certified assignment
+- ✅ `checkAutoApprovalEligibility(score, description)` - Red flag + positive signal detection
+- ✅ `getRedFlags(description)` - Detects dropship, resell, Amazon/Alibaba, greenwashing
+- ✅ `hasPositiveSignals(description)` - Detects handmade, organic, certified, local
+- ✅ `generateRejectionFeedback(ecoData, score)` - Educational feedback for rejections
+- ✅ `getTierColor(tier)` - UI helper for tier badge colors
+- ✅ `getTierEmoji(tier)` - 🟢/🟡/🔴 emoji for tiers
+- ✅ `getEstimatedReviewTime(score, tier, autoApproval)` - Review time estimation
 
 ### Integration Libraries
 
@@ -1240,11 +1263,163 @@
     - Completeness tracking (0-100%) and tier system (starter/verified/certified)
     - Non-breaking migration: Legacy fields still present, Phase 5 cleanup pending
     - Calculation functions in `/src/lib/eco-calculations.ts` (client-safe utilities)
+21. **⭐ Smart Gate Application System** - Auto-scoring and tiered approval:
+    - Applications scored 0-100% based on structured eco-profile data
+    - Auto-approval for 85%+ with no red flags and positive signals
+    - Live score preview with improvement suggestions for applicants
+    - Admin dashboard with tier filtering and score-based sorting
+    - Red flag detection: dropshipping, reselling, Amazon/Alibaba, greenwashing
+    - Scoring engine in `/src/lib/application-scoring.ts` (427 lines)
+22. **⭐ Role Management System** - Clerk + Prisma synchronization:
+    - CRITICAL: Always update BOTH Prisma User.role AND Clerk publicMetadata.role
+    - Use `/src/lib/user-roles.ts` functions: promoteToSeller(), promoteToAdmin()
+    - Never manually update only one system (creates inconsistency)
+    - Header checks database role (server pages) or Clerk metadata (client pages)
+    - SiteHeaderWrapper for server pages, SiteHeader for client pages
+    - Scripts in `/scripts/` for admin promotion and seller role sync
 
 ---
 
 **End of Codebase Map**
-_Last Updated: October 11, 2025 (Session 9)_
+_Last Updated: October 12, 2025 (Session 10)_
+
+## SESSION 10 UPDATES (October 12, 2025) ⭐
+
+### Smart Gate Seller Application System (✅ Complete)
+
+**New Features:**
+
+- **Auto-Scoring System**: Applications now receive 0-100% completeness score based on structured eco-profile data
+- **Tier Classification**: Starter (0-59%), Verified (60-84%), Certified (85-100%)
+- **Auto-Approval**: 85%+ applications with positive signals auto-approve and create shop immediately
+- **Live Score Preview**: Applicants see real-time score, tier badge, estimated review time, and improvement suggestions
+
+**New Files Created:**
+
+- `/src/lib/application-scoring.ts` (427 lines) - Comprehensive scoring engine with red flag detection
+- `/src/lib/user-roles.ts` (127 lines) - Role management (promoteToSeller, promoteToAdmin, syncUserRole)
+- `/src/actions/sync-roles.ts` (145 lines) - Admin actions for syncing existing user roles
+- `/scripts/promote-admin.ts` - CLI script to promote user to admin by Clerk ID
+- `/scripts/promote-admin-by-email.ts` - CLI script to promote user to admin by email
+- `/scripts/sync-seller-roles.ts` - One-time script to fix existing approved sellers
+- `/scripts/README.md` - Documentation for all admin scripts
+
+**Updated Files:**
+
+- `/src/app/apply/application-form.tsx` - Replaced free-text questions with structured ShopEcoProfileForm
+  - Live application score with circular progress indicator
+  - Tier badges (🟢 Certified / 🟡 Verified / 🔴 Starter)
+  - Real-time improvement suggestions
+  - Auto-approval eligibility indicator
+- `/src/app/apply/application-status.tsx` - Enhanced status page with:
+  - Score visualization
+  - Tier badge display
+  - Red flag warnings
+  - Estimated review time
+- `/src/actions/seller-application.ts` - Updated approval flows:
+  - Auto-approval: Creates shop + ShopEcoProfile + promotes user to SELLER role
+  - Manual approval: Same logic when admin approves
+  - Both flows update Prisma database AND Clerk publicMetadata
+
+**Database Changes:**
+
+- Migration: `20251011205535_add_smart_gate_fields_to_seller_application`
+- New SellerApplication fields:
+  - `completenessScore: Int` (0-100%)
+  - `tier: String` (starter/verified/certified)
+  - `autoApprovalEligible: Boolean`
+  - `shopEcoProfileData: Json?` (structured data replaces ecoQuestions)
+  - `rejectionReason: String?` (educational feedback)
+
+### Navigation & Role Management Fix (✅ Complete)
+
+**Problem Fixed:**
+
+- Admins and sellers weren't seeing correct navigation links ("Become a Seller" instead of "Admin"/"Seller Dashboard")
+- Root cause: Clerk publicMetadata not synced with Prisma User.role field
+
+**Solution Implemented:**
+
+- **Server-Side Header Wrapper**: Created `/src/components/layout/site-header-wrapper.tsx`
+  - Fetches User.role from database server-side
+  - Passes to client SiteHeader component
+  - Used by all server-rendered pages (11 pages)
+- **Client Pages Fallback**: 6 client pages continue using SiteHeader directly
+  - Reads from Clerk publicMetadata (now kept in sync via promoteToSeller/promoteToAdmin)
+- **Automatic Role Sync**: Both approval flows now:
+  1. Update Prisma `User.role` → SELLER
+  2. Update Clerk `publicMetadata.role` → "seller"
+  3. Both systems stay synchronized
+- **Shop Existence Check**: `/app/apply` now redirects to `/seller` if user already has shop
+
+**Files Updated:**
+
+- `/src/components/layout/site-header.tsx` - Now accepts optional `databaseRole` prop
+- 17 page files updated to use `SiteHeaderWrapper` (server pages) or `SiteHeader` (client pages)
+- `/src/app/apply/page.tsx` - Added shop existence redirect
+
+**Admin Scripts Usage:**
+
+```bash
+# Promote user to admin by email
+npx tsx scripts/promote-admin-by-email.ts tyson.ben@gmail.com
+
+# Fix all existing approved sellers (one-time)
+npx tsx scripts/sync-seller-roles.ts
+```
+
+**Result:**
+
+- ✅ Admins see "Admin" (red) + "Seller Dashboard" links
+- ✅ Sellers see "Seller Dashboard" link
+- ✅ "Become a Seller" hidden for admins/sellers
+- ✅ Future approvals automatically set roles (no manual sync needed)
+
+### Enhanced Admin Applications Dashboard (✅ Complete)
+
+**New Features:**
+
+- `/src/app/admin/applications/applications-list-enhanced.tsx` (587 lines)
+  - Tier filtering: All / Certified / Verified / Starter / Auto-Approved
+  - Sorting: Score (high→low, low→high) or Date (newest→oldest, oldest→newest)
+  - Visual score cards with circular progress indicators
+  - Color-coded tier banners (green/yellow/red)
+  - Red flag detection and warnings
+  - Estimated review time display
+  - Expandable details showing full eco-profile data
+  - Score card statistics (tier counts)
+
+**Application Scoring Logic:**
+
+- **Completeness Calculation**: 70% from 10 tier-1 practices + 30% from 7 tier-2 details
+- **Red Flags**: Detects dropshipping, reselling, Amazon/Alibaba sourcing, greenwashing
+- **Positive Signals**: handmade, organic, certified, fair trade, local, carbon neutral
+- **Auto-Approval Requirements**:
+  - 85%+ completeness
+  - No red flags
+  - At least one positive signal
+  - Result: Instant shop creation + seller role
+
+### Key Architecture Improvements
+
+**Role Management System:**
+
+- Single source of truth: Both Prisma and Clerk stay synchronized
+- Helper functions in `/src/lib/user-roles.ts`:
+  - `promoteToSeller()` - Updates DB + Clerk metadata
+  - `promoteToAdmin()` - Same for admins
+  - `demoteToBuyer()` - Demotion function
+  - `syncUserRole()` - Sync DB → Clerk if needed
+- Admin actions in `/src/actions/sync-roles.ts`:
+  - `syncExistingSellerRoles()` - Bulk fix for existing sellers
+  - `checkRoleSyncStatus()` - Preview what needs syncing
+
+**Header Architecture:**
+
+- Server pages: `SiteHeaderWrapper` → fetches DB role → passes to `SiteHeader`
+- Client pages: `SiteHeader` → reads Clerk metadata (kept in sync)
+- Fallback logic: Database role takes precedence over Clerk metadata
+- Result: Consistent role display across entire application
 
 ## SESSION 9 UPDATES (October 11, 2025) ⭐
 

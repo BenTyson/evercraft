@@ -34,7 +34,6 @@ async function main() {
   // Create categories
   const categories = await Promise.all([
     prisma.category.create({
-      // @ts-expect-error - Prisma auto-generates id and updatedAt
       data: {
         name: 'Home & Living',
         slug: 'home-living',
@@ -43,7 +42,6 @@ async function main() {
       },
     }),
     prisma.category.create({
-      // @ts-expect-error - Prisma auto-generates id and updatedAt
       data: {
         name: 'Kitchen & Dining',
         slug: 'kitchen-dining',
@@ -52,7 +50,6 @@ async function main() {
       },
     }),
     prisma.category.create({
-      // @ts-expect-error - Prisma auto-generates id and updatedAt
       data: {
         name: 'Personal Care',
         slug: 'personal-care',
@@ -61,7 +58,6 @@ async function main() {
       },
     }),
     prisma.category.create({
-      // @ts-expect-error - Prisma auto-generates id and updatedAt
       data: {
         name: 'Fashion & Accessories',
         slug: 'fashion-accessories',
@@ -70,7 +66,6 @@ async function main() {
       },
     }),
     prisma.category.create({
-      // @ts-expect-error - Prisma auto-generates id and updatedAt
       data: {
         name: 'Food & Beverages',
         slug: 'food-beverages',
@@ -85,7 +80,6 @@ async function main() {
   // Create nonprofits
   const nonprofits = await Promise.all([
     prisma.nonprofit.create({
-      // @ts-expect-error - Prisma auto-generates id and updatedAt
       data: {
         name: 'Ocean Conservancy',
         ein: '23-7245152',
@@ -97,7 +91,6 @@ async function main() {
       },
     }),
     prisma.nonprofit.create({
-      // @ts-expect-error - Prisma auto-generates id and updatedAt
       data: {
         name: 'Rainforest Alliance',
         ein: '13-3377893',
@@ -108,7 +101,6 @@ async function main() {
       },
     }),
     prisma.nonprofit.create({
-      // @ts-expect-error - Prisma auto-generates id and updatedAt
       data: {
         name: 'Fair Trade Federation',
         ein: '52-2106638',
@@ -119,7 +111,6 @@ async function main() {
       },
     }),
     prisma.nonprofit.create({
-      // @ts-expect-error - Prisma auto-generates id and updatedAt
       data: {
         name: 'The Nature Conservancy',
         ein: '53-0242652',
@@ -198,7 +189,7 @@ async function main() {
       userId: seller1.id,
       nonprofitId: nonprofits[0].id,
       donationPercentage: 5.0,
-      verificationStatus: VerificationStatus.VERIFIED,
+      verificationStatus: VerificationStatus.APPROVED,
       isVerified: true,
       logo: 'https://images.unsplash.com/photo-1556912173-46c336c7fd55?w=400',
       shippingProfiles: {
@@ -231,7 +222,7 @@ async function main() {
       userId: seller2.id,
       nonprofitId: nonprofits[1].id,
       donationPercentage: 3.0,
-      verificationStatus: VerificationStatus.VERIFIED,
+      verificationStatus: VerificationStatus.APPROVED,
       isVerified: true,
       logo: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400',
       shippingProfiles: {
@@ -264,7 +255,7 @@ async function main() {
       userId: seller3.id,
       nonprofitId: nonprofits[2].id,
       donationPercentage: 7.0,
-      verificationStatus: VerificationStatus.VERIFIED,
+      verificationStatus: VerificationStatus.APPROVED,
       isVerified: true,
       logo: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400',
       shippingProfiles: {

@@ -9,7 +9,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, Package, ShoppingBag, Truck, CheckCircle } from 'lucide-react';
 import { auth } from '@clerk/nextjs/server';
-import { SiteHeader } from '@/components/layout/site-header';
+import { SiteHeaderWrapper } from '@/components/layout/site-header-wrapper';
 import { Button } from '@/components/ui/button';
 import { getOrderById } from '@/actions/orders';
 import { OrderTracking } from '@/components/order-tracking';
@@ -79,11 +79,13 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
   const order = result.order;
   const shippingAddress =
-    typeof order.shippingAddress === 'object' ? (order.shippingAddress as unknown as ShippingAddress) : null;
+    typeof order.shippingAddress === 'object'
+      ? (order.shippingAddress as unknown as ShippingAddress)
+      : null;
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeaderWrapper />
       <div className="container mx-auto px-4 py-8">
         <Button variant="ghost" asChild className="mb-6">
           <Link href="/orders">
@@ -152,10 +154,10 @@ export default async function OrderDetailPage({ params }: PageProps) {
                         <p className="text-muted-foreground text-sm">Quantity: {item.quantity}</p>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm">${(item.subtotal / item.quantity).toFixed(2)} each</span>
-                        <span className="font-semibold">
-                          ${item.subtotal.toFixed(2)}
+                        <span className="text-sm">
+                          ${(item.subtotal / item.quantity).toFixed(2)} each
                         </span>
+                        <span className="font-semibold">${item.subtotal.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
@@ -330,7 +332,9 @@ export default async function OrderDetailPage({ params }: PageProps) {
                   <div className="bg-eco-light/20 -mx-6 my-3 px-6 py-3">
                     <div className="mb-1 flex items-center justify-between">
                       <span className="text-eco-dark font-semibold">Nonprofit Donation (5%)</span>
-                      <span className="text-eco-dark font-bold">${order.nonprofitDonation.toFixed(2)}</span>
+                      <span className="text-eco-dark font-bold">
+                        ${order.nonprofitDonation.toFixed(2)}
+                      </span>
                     </div>
                     <p className="text-muted-foreground text-xs">
                       Thank you for supporting environmental nonprofits!

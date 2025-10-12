@@ -4,6 +4,7 @@ import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { Prisma } from '@/generated/prisma';
+import { syncUserToDatabase } from '@/lib/auth';
 
 /**
  * Create a new product review
@@ -21,6 +22,9 @@ export async function createReview(input: {
     if (!userId) {
       return { success: false, error: 'Not authenticated' };
     }
+
+    // Sync user to database (creates User record if it doesn't exist)
+    await syncUserToDatabase(userId);
 
     // Validate rating
     if (input.rating < 1 || input.rating > 5) {

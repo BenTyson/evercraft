@@ -143,7 +143,6 @@ export async function createPromotion(input: {
 
     // Create promotion
     const promotion = await db.promotion.create({
-      // @ts-expect-error - Prisma types are overly strict for auto-generated fields
       data: {
         shopId,
         code: promoCode,
