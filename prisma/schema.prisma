@@ -309,6 +309,7 @@ model Product {
   reviews             Review[]
   sustainabilityScore SustainabilityScore?
   ecoProfile          ProductEcoProfile?
+  shopSections        ShopSectionProduct[]
 
   @@index([categoryId])
   @@index([createdAt])
@@ -502,6 +503,7 @@ model Shop {
   nonprofit          Nonprofit?         @relation(fields: [nonprofitId], references: [id])
   user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   ecoProfile         ShopEcoProfile?
+  sections           ShopSection[]
 
   @@index([isVerified])
   @@index([nonprofitId])
@@ -629,6 +631,39 @@ model ProductEcoProfile {
   @@index([plasticFreePackaging])
   @@index([carbonNeutralShipping])
   @@index([completenessPercent])
+  @@index([productId])
+}
+
+model ShopSection {
+  id          String               @id @default(cuid())
+  shopId      String
+  name        String
+  slug        String
+  description String?
+  position    Int                  @default(0)
+  isVisible   Boolean              @default(true)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  shop        Shop                 @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  products    ShopSectionProduct[]
+
+  @@unique([shopId, slug])
+  @@index([shopId])
+  @@index([position])
+  @@index([isVisible])
+}
+
+model ShopSectionProduct {
+  id        String      @id @default(cuid())
+  sectionId String
+  productId String
+  position  Int         @default(0)
+  addedAt   DateTime    @default(now())
+  section   ShopSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([sectionId, productId])
+  @@index([sectionId])
   @@index([productId])
 }
 

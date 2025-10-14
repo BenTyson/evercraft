@@ -8,6 +8,7 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect, notFound } from 'next/navigation';
 import { getCategoriesHierarchical, getCertifications } from '@/actions/products';
 import { getSellerShop } from '@/actions/seller-products';
+import { getShopSections } from '@/actions/shop-sections';
 import { db } from '@/lib/db';
 import { ProductForm } from '../../product-form';
 
@@ -47,6 +48,11 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
         },
       },
       ecoProfile: true, // Include eco profile data for editing
+      shopSections: {
+        select: {
+          sectionId: true,
+        },
+      },
     },
   });
 
@@ -59,9 +65,14 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
     redirect('/seller/products');
   }
 
-  // Fetch hierarchical categories and certifications for the form
-  const categories = await getCategoriesHierarchical();
-  const certifications = await getCertifications();
+  // Fetch hierarchical categories, certifications, and sections for the form
+  const [categories, certifications, sectionsResult] = await Promise.all([
+    getCategoriesHierarchical(),
+    getCertifications(),
+    getShopSections(shop.id, true), // Include hidden sections for editing
+  ]);
+
+  const sections = sectionsResult.success ? sectionsResult.sections : [];
 
   // Prepare initial data for the form
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -74,6 +85,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
     categoryId: product.categoryId || undefined,
     tags: product.tags || [],
     certificationIds: product.certifications.map((c) => c.id),
+    sectionIds: product.shopSections.map((s) => s.sectionId),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ecoAttributes: (product.ecoAttributes as Record<string, any>) || {},
     ecoProfile: product.ecoProfile || {},
@@ -95,6 +107,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
         shopId={shop.id}
         categories={categories}
         certifications={certifications}
+        sections={sections}
         initialData={initialData}
         productId={id}
         isEditing

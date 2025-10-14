@@ -8,10 +8,12 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 import { SiteHeaderWrapper } from '@/components/layout/site-header-wrapper';
 import { ProductCard } from '@/components/eco/product-card';
 import { ShopHero } from '@/components/shop/shop-hero';
+import { ShopSectionNav } from '@/components/shop/shop-section-nav';
 import { NonprofitCard } from '@/components/shop/nonprofit-card';
 import { ShopReviewStats } from '@/components/shop/shop-review-stats';
 import { ShopReviewCard } from '@/components/shop/shop-review-card';
@@ -25,6 +27,7 @@ import {
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ section?: string }>;
 }
 
 // Convert certification names to badge variants
@@ -62,8 +65,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function ShopPage({ params }: PageProps) {
+export default async function ShopPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  const { section: sectionSlug } = await searchParams;
 
   // Fetch shop data
   const shop = await getShopBySlug(slug);
@@ -72,9 +76,12 @@ export default async function ShopPage({ params }: PageProps) {
     notFound();
   }
 
+  // Find the current section if filtered
+  const currentSection = sectionSlug ? shop.sections.find((s) => s.slug === sectionSlug) : null;
+
   // Fetch products and reviews in parallel
   const [productsData, reviewsData, reviewStats] = await Promise.all([
-    getShopProducts(shop.id, { limit: 12 }),
+    getShopProducts(shop.id, { limit: 12, sectionSlug }),
     getShopReviews(shop.id, { limit: 5 }),
     getShopReviewStats(shop.id),
   ]);
@@ -94,7 +101,22 @@ export default async function ShopPage({ params }: PageProps) {
             Browse
           </Link>
           <ChevronRight className="text-muted-foreground size-4" />
-          <span className="text-foreground font-medium">{shop.name}</span>
+          <Link
+            href={`/shop/${shop.slug}`}
+            className={cn(
+              currentSection
+                ? 'text-muted-foreground hover:text-foreground'
+                : 'text-foreground font-medium'
+            )}
+          >
+            {shop.name}
+          </Link>
+          {currentSection && (
+            <>
+              <ChevronRight className="text-muted-foreground size-4" />
+              <span className="text-foreground font-medium">{currentSection.name}</span>
+            </>
+          )}
         </nav>
       </div>
 
@@ -109,6 +131,13 @@ export default async function ShopPage({ params }: PageProps) {
         productCount={shop._count.products}
         reviewCount={shop.reviewCount}
         averageRating={shop.averageRating}
+      />
+
+      {/* Section Navigation */}
+      <ShopSectionNav
+        shopSlug={shop.slug}
+        sections={shop.sections}
+        totalProducts={shop._count.products}
       />
 
       {/* Shop Story (if exists) */}
@@ -126,13 +155,17 @@ export default async function ShopPage({ params }: PageProps) {
 
       {/* Products Section */}
       <section className="container mx-auto px-4 py-12 md:py-16">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold md:text-3xl">Products</h2>
-            <p className="text-muted-foreground mt-1 text-sm">
-              {productsData.total} {productsData.total === 1 ? 'item' : 'items'} available
-            </p>
-          </div>
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold md:text-3xl">
+            {currentSection ? currentSection.name : 'All Products'}
+          </h2>
+          {currentSection?.description && (
+            <p className="text-muted-foreground mt-2 text-sm">{currentSection.description}</p>
+          )}
+          <p className="text-muted-foreground mt-1 text-sm">
+            {productsData.total} {productsData.total === 1 ? 'item' : 'items'}
+            {currentSection ? ' in this section' : ' available'}
+          </p>
         </div>
 
         {productsData.products.length > 0 ? (

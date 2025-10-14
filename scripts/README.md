@@ -81,6 +81,39 @@ npx tsx scripts/sync-seller-roles.ts
 
 ---
 
+### 3. `delete-user-by-email.ts` - Delete User Completely
+
+Completely removes a user from both Clerk and the database. Useful for cleanup after reseeding or testing.
+
+**Usage:**
+
+```bash
+npx tsx scripts/delete-user-by-email.ts <email>
+```
+
+**Example:**
+
+```bash
+npx tsx scripts/delete-user-by-email.ts evercraft.eeko@gmail.com
+```
+
+**What it does:**
+
+- Looks up user by email in both database and Clerk
+- Deletes from database (cascading delete removes all related data)
+- Deletes from Clerk (removes authentication account)
+- Shows what data will be deleted before proceeding
+
+**When to use:**
+
+- After reseeding the database to clean up orphaned Clerk accounts
+- Removing test users completely
+- Allowing a user to sign up fresh (they'll start as BUYER with no history)
+
+**⚠️ WARNING:** This action CANNOT be undone. The user will need to sign up again from scratch.
+
+---
+
 ## Quick Setup
 
 To fix the current issues:

@@ -36,10 +36,20 @@ interface HierarchicalCategory {
   }>;
 }
 
+interface Section {
+  id: string;
+  name: string;
+  isVisible: boolean;
+  _count: {
+    products: number;
+  };
+}
+
 interface ProductFormProps {
   shopId: string;
   categories: HierarchicalCategory[];
   certifications: Array<{ id: string; name: string; count: number }>;
+  sections: Section[];
   initialData?: Partial<CreateProductInput>;
   productId?: string;
   isEditing?: boolean;
@@ -48,7 +58,8 @@ interface ProductFormProps {
 export function ProductForm({
   shopId,
   categories,
-  certifications,
+  certifications: _certifications,
+  sections,
   initialData,
   productId,
   isEditing = false,
@@ -67,6 +78,7 @@ export function ProductForm({
     shopId,
     tags: initialData?.tags || [],
     certificationIds: initialData?.certificationIds || [],
+    sectionIds: initialData?.sectionIds || [],
     ecoAttributes: initialData?.ecoAttributes || {},
     ecoProfile: initialData?.ecoProfile || {},
     images: initialData?.images || [],
@@ -334,6 +346,66 @@ export function ProductForm({
           </div>
         )}
       </div>
+
+      {/* Shop Sections */}
+      {sections.length > 0 && (
+        <div className="bg-card space-y-4 rounded-lg border p-6">
+          <div>
+            <h2 className="text-xl font-bold">Shop Sections</h2>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Organize this product into sections (optional)
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            {sections.map((section) => (
+              <label
+                key={section.id}
+                className="hover:bg-accent flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition"
+              >
+                <input
+                  type="checkbox"
+                  checked={(formData.sectionIds || []).includes(section.id)}
+                  onChange={(e) => {
+                    const currentSections = formData.sectionIds || [];
+                    if (e.target.checked) {
+                      handleChange('sectionIds', [...currentSections, section.id]);
+                    } else {
+                      handleChange(
+                        'sectionIds',
+                        currentSections.filter((id) => id !== section.id)
+                      );
+                    }
+                  }}
+                  className="size-4 rounded border-gray-300"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{section.name}</span>
+                    {!section.isVisible && (
+                      <span className="text-muted-foreground text-xs">(hidden)</span>
+                    )}
+                  </div>
+                  <p className="text-muted-foreground text-xs">
+                    {section._count.products}{' '}
+                    {section._count.products === 1 ? 'product' : 'products'}
+                  </p>
+                </div>
+              </label>
+            ))}
+          </div>
+
+          {sections.length === 0 && (
+            <p className="text-muted-foreground text-sm">
+              No sections yet. Create sections from the{' '}
+              <Link href="/seller/sections" className="text-forest underline">
+                Sections page
+              </Link>
+              .
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Product Eco-Profile */}
       <ProductEcoProfileForm value={formData.ecoProfile || {}} onChange={handleEcoProfileChange} />

@@ -49,6 +49,26 @@ export async function getShopBySlug(slug: string) {
             sellerReviews: true,
           },
         },
+        sections: {
+          where: {
+            isVisible: true,
+          },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true,
+            position: true,
+            _count: {
+              select: {
+                products: true,
+              },
+            },
+          },
+          orderBy: {
+            position: 'asc',
+          },
+        },
       },
     });
 
@@ -92,13 +112,21 @@ export async function getShopProducts(
   params: {
     categoryIds?: string[];
     search?: string;
+    sectionSlug?: string;
     sortBy?: 'featured' | 'newest' | 'price-low' | 'price-high';
     limit?: number;
     offset?: number;
   } = {}
 ) {
   try {
-    const { categoryIds, search, sortBy = 'featured', limit = 12, offset = 0 } = params;
+    const {
+      categoryIds,
+      search,
+      sectionSlug,
+      sortBy = 'featured',
+      limit = 12,
+      offset = 0,
+    } = params;
 
     // Build where clause
     const andConditions: Prisma.ProductWhereInput[] = [];
@@ -120,6 +148,30 @@ export async function getShopProducts(
           { description: { contains: search, mode: 'insensitive' } },
         ],
       });
+    }
+
+    // Section filter
+    if (sectionSlug) {
+      // Find the section first
+      const section = await db.shopSection.findUnique({
+        where: {
+          shopId_slug: {
+            shopId,
+            slug: sectionSlug,
+          },
+        },
+        select: { id: true },
+      });
+
+      if (section) {
+        andConditions.push({
+          shopSections: {
+            some: {
+              sectionId: section.id,
+            },
+          },
+        });
+      }
     }
 
     const where: Prisma.ProductWhereInput = {

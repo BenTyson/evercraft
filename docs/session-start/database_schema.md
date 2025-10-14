@@ -1,7 +1,15 @@
 # Database Schema
 
-**Last Updated:** October 11, 2025
-**Status:** ✅ Production - Fully implemented with 30 models (Analytics-optimized with Eco-Impact V2)
+**Last Updated:** October 13, 2025
+**Status:** ✅ Production - Fully implemented with 32 models (Analytics-optimized with Eco-Impact V2 + Shop Sections)
+
+> **DOCUMENTATION POLICY:**
+>
+> - This file and `CODEBASE_MAP.md` are the ONLY approved documentation files in `/docs/session-start/`
+> - No new `.md` files may be created without explicit user approval
+> - Documentation must be optimized for Claude agent technical reference (concise, factual, development-focused)
+> - Avoid explanatory prose, conceptual descriptions, or intrinsic feature information
+> - Focus: What exists, where it lives, how it's structured, what it does
 
 ---
 
@@ -641,6 +649,79 @@ Total: 0-100%
 
 ---
 
+### ShopSection
+
+Custom seller-created sections for organizing products within their shop (e.g., "Bestsellers", "Spring Collection").
+
+```prisma
+model ShopSection {
+  id          String               @id @default(cuid())
+  shopId      String
+  name        String               // Display name (e.g., "Bestsellers")
+  slug        String               // URL-friendly (e.g., "bestsellers")
+  description String?              // Optional section description
+  position    Int                  @default(0)  // Display order
+  isVisible   Boolean              @default(true)  // Show/hide without deleting
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  // Relations
+  shop        Shop                 @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  products    ShopSectionProduct[] // Many-to-many via junction table
+
+  @@unique([shopId, slug])  // Slug unique per shop
+  @@index([shopId])
+  @@index([position])
+  @@index([isVisible])
+}
+```
+
+**Key Points:**
+
+- **Shop-scoped slugs**: Each shop can have a "bestsellers" section (unique constraint on `[shopId, slug]`)
+- **Visibility toggle**: Sellers can hide sections without deleting them
+- **Position field**: Controls display order on shop page
+- **Many-to-many with Products**: Products can belong to multiple sections
+
+---
+
+### ShopSectionProduct
+
+Junction table for the many-to-many relationship between sections and products.
+
+```prisma
+model ShopSectionProduct {
+  id        String      @id @default(cuid())
+  sectionId String
+  productId String
+  position  Int         @default(0)  // Order within section
+  addedAt   DateTime    @default(now())
+
+  // Relations
+  section   ShopSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([sectionId, productId])  // Product once per section
+  @@index([sectionId])
+  @@index([productId])
+}
+```
+
+**Key Points:**
+
+- **Cascading deletes**: Deleting section removes assignments, not products
+- **Position field**: Sellers can reorder products within sections
+- **Unique constraint**: Prevents duplicate assignments
+
+**Usage Example:**
+
+- Seller creates "Spring 2025" section
+- Assigns 5 products to it
+- Products also appear in "All Products" view
+- Shop page shows tabs: "All Products | Spring 2025 | Bestsellers"
+
+---
+
 ### Additional Entities (See PROJECT_PLAN.md for full list)
 
 - **Addresses** - User shipping/billing addresses
@@ -653,6 +734,8 @@ Total: 0-100%
 - **SustainabilityScores** - Detailed eco-scoring (LEGACY - being replaced by eco-profiles)
 - **ShopEcoProfile** - Shop sustainability practices (Eco-Impact V2)
 - **ProductEcoProfile** - Product eco-attributes (Eco-Impact V2)
+- **ShopSection** - Seller-created product sections (e.g., "Bestsellers", "Spring Collection")
+- **ShopSectionProduct** - Junction table for section-product assignments (many-to-many)
 - **Promotions** - Coupons and discounts
 - **AnalyticsEvents** - Event tracking
 - **SupportTickets** - Customer support
@@ -879,6 +962,20 @@ All models include appropriate indexes for:
 
 ### Recent Migrations
 
+**Migration #6: `add_shop_sections` (October 13, 2025)**
+
+- Added `ShopSection` model for seller-created product sections:
+  - Fields: name, slug, description, position, isVisible
+  - Unique constraint on `[shopId, slug]` for shop-scoped slugs
+  - Indexes on shopId, position, isVisible
+- Added `ShopSectionProduct` junction table for many-to-many relationship:
+  - Fields: sectionId, productId, position, addedAt
+  - Unique constraint on `[sectionId, productId]`
+  - Cascading deletes on both foreign keys
+- Added `sections` relation to Shop model
+- Added `shopSections` relation to Product model
+- Enables sellers to organize products into custom sections (Bestsellers, Collections, etc.)
+
 **Migration #5: `add_smart_gate_fields_to_seller_application` (October 12, 2025)**
 
 - Added Smart Gate fields to `SellerApplication` model:
@@ -898,4 +995,4 @@ All models include appropriate indexes for:
 - Added indexes for filtering and performance
 - Non-breaking migration (legacy `ecoScore` and `ecoAttributes` preserved)
 
-**Status:** ✅ Complete - All 30 models operational
+**Status:** ✅ Complete - All 32 models operational

@@ -38,6 +38,7 @@ export interface CreateProductInput {
     origin?: string;
   };
   ecoProfile?: Partial<ProductEcoProfileData>;
+  sectionIds?: string[];
   images?: {
     url: string;
     altText?: string;
@@ -101,8 +102,22 @@ export async function createProduct(input: CreateProductInput) {
       await initializeProductEcoProfile(product.id);
     }
 
+    // Assign product to sections if sectionIds provided
+    if (input.sectionIds && input.sectionIds.length > 0) {
+      await db.shopSectionProduct.createMany({
+        data: input.sectionIds.map((sectionId, index) => ({
+          sectionId,
+          productId: product.id,
+          position: index,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
     revalidatePath('/seller/products');
+    revalidatePath('/seller/sections');
     revalidatePath('/browse');
+    revalidatePath(`/shop/${input.shopId}`);
 
     return { success: true, product };
   } catch (error) {
@@ -119,7 +134,7 @@ export async function createProduct(input: CreateProductInput) {
  */
 export async function updateProduct(productId: string, input: CreateProductInput) {
   try {
-    const { certificationIds, images, ecoProfile, ...data } = input;
+    const { certificationIds, images, ecoProfile, sectionIds, ...data } = input;
 
     // Get current product to find existing certifications
     const currentProduct = await db.product.findUnique({
@@ -167,9 +182,33 @@ export async function updateProduct(productId: string, input: CreateProductInput
       await updateProductEcoProfile(productId, ecoProfile);
     }
 
+    // Update section assignments if sectionIds provided
+    if (sectionIds !== undefined) {
+      // Remove all existing section assignments
+      await db.shopSectionProduct.deleteMany({
+        where: { productId },
+      });
+
+      // Add new section assignments
+      if (sectionIds.length > 0) {
+        await db.shopSectionProduct.createMany({
+          data: sectionIds.map((sectionId, index) => ({
+            sectionId,
+            productId,
+            position: index,
+          })),
+          skipDuplicates: true,
+        });
+      }
+    }
+
     revalidatePath('/seller/products');
+    revalidatePath('/seller/sections');
     revalidatePath('/browse');
     revalidatePath(`/products/${productId}`);
+    if (product.shopId) {
+      revalidatePath(`/shop/${product.shopId}`);
+    }
 
     return { success: true, product };
   } catch (error) {

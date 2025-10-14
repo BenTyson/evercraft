@@ -1,8 +1,16 @@
 # EVERCRAFT CODEBASE MAP
 
 **Generated:** October 8, 2025
-**Last Updated:** October 12, 2025 (Session 11 - Category System ✅)
+**Last Updated:** October 13, 2025 (Session 12 - Shop Sections Feature ✅)
 **Purpose:** Comprehensive reference for understanding the Evercraft marketplace codebase structure, implementations, and capabilities.
+
+> **DOCUMENTATION POLICY:**
+>
+> - This file and `database_schema.md` are the ONLY approved documentation files in `/docs/session-start/`
+> - No new `.md` files may be created without explicit user approval
+> - Documentation must be optimized for Claude agent technical reference (concise, factual, development-focused)
+> - Avoid explanatory prose, conceptual descriptions, or intrinsic feature information
+> - Focus: What exists, where it lives, how it's structured, what it does
 
 ---
 
@@ -49,9 +57,9 @@
 
 ## DATABASE SCHEMA
 
-**Location:** `/prisma/schema.prisma` (742 lines)
+**Location:** `/prisma/schema.prisma` (768 lines)
 
-### Models (30 total)
+### Models (32 total)
 
 #### Core User & Shop Models
 
@@ -99,46 +107,58 @@
     - Calculated: completenessPercent (0-100)
     - Relations: Product (one-to-one)
 
+12. **ShopSection** ⭐ NEW - Seller-created product sections
+    - Fields: name, slug, description, position, isVisible
+    - Purpose: Organize products into custom groups (e.g., "Bestsellers", "Spring Collection")
+    - Constraints: Unique slug per shop `[shopId, slug]`
+    - Relations: Shop, ShopSectionProduct (many-to-many)
+
+13. **ShopSectionProduct** ⭐ NEW - Junction table for section-product assignments
+    - Fields: sectionId, productId, position, addedAt
+    - Purpose: Many-to-many relationship between sections and products
+    - Constraints: Unique `[sectionId, productId]`
+    - Cascading deletes preserve products when sections are deleted
+
 #### Order & Payment Models
 
-12. **Order** - Customer orders
+14. **Order** - Customer orders
     - Fields: orderNumber, status, subtotal, shippingCost, tax, total, nonprofitDonation, paymentStatus, trackingNumber, trackingCarrier, shippingLabelUrl, shippoTransactionId
     - Status: PROCESSING, SHIPPED, DELIVERED, CANCELLED, REFUNDED
     - Payment Status: PENDING, PAID, FAILED, REFUNDED
 
-13. **OrderItem** - Individual items in orders
+15. **OrderItem** - Individual items in orders
     - Fields: quantity, priceAtPurchase, subtotal, donationAmount
 
-14. **Payment** - Payment records
+16. **Payment** - Payment records
     - Fields: stripePaymentIntentId, amount, platformFee, sellerPayout, nonprofitDonation
 
 #### Social & Engagement Models
 
-15. **Review** - Product reviews
+17. **Review** - Product reviews
     - Fields: rating (1-5), text, images, isVerifiedPurchase, helpfulCount
 
-16. **SellerReview** - Shop ratings
+18. **SellerReview** - Shop ratings
     - Fields: rating, shippingSpeedRating, communicationRating, itemAsDescribedRating
 
-17. **Favorite** - User product favorites/wishlist
+19. **Favorite** - User product favorites/wishlist
 
-18. **Collection** - User product collections
+20. **Collection** - User product collections
     - Fields: name, description, isPublic
 
 #### Supporting Models
 
-19. **Address** - User shipping/billing addresses
-20. **ShippingProfile** - Seller shipping configurations
-21. **Promotion** - Discount codes
-22. **Nonprofit** - Charity organizations
-23. **Donation** - Nonprofit donation records
-24. **Message** - User-to-user messaging
-25. **SupportTicket** - Customer support system
-26. **NotificationPreference** - User notification settings
-27. **AnalyticsEvent** - Platform analytics tracking
-28. **SearchHistory** - User search history
-29. **AdminLog** - Admin action logging
-30. **CollectionProduct** - Junction table for collections
+21. **Address** - User shipping/billing addresses
+22. **ShippingProfile** - Seller shipping configurations
+23. **Promotion** - Discount codes
+24. **Nonprofit** - Charity organizations
+25. **Donation** - Nonprofit donation records
+26. **Message** - User-to-user messaging
+27. **SupportTicket** - Customer support system
+28. **NotificationPreference** - User notification settings
+29. **AnalyticsEvent** - Platform analytics tracking
+30. **SearchHistory** - User search history
+31. **AdminLog** - Admin action logging
+32. **CollectionProduct** - Junction table for collections
 
 ### Migrations History
 
@@ -147,7 +167,9 @@
 1. **20251006151154_init** - Initial schema
 2. **20251007031524_add_product_inventory** - Added inventory tracking fields
 3. **20251007232813_add_shipping_tracking_fields** - Added Shippo integration fields (trackingNumber, trackingCarrier, shippingLabelUrl, shippoTransactionId)
-4. **20251011000632_add_eco_profiles_v2** ⭐ NEW - Added ShopEcoProfile and ProductEcoProfile models, enhanced Certification with verification fields
+4. **20251011000632_add_eco_profiles_v2** - Added ShopEcoProfile and ProductEcoProfile models, enhanced Certification with verification fields
+5. **20251012xxxxxx_add_smart_gate_fields** - Added Smart Gate completenessScore, tier, autoApprovalEligible to SellerApplication
+6. **20251013201015_add_shop_sections** ⭐ NEW - Added ShopSection and ShopSectionProduct models for seller product organization
 
 ---
 
@@ -199,15 +221,19 @@
 | `/seller/products`           | ✅ Built | `/src/app/seller/products/page.tsx`           | ~300  | Seller's product management |
 | `/seller/products/new`       | ✅ Built | `/src/app/seller/products/new/page.tsx`       | -     | Create new product          |
 | `/seller/products/[id]/edit` | ✅ Built | `/src/app/seller/products/[id]/edit/page.tsx` | -     | Edit existing product       |
+| `/seller/sections`           | ✅ Built | `/src/app/seller/sections/page.tsx`           | 80    | Manage shop sections ⭐ NEW |
 | `/seller/orders`             | ✅ Built | `/src/app/seller/orders/page.tsx`             | -     | Seller order management     |
 
 **Seller Components:**
 
-- `/src/app/seller/products/product-form.tsx` - Product creation/edit form
-- `/src/app/seller/products/products-list.tsx` - Product listing with grid/list views ⭐
-- `/src/app/seller/products/product-actions.tsx` - Product action buttons with compact mode ⭐
-- `/src/app/seller/products/view-toggle.tsx` ⭐ NEW - Grid/list view toggle component
-- `/src/app/seller/products/status-tabs.tsx` - Status filtering with Favorites tab ⭐
+- `/src/app/seller/products/product-form.tsx` - Product creation/edit form with section multi-select ⭐
+- `/src/app/seller/products/products-list.tsx` - Product listing with grid/list views
+- `/src/app/seller/products/product-actions.tsx` - Product action buttons with compact mode
+- `/src/app/seller/products/view-toggle.tsx` - Grid/list view toggle component
+- `/src/app/seller/products/status-tabs.tsx` - Status filtering with Favorites tab
+- `/src/components/seller/section-manager.tsx` ⭐ NEW - Section CRUD with reordering, visibility toggle (313 lines)
+- `/src/components/seller/section-form-dialog.tsx` ⭐ NEW - Create/edit section dialog with slug preview (173 lines)
+- `/src/components/seller/section-product-assignment.tsx` ⭐ NEW - Multi-select product assignment UI (228 lines)
 - `/src/app/seller/orders/orders-table.tsx` - Order management table (283 lines)
 - `/src/app/seller/orders/shipping-label-manager.tsx` - Shippo label generation UI (219 lines)
 
@@ -368,18 +394,20 @@
 - ✅ Payment success rate monitoring
 - ✅ Transaction history with full breakdowns
 
-**File:** `/src/actions/shops.ts` (264 lines)
+**File:** `/src/actions/shops.ts` (311 lines) ⭐ UPDATED
 
-| Function               | Purpose                                   |
-| ---------------------- | ----------------------------------------- |
-| `getShopBySlug(slug)`  | Get shop details by slug or ID            |
-| `getShopProducts()`    | Fetch shop products with pagination       |
-| `getShopReviews()`     | Fetch shop seller reviews with pagination |
-| `getShopReviewStats()` | Calculate shop rating statistics          |
+| Function               | Purpose                                                       |
+| ---------------------- | ------------------------------------------------------------- |
+| `getShopBySlug(slug)`  | Get shop details by slug or ID (includes visible sections) ⭐ |
+| `getShopProducts()`    | Fetch shop products with pagination and section filtering ⭐  |
+| `getShopReviews()`     | Fetch shop seller reviews with pagination                     |
+| `getShopReviewStats()` | Calculate shop rating statistics                              |
 
 **Features:**
 
-- ✅ Shop storefront data fetching
+- ✅ Shop storefront data fetching with sections
+- ✅ Section filtering via `sectionSlug` parameter ⭐
+- ✅ Section tabs with product counts ⭐
 - ✅ Average rating calculation from seller reviews
 - ✅ Review count aggregation
 - ✅ Supports slug or ID lookup
@@ -539,6 +567,35 @@
 - ✅ 17 tier-1 toggles + 5 tier-2 details
 - ✅ Revalidates product/browse pages on update
 - ✅ Batch operations support for migrations
+
+### Shop Sections Actions ⭐ NEW
+
+**File:** `/src/actions/shop-sections.ts` (600 lines)
+
+| Function                                                | Purpose                                             |
+| ------------------------------------------------------- | --------------------------------------------------- |
+| `getShopSections(shopId, includeHidden?)`               | Get all sections for a shop                         |
+| `getSectionWithProducts(sectionId)`                     | Get section with full product details               |
+| `getSectionBySlug(shopId, slug)`                        | Find section by shop + slug                         |
+| `createSection(shopId, data)`                           | Create new section with auto-slug generation        |
+| `updateSection(sectionId, data)`                        | Update section name, description, visibility        |
+| `deleteSection(sectionId)`                              | Delete section (cascades to junction, not products) |
+| `reorderSections(shopId, updates[])`                    | Batch update section positions                      |
+| `addProductsToSection(sectionId, productIds[])`         | Assign multiple products to section                 |
+| `removeProductFromSection(sectionId, productId)`        | Remove product from section                         |
+| `updateProductPosition(sectionId, productId, position)` | Reorder products within section                     |
+
+**Features:**
+
+- ✅ Shop ownership verification on all mutations
+- ✅ Auto-generates URL-friendly slugs from section names
+- ✅ Unique slug constraint per shop `[shopId, slug]`
+- ✅ Many-to-many product relationships (products can be in multiple sections)
+- ✅ Cascading deletes (section deletion removes assignments, not products)
+- ✅ Position management for sections and products
+- ✅ Visibility toggle (hide sections without deleting)
+- ✅ Product count tracking via junction table
+- ✅ Revalidates shop pages and seller sections page
 
 ### Product Actions
 
@@ -1491,13 +1548,6 @@ Built industry-standard 2-level category taxonomy with full admin CRUD interface
      - Clear/reset functionality
      - Visual confirmation of selection
    - Updated `/src/actions/products.ts` - Added `getCategoriesHierarchical()`
-
-5. **Documentation**
-   - `/docs/session-start/CATEGORIES_SYSTEM.md` (400+ lines)
-     - Complete taxonomy breakdown
-     - Usage patterns and examples
-     - Admin workflow documentation
-     - SEO benefits and architecture
 
 **Updated Files:**
 
