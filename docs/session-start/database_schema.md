@@ -1,7 +1,7 @@
 # Database Schema
 
-**Last Updated:** October 13, 2025
-**Status:** ✅ Production - Fully implemented with 32 models (Analytics-optimized with Eco-Impact V2 + Shop Sections)
+**Last Updated:** October 14, 2025
+**Status:** ✅ Production - Fully implemented with 32 models (Analytics-optimized with Eco-Impact V2 + Shop Sections + Product Variants)
 
 > **DOCUMENTATION POLICY:**
 >
@@ -162,7 +162,7 @@ model Product {
   shopId             String
   title              String
   description        String   // Rich text
-  price              Float
+  price              Float    // Base price (used if no variants, or as fallback)
   compareAtPrice     Float?
   sku                String?
   categoryId         String?  // ⚠️ Scalar field for groupBy (NOT "category" relation)
@@ -175,13 +175,18 @@ model Product {
   ecoAttributes      Json?    // (LEGACY - being phased out, use ecoProfile)
   metaTitle          String?
   metaDescription    String?
+
+  // Variant fields (Session 12-13)
+  hasVariants        Boolean  @default(false)  // Product has variants
+  variantOptions     Json?    // Variant option structure: { options: { Size: ["S", "M", "L"], Color: ["Red", "Blue"] } }
+
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
   // Relations
   shop            Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
   category        Category? @relation(fields: [categoryId], references: [id])
-  variants        ProductVariant[]
+  variants        ProductVariant[]  // Product variations (if hasVariants = true)
   images          ProductImage[]
   reviews         Review[]
   favorites       Favorite[]
@@ -190,6 +195,7 @@ model Product {
   certifications  Certification[]
   sustainabilityScore SustainabilityScore?  // LEGACY (Phase 5 cleanup)
   ecoProfile      ProductEcoProfile?       // Eco-Impact V2 (badge-based system)
+  shopSections    ShopSectionProduct[]     // Section assignments
 }
 
 enum ProductStatus {
@@ -221,7 +227,7 @@ model ProductVariant {
   price             Float?   // Override product price
   inventoryQuantity Int      @default(0)
   trackInventory    Boolean  @default(true)
-  imageId           String?  // Variant-specific image
+  imageId           String?  // Variant-specific image (UUID reference to ProductImage)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -231,6 +237,68 @@ model ProductVariant {
   orderItems        OrderItem[]
 }
 ```
+
+**⚠️ Critical Implementation Notes:**
+
+**Image ID Mapping Pattern:**
+
+Frontend and database use different image identifiers during product creation/editing:
+
+- **Frontend (pre-save)**: Array indices as strings ("0", "1", "2")
+  - Used in form state before product is saved
+  - Allows variant image assignment before database IDs exist
+
+- **Database (post-save)**: UUID strings (e.g., "clx7k8p2q000008l6bqwe9h2v")
+  - Actual foreign key values after ProductImage records created
+  - Required for ProductVariant.imageId foreign key constraint
+
+**Solution Pattern:**
+
+```typescript
+// After creating product with images
+const imageIdMap = new Map<string, string>();
+product.images.forEach((img, index) => {
+  imageIdMap.set(index.toString(), img.id);
+});
+
+// When creating variants, map frontend index to database UUID
+await db.productVariant.createMany({
+  data: variants.map((variant) => {
+    let actualImageId = null;
+    if (variant.imageId) {
+      actualImageId = imageIdMap.get(variant.imageId) || null;
+    }
+    return {
+      productId: product.id,
+      name: variant.name,
+      price: variant.price,
+      imageId: actualImageId, // Now a valid UUID
+      // ... other fields
+    };
+  }),
+});
+```
+
+**Why This Matters:**
+
+Without proper mapping, you'll get foreign key constraint violation:
+
+```
+Foreign key constraint violated on ProductVariant_imageId_fkey
+```
+
+**Applied in:**
+
+- `/src/actions/seller-products.ts:108-131` (createProduct)
+- `/src/actions/seller-products.ts:228-252` (updateProduct)
+
+**Variant Name Format:**
+
+Variant names are automatically generated from option values:
+
+- Single option: "Large"
+- Multiple options: "Large / Navy Blue" (joined with " / ")
+- Used in cart, checkout, orders, and email confirmations
 
 ---
 
@@ -962,6 +1030,18 @@ All models include appropriate indexes for:
 
 ### Recent Migrations
 
+**Migration #7: Product Variants (October 12-14, 2025) - Sessions 12-13**
+
+- Added `hasVariants` field to Product model (Boolean, default false)
+- Added `variantOptions` field to Product model (Json, nullable)
+  - Stores variant option structure: `{ options: { Size: ["S", "M", "L"], Color: ["Red", "Blue"] } }`
+- `ProductVariant` model already existed in schema from initial migration
+  - Fields: name, sku, price, inventoryQuantity, trackInventory, imageId
+  - Relation to Product (one-to-many)
+  - Relation to ProductImage (optional, for variant-specific images)
+- Session 12: Core variant implementation (schema, CRUD, cart integration)
+- Session 13: Bug fixes (infinite loops, foreign key constraints, image ID mapping)
+
 **Migration #6: `add_shop_sections` (October 13, 2025)**
 
 - Added `ShopSection` model for seller-created product sections:
@@ -995,4 +1075,4 @@ All models include appropriate indexes for:
 - Added indexes for filtering and performance
 - Non-breaking migration (legacy `ecoScore` and `ecoAttributes` preserved)
 
-**Status:** ✅ Complete - All 32 models operational
+**Status:** ✅ Complete - All 32 models operational (includes Product Variants system - Sessions 12-13)

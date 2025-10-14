@@ -20,6 +20,7 @@ interface Product {
   description: string;
   price: number;
   status: ProductStatus;
+  hasVariants: boolean;
   category: {
     id: string;
     name: string;
@@ -35,6 +36,9 @@ interface Product {
   favorites?: {
     id: string;
   }[];
+  _count?: {
+    variants: number;
+  };
 }
 
 interface ProductsListProps {
@@ -231,10 +235,19 @@ export function ProductsList({ products, viewMode = 'list' }: ProductsListProps)
                         {product.description}
                       </p>
                       <div className="flex items-center gap-2">
-                        <span className="text-forest-dark font-bold">{formattedPrice}</span>
+                        <span className="text-forest-dark font-bold">
+                          {product.hasVariants ? 'From ' : ''}
+                          {formattedPrice}
+                        </span>
                         {product.category && (
                           <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs">
                             {product.category.name}
+                          </span>
+                        )}
+                        {product.hasVariants && product._count && product._count.variants > 0 && (
+                          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                            {product._count.variants} variant
+                            {product._count.variants > 1 ? 's' : ''}
                           </span>
                         )}
                         {product.status === 'ACTIVE' ? (
@@ -341,10 +354,18 @@ export function ProductsList({ products, viewMode = 'list' }: ProductsListProps)
                     </Link>
 
                     <div className="mb-2 flex flex-wrap items-center gap-1.5">
-                      <span className="text-forest-dark text-lg font-bold">{formattedPrice}</span>
+                      <span className="text-forest-dark text-lg font-bold">
+                        {product.hasVariants ? 'From ' : ''}
+                        {formattedPrice}
+                      </span>
                       {product.category && (
                         <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs">
                           {product.category.name}
+                        </span>
+                      )}
+                      {product.hasVariants && product._count && product._count.variants > 0 && (
+                        <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                          {product._count.variants} variant{product._count.variants > 1 ? 's' : ''}
                         </span>
                       )}
                     </div>

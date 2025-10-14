@@ -34,6 +34,8 @@ export interface ProductCardProps extends Omit<React.ComponentProps<'div'>, 'chi
     compareAtPrice?: number;
     image: string;
     imageAlt?: string;
+    hasVariants?: boolean;
+    variantCount?: number;
   };
   /**
    * Seller information
@@ -124,7 +126,7 @@ function ProductCard({
       {/* Product Image */}
       <button
         type="button"
-        className="relative aspect-[4/3] w-full cursor-pointer overflow-hidden bg-neutral-100 dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-forest-dark focus:ring-offset-2"
+        className="focus:ring-forest-dark relative aspect-[4/3] w-full cursor-pointer overflow-hidden bg-neutral-100 focus:ring-2 focus:ring-offset-2 focus:outline-none dark:bg-neutral-800"
         onClick={onProductClick}
         aria-label={`View ${product.title}`}
       >
@@ -192,7 +194,10 @@ function ProductCard({
         <div className="flex items-center justify-between gap-2">
           {/* Price */}
           <div className="flex items-baseline gap-2">
-            <span className="text-lg font-bold">{formattedPrice}</span>
+            <span className="text-lg font-bold">
+              {product.hasVariants && <span className="text-sm font-normal">From </span>}
+              {formattedPrice}
+            </span>
             {formattedComparePrice && (
               <span className="text-muted-foreground text-sm line-through">
                 {formattedComparePrice}
@@ -233,7 +238,7 @@ function ProductCard({
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-white flex-1 gap-1.5"
+            className="text-muted-foreground flex-1 gap-1.5 hover:text-white"
             onClick={(e) => {
               e.stopPropagation();
               onQuickAddClick?.();

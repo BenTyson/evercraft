@@ -33,6 +33,7 @@ export async function sendOrderConfirmationEmail({
   orderTotal: number;
   items: Array<{
     title: string;
+    variantName?: string;
     quantity: number;
     price: number;
   }>;
@@ -60,10 +61,13 @@ export async function sendOrderConfirmationEmail({
     const itemsList = items
       .map(
         (item) =>
-          `- ${item.title} x${item.quantity} - ${new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-          }).format(item.price * item.quantity)}`
+          `- ${item.title}${item.variantName ? ` (${item.variantName})` : ''} x${item.quantity} - ${new Intl.NumberFormat(
+            'en-US',
+            {
+              style: 'currency',
+              currency: 'USD',
+            }
+          ).format(item.price * item.quantity)}`
       )
       .join('\n');
 

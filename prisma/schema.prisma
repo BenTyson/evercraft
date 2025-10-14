@@ -296,6 +296,9 @@ model Product {
   ecoAttributes       Json?
   metaTitle           String?
   metaDescription     String?
+  // Variant support
+  hasVariants         Boolean              @default(false)
+  variantOptions      Json?                // { options: [{ name, position, values[], isCustom }] }
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   certifications      Certification[]
@@ -316,6 +319,7 @@ model Product {
   @@index([ecoScore])
   @@index([shopId])
   @@index([status])
+  @@index([hasVariants])
 }
 
 model ProductImage {

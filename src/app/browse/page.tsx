@@ -26,6 +26,7 @@ interface Product {
   title: string;
   price: number;
   compareAtPrice: number | null;
+  hasVariants: boolean;
   images: Array<{ url: string; altText: string | null }>;
   shop: {
     id: string;
@@ -57,6 +58,9 @@ interface Product {
     isCompostable?: boolean;
     isRepairable?: boolean;
   } | null;
+  _count?: {
+    variants: number;
+  };
 }
 
 interface Category {
@@ -426,6 +430,8 @@ export default function BrowsePage() {
                     compareAtPrice: product.compareAtPrice || undefined,
                     image: product.images[0]?.url || '/placeholder.png',
                     imageAlt: product.images[0]?.altText || product.title,
+                    hasVariants: product.hasVariants,
+                    variantCount: product._count?.variants,
                   }}
                   seller={{
                     name: product.shop.name,
@@ -438,7 +444,14 @@ export default function BrowsePage() {
                   reviewCount={0}
                   isFavorited={favorited[product.id]}
                   onFavoriteClick={() => toggleFavorite(product.id)}
-                  onQuickAddClick={() => alert('Added to cart!')}
+                  onQuickAddClick={() => {
+                    // For variant products, navigate to product page to select options
+                    if (product.hasVariants) {
+                      router.push(`/products/${product.id}`);
+                    } else {
+                      alert('Added to cart!');
+                    }
+                  }}
                   onProductClick={() => router.push(`/products/${product.id}`)}
                 />
               ))}

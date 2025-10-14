@@ -7,22 +7,28 @@ import { useCartStore } from '@/store/cart-store';
 
 interface AddToCartButtonProps {
   productId: string;
+  variantId?: string;
+  variantName?: string;
   title: string;
   price: number;
   image?: string;
   shopId: string;
   shopName: string;
   disabled?: boolean;
+  requiresVariantSelection?: boolean;
 }
 
 export function AddToCartButton({
   productId,
+  variantId,
+  variantName,
   title,
   price,
   image,
   shopId,
   shopName,
   disabled = false,
+  requiresVariantSelection = false,
 }: AddToCartButtonProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
@@ -32,8 +38,10 @@ export function AddToCartButton({
     setIsAdding(true);
     try {
       addItem({
-        id: `${productId}-${Date.now()}`,
+        id: `${productId}-${variantId || 'default'}-${Date.now()}`,
         productId,
+        variantId,
+        variantName,
         title,
         price,
         image,
@@ -51,8 +59,15 @@ export function AddToCartButton({
   };
 
   return (
-    <Button onClick={handleAddToCart} disabled={isAdding || disabled} className="flex-1" size="lg">
-      {disabled ? (
+    <Button
+      onClick={handleAddToCart}
+      disabled={isAdding || disabled || requiresVariantSelection}
+      className="flex-1"
+      size="lg"
+    >
+      {requiresVariantSelection ? (
+        <>Select Options</>
+      ) : disabled ? (
         <>Out of Stock</>
       ) : isAdding ? (
         <>

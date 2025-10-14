@@ -10,6 +10,8 @@ import { persist } from 'zustand/middleware';
 export interface CartItem {
   id: string;
   productId: string;
+  variantId?: string;
+  variantName?: string;
   title: string;
   price: number;
   quantity: number;
@@ -21,11 +23,18 @@ export interface CartItem {
 interface CartStore {
   items: CartItem[];
   addItem: (item: Omit<CartItem, 'quantity'>) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  removeItem: (productId: string, variantId?: string) => void;
+  updateQuantity: (productId: string, quantity: number, variantId?: string) => void;
   clearCart: () => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
+}
+
+/**
+ * Generate unique cart item key from productId and optional variantId
+ */
+function getCartItemKey(productId: string, variantId?: string): string {
+  return variantId ? `${productId}-${variantId}` : productId;
 }
 
 export const useCartStore = create<CartStore>()(
@@ -35,13 +44,18 @@ export const useCartStore = create<CartStore>()(
 
       addItem: (item) => {
         const items = get().items;
-        const existingItem = items.find((i) => i.productId === item.productId);
+        const itemKey = getCartItemKey(item.productId, item.variantId);
+        const existingItem = items.find(
+          (i) => getCartItemKey(i.productId, i.variantId) === itemKey
+        );
 
         if (existingItem) {
           // Increment quantity if item already in cart
           set({
             items: items.map((i) =>
-              i.productId === item.productId ? { ...i, quantity: i.quantity + 1 } : i
+              getCartItemKey(i.productId, i.variantId) === itemKey
+                ? { ...i, quantity: i.quantity + 1 }
+                : i
             ),
           });
         } else {
@@ -52,21 +66,23 @@ export const useCartStore = create<CartStore>()(
         }
       },
 
-      removeItem: (productId) => {
+      removeItem: (productId, variantId) => {
+        const itemKey = getCartItemKey(productId, variantId);
         set({
-          items: get().items.filter((i) => i.productId !== productId),
+          items: get().items.filter((i) => getCartItemKey(i.productId, i.variantId) !== itemKey),
         });
       },
 
-      updateQuantity: (productId, quantity) => {
+      updateQuantity: (productId, quantity, variantId) => {
         if (quantity <= 0) {
-          get().removeItem(productId);
+          get().removeItem(productId, variantId);
           return;
         }
 
+        const itemKey = getCartItemKey(productId, variantId);
         set({
           items: get().items.map((i) =>
-            i.productId === productId ? { ...i, quantity } : i
+            getCartItemKey(i.productId, i.variantId) === itemKey ? { ...i, quantity } : i
           ),
         });
       },

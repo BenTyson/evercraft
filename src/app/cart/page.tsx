@@ -12,12 +12,12 @@ import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/store/cart-store';
 import { SiteHeader } from '@/components/layout/site-header';
+import { calculateCartShipping, getShippingEstimateMessage } from '@/lib/shipping';
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, getTotalPrice, getTotalItems } = useCartStore();
 
   // Calculate shipping dynamically
-  const { calculateCartShipping, getShippingEstimateMessage } = require('@/lib/shipping');
   const shippingResult = calculateCartShipping({
     items: items.map((item) => ({
       price: item.price,
@@ -64,18 +64,13 @@ export default function CartPage() {
 
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Cart Items */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="space-y-4 lg:col-span-2">
             {items.map((item) => (
               <div key={item.id} className="bg-card flex gap-4 rounded-lg border p-4">
                 {/* Product Image */}
                 <div className="bg-muted relative size-24 flex-shrink-0 overflow-hidden rounded-md">
                   {item.image ? (
-                    <Image
-                      src={item.image}
-                      alt={item.title}
-                      fill
-                      className="object-cover"
-                    />
+                    <Image src={item.image} alt={item.title} fill className="object-cover" />
                   ) : (
                     <div className="flex size-full items-center justify-center">
                       <ShoppingBag className="text-muted-foreground size-8" />
@@ -92,6 +87,11 @@ export default function CartPage() {
                     >
                       {item.title}
                     </Link>
+                    {item.variantName && (
+                      <p className="text-muted-foreground text-sm font-medium">
+                        {item.variantName}
+                      </p>
+                    )}
                     <p className="text-muted-foreground text-sm">by {item.shopName}</p>
                   </div>
 
@@ -102,7 +102,9 @@ export default function CartPage() {
                         variant="outline"
                         size="icon"
                         className="size-8"
-                        onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                        onClick={() =>
+                          updateQuantity(item.productId, item.quantity - 1, item.variantId)
+                        }
                       >
                         <Minus className="size-4" />
                       </Button>
@@ -111,7 +113,9 @@ export default function CartPage() {
                         variant="outline"
                         size="icon"
                         className="size-8"
-                        onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                        onClick={() =>
+                          updateQuantity(item.productId, item.quantity + 1, item.variantId)
+                        }
                       >
                         <Plus className="size-4" />
                       </Button>
@@ -124,7 +128,7 @@ export default function CartPage() {
                         variant="ghost"
                         size="icon"
                         className="text-muted-foreground hover:text-red-600"
-                        onClick={() => removeItem(item.productId)}
+                        onClick={() => removeItem(item.productId, item.variantId)}
                       >
                         <Trash2 className="size-4" />
                       </Button>
@@ -142,9 +146,7 @@ export default function CartPage() {
 
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    Subtotal ({getTotalItems()} items)
-                  </span>
+                  <span className="text-muted-foreground">Subtotal ({getTotalItems()} items)</span>
                   <span className="font-semibold">${subtotal.toFixed(2)}</span>
                 </div>
 
@@ -161,7 +163,7 @@ export default function CartPage() {
 
                 {/* Shipping Estimate Message */}
                 {shippingMessage && (
-                  <div className="bg-eco-light/10 rounded-md px-3 py-2 text-xs text-eco-dark">
+                  <div className="bg-eco-light/10 text-eco-dark rounded-md px-3 py-2 text-xs">
                     {shippingMessage}
                   </div>
                 )}

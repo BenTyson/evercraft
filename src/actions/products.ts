@@ -296,6 +296,11 @@ export async function getProducts(params: GetProductsParams = {}) {
             certificationScore: true,
           },
         },
+        _count: {
+          select: {
+            variants: true,
+          },
+        },
       },
     });
 
@@ -358,10 +363,25 @@ export async function getProductById(id: string) {
             position: 'asc',
           },
           select: {
+            id: true,
             url: true,
             altText: true,
             position: true,
             isPrimary: true,
+          },
+        },
+        variants: {
+          orderBy: {
+            name: 'asc',
+          },
+          select: {
+            id: true,
+            name: true,
+            sku: true,
+            price: true,
+            inventoryQuantity: true,
+            trackInventory: true,
+            imageId: true,
           },
         },
         ecoProfile: true,

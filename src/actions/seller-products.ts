@@ -14,6 +14,7 @@ import {
   updateProductEcoProfile,
   type ProductEcoProfileData,
 } from './product-eco-profile';
+import type { VariantOptionsData, VariantInput } from '@/types/variants';
 
 export interface CreateProductInput {
   title: string;
@@ -44,6 +45,10 @@ export interface CreateProductInput {
     altText?: string;
     isPrimary: boolean;
   }[];
+  // Variant fields
+  hasVariants?: boolean;
+  variantOptions?: VariantOptionsData | null;
+  variants?: VariantInput[];
 }
 
 export interface UpdateProductInput extends Partial<CreateProductInput> {
@@ -71,6 +76,9 @@ export async function createProduct(input: CreateProductInput) {
         trackInventory: input.trackInventory ?? true,
         lowStockThreshold: input.lowStockThreshold,
         ecoAttributes: input.ecoAttributes || {},
+        // Variant fields
+        hasVariants: input.hasVariants || false,
+        variantOptions: input.variantOptions || null,
         certifications: input.certificationIds
           ? {
               connect: input.certificationIds.map((id) => ({ id })),
@@ -93,6 +101,35 @@ export async function createProduct(input: CreateProductInput) {
         images: true,
       },
     });
+
+    // Create variants if provided
+    if (input.hasVariants && input.variants && input.variants.length > 0) {
+      // Map frontend image indices to actual database image IDs
+      const imageIdMap = new Map<string, string>();
+      product.images.forEach((img, index) => {
+        imageIdMap.set(index.toString(), img.id);
+      });
+
+      await db.productVariant.createMany({
+        data: input.variants.map((variant) => {
+          // Map the frontend imageId (index) to actual database ID
+          let actualImageId = null;
+          if (variant.imageId) {
+            actualImageId = imageIdMap.get(variant.imageId) || null;
+          }
+
+          return {
+            productId: product.id,
+            name: variant.name,
+            sku: variant.sku || null,
+            price: variant.price,
+            inventoryQuantity: variant.inventoryQuantity,
+            trackInventory: variant.trackInventory,
+            imageId: actualImageId,
+          };
+        }),
+      });
+    }
 
     // Initialize eco-profile if data provided
     if (input.ecoProfile) {
@@ -134,7 +171,16 @@ export async function createProduct(input: CreateProductInput) {
  */
 export async function updateProduct(productId: string, input: CreateProductInput) {
   try {
-    const { certificationIds, images, ecoProfile, sectionIds, ...data } = input;
+    const {
+      certificationIds,
+      images,
+      ecoProfile,
+      sectionIds,
+      variants,
+      hasVariants,
+      variantOptions,
+      ...data
+    } = input;
 
     // Get current product to find existing certifications
     const currentProduct = await db.product.findUnique({
@@ -153,6 +199,8 @@ export async function updateProduct(productId: string, input: CreateProductInput
       where: { id: productId },
       data: {
         ...data,
+        hasVariants: hasVariants || false,
+        variantOptions: variantOptions || null,
         certifications: certificationIds
           ? {
               disconnect: currentProduct?.certifications.map((cert) => ({ id: cert.id })) || [],
@@ -176,6 +224,43 @@ export async function updateProduct(productId: string, input: CreateProductInput
         images: true,
       },
     });
+
+    // Update variants if hasVariants is true
+    if (hasVariants && variants !== undefined) {
+      // Delete all existing variants
+      await db.productVariant.deleteMany({
+        where: { productId },
+      });
+
+      // Create new variants if provided
+      if (variants.length > 0) {
+        // Map frontend image indices to actual database image IDs
+        const imageIdMap = new Map<string, string>();
+        product.images.forEach((img, index) => {
+          imageIdMap.set(index.toString(), img.id);
+        });
+
+        await db.productVariant.createMany({
+          data: variants.map((variant) => {
+            // Map the frontend imageId (index) to actual database ID
+            let actualImageId = null;
+            if (variant.imageId) {
+              actualImageId = imageIdMap.get(variant.imageId) || null;
+            }
+
+            return {
+              productId,
+              name: variant.name,
+              sku: variant.sku || null,
+              price: variant.price,
+              inventoryQuantity: variant.inventoryQuantity,
+              trackInventory: variant.trackInventory,
+              imageId: actualImageId,
+            };
+          }),
+        });
+      }
+    }
 
     // Update eco-profile if data provided
     if (ecoProfile) {
@@ -361,6 +446,7 @@ export async function getSellerProducts(
         _count: {
           select: {
             reviews: true,
+            variants: true,
           },
         },
       },

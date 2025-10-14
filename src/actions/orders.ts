@@ -35,6 +35,13 @@ export async function getUserOrders() {
                 },
               },
             },
+            variant: {
+              select: {
+                id: true,
+                name: true,
+                sku: true,
+              },
+            },
             shop: {
               select: {
                 id: true,
@@ -107,6 +114,13 @@ export async function getOrderById(orderId: string) {
                   },
                   take: 1,
                 },
+              },
+            },
+            variant: {
+              select: {
+                id: true,
+                name: true,
+                sku: true,
               },
             },
             shop: {
@@ -193,6 +207,13 @@ export async function getSellerOrders() {
                   },
                   take: 1,
                 },
+              },
+            },
+            variant: {
+              select: {
+                id: true,
+                name: true,
+                sku: true,
               },
             },
           },

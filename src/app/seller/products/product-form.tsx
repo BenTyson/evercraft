@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Loader2, Eye, EyeOff, Info } from 'lucide-react';
 import Link from 'next/link';
@@ -18,8 +18,10 @@ import {
   type ProductEcoProfileData,
 } from '@/components/seller/product-eco-profile-form';
 import { CascadingCategorySelect } from '@/components/categories/cascading-category-select';
+import { VariantManager } from '@/components/seller/variant-manager';
 import { createProduct, updateProduct, type CreateProductInput } from '@/actions/seller-products';
 import { ProductStatus } from '@/generated/prisma';
+import type { VariantOptionsData, VariantInput } from '@/types/variants';
 
 interface HierarchicalCategory {
   id: string;
@@ -88,24 +90,47 @@ export function ProductForm({
     status: initialData?.status || ProductStatus.DRAFT,
   });
 
+  // Variant state
+  const [hasVariants, setHasVariants] = useState(initialData?.hasVariants || false);
+  const [variantOptions, setVariantOptions] = useState<VariantOptionsData | null>(
+    initialData?.variantOptions || null
+  );
+  const [variants, setVariants] = useState<VariantInput[]>(initialData?.variants || []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     // Validation
-    if (!formData.title || !formData.description || !formData.price || !formData.categoryId) {
+    if (!formData.title || !formData.description || !formData.categoryId) {
       setError('Please fill in all required fields');
       return;
+    }
+
+    // Validate based on variant mode
+    if (hasVariants) {
+      if (!variants || variants.length === 0) {
+        setError('Please generate at least one variant');
+        return;
+      }
+      // Validate at least one variant has inventory if tracking
+      const hasInventory = variants.some((v) => !v.trackInventory || v.inventoryQuantity > 0);
+      if (!hasInventory) {
+        setError('At least one variant must have inventory');
+        return;
+      }
+    } else {
+      // Single product validation
+      if (!formData.price || formData.price <= 0) {
+        setError('A valid price is required');
+        return;
+      }
     }
 
     // Additional validation for ACTIVE products
     if (formData.status === ProductStatus.ACTIVE) {
       if (!formData.images || formData.images.length === 0) {
         setError('At least one product image is required to publish as Active');
-        return;
-      }
-      if (!formData.price || formData.price <= 0) {
-        setError('A valid price is required to publish as Active');
         return;
       }
     }
@@ -123,6 +148,9 @@ export function ProductForm({
       const productData = {
         ...formData,
         images,
+        hasVariants,
+        variantOptions: hasVariants ? variantOptions : null,
+        variants: hasVariants ? variants : [],
       } as CreateProductInput;
 
       let result;
@@ -157,6 +185,23 @@ export function ProductForm({
 
   const handleEcoProfileChange = (ecoProfile: Partial<ProductEcoProfileData>) => {
     setFormData((prev) => ({ ...prev, ecoProfile }));
+  };
+
+  const handleVariantChange = useCallback(
+    (options: VariantOptionsData, variantList: VariantInput[]) => {
+      setVariantOptions(options);
+      setVariants(variantList);
+    },
+    []
+  );
+
+  const handleVariantToggle = (enabled: boolean) => {
+    setHasVariants(enabled);
+    if (!enabled) {
+      // Clear variant data when disabling
+      setVariantOptions(null);
+      setVariants([]);
+    }
   };
 
   return (
@@ -237,115 +282,164 @@ export function ProductForm({
         />
       </div>
 
-      {/* Pricing */}
+      {/* Variant Toggle */}
       <div className="bg-card space-y-4 rounded-lg border p-6">
-        <h2 className="text-xl font-bold">Pricing</h2>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label htmlFor="price" className="mb-2 block text-sm font-medium">
-              Price (USD) <span className="text-red-500">*</span>
-            </label>
-            <Input
-              id="price"
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.price || ''}
-              onChange={(e) =>
-                handleChange('price', e.target.value ? parseFloat(e.target.value) : 0)
-              }
-              placeholder="24.99"
-              required
+        <div>
+          <h2 className="mb-2 text-xl font-bold">Product Options</h2>
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={hasVariants}
+              onChange={(e) => handleVariantToggle(e.target.checked)}
+              className="text-forest-dark focus:ring-forest-dark mt-1 size-4 rounded border-gray-300"
             />
-          </div>
-
-          <div>
-            <label htmlFor="compareAtPrice" className="mb-2 block text-sm font-medium">
-              Compare at Price (optional)
-            </label>
-            <Input
-              id="compareAtPrice"
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.compareAtPrice || ''}
-              onChange={(e) =>
-                handleChange(
-                  'compareAtPrice',
-                  e.target.value ? parseFloat(e.target.value) : undefined
-                )
-              }
-              placeholder="34.99"
-            />
-            <p className="text-muted-foreground mt-1 text-xs">Show original price for discounts</p>
-          </div>
+            <div className="flex-1">
+              <span className="text-sm font-medium">This product has variants</span>
+              <p className="text-muted-foreground mt-1 text-xs">
+                Add options like size or color that buyers can choose from (e.g.,
+                Small/Medium/Large)
+              </p>
+            </div>
+          </label>
         </div>
       </div>
 
-      {/* Inventory Management */}
-      <div className="bg-card space-y-4 rounded-lg border p-6">
-        <h2 className="text-xl font-bold">Inventory</h2>
+      {/* Pricing - shown only if NOT using variants */}
+      {!hasVariants && (
+        <div className="bg-card space-y-4 rounded-lg border p-6">
+          <h2 className="text-xl font-bold">Pricing</h2>
 
-        <div>
-          <label className="flex cursor-pointer items-center gap-3">
-            <input
-              type="checkbox"
-              checked={formData.trackInventory ?? true}
-              onChange={(e) => handleChange('trackInventory', e.target.checked)}
-              className="text-forest-dark focus:ring-forest-dark size-4 rounded border-gray-300"
-            />
-            <span className="text-sm font-medium">Track inventory for this product</span>
-          </label>
-          <p className="text-muted-foreground mt-1 ml-7 text-xs">
-            Evercraft will track stock levels and show &quot;Out of Stock&quot; when quantity
-            reaches zero
-          </p>
-        </div>
-
-        {(formData.trackInventory ?? true) && (
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label htmlFor="inventoryQuantity" className="mb-2 block text-sm font-medium">
-                Quantity in Stock <span className="text-red-500">*</span>
+              <label htmlFor="price" className="mb-2 block text-sm font-medium">
+                Price (USD) <span className="text-red-500">*</span>
               </label>
               <Input
-                id="inventoryQuantity"
+                id="price"
                 type="number"
+                step="0.01"
                 min="0"
-                value={formData.inventoryQuantity ?? 0}
+                value={formData.price || ''}
                 onChange={(e) =>
-                  handleChange('inventoryQuantity', e.target.value ? parseInt(e.target.value) : 0)
+                  handleChange('price', e.target.value ? parseFloat(e.target.value) : 0)
                 }
-                placeholder="100"
+                placeholder="24.99"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="lowStockThreshold" className="mb-2 block text-sm font-medium">
-                Low Stock Alert (optional)
+              <label htmlFor="compareAtPrice" className="mb-2 block text-sm font-medium">
+                Compare at Price (optional)
               </label>
               <Input
-                id="lowStockThreshold"
+                id="compareAtPrice"
                 type="number"
+                step="0.01"
                 min="0"
-                value={formData.lowStockThreshold ?? ''}
+                value={formData.compareAtPrice || ''}
                 onChange={(e) =>
                   handleChange(
-                    'lowStockThreshold',
-                    e.target.value ? parseInt(e.target.value) : undefined
+                    'compareAtPrice',
+                    e.target.value ? parseFloat(e.target.value) : undefined
                   )
                 }
-                placeholder="10"
+                placeholder="34.99"
               />
               <p className="text-muted-foreground mt-1 text-xs">
-                Get notified when stock falls below this number
+                Show original price for discounts
               </p>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Variant Manager - shown only if using variants */}
+      {hasVariants && (
+        <div className="bg-card space-y-4 rounded-lg border p-6">
+          <h2 className="text-xl font-bold">Variant Manager</h2>
+          <p className="text-muted-foreground text-sm">
+            Define your variant options (like Size and Color), then generate all combinations. Each
+            variant has its own pricing and inventory.
+          </p>
+          <VariantManager
+            productPrice={formData.price || 0}
+            productImages={(formData.images || []).map((img) => ({
+              url: typeof img === 'string' ? img : img.url,
+              altText: formData.title,
+            }))}
+            initialOptions={variantOptions || undefined}
+            initialVariants={variants}
+            onChange={handleVariantChange}
+          />
+        </div>
+      )}
+
+      {/* Inventory Management - shown only if NOT using variants */}
+      {!hasVariants && (
+        <div className="bg-card space-y-4 rounded-lg border p-6">
+          <h2 className="text-xl font-bold">Inventory</h2>
+
+          <div>
+            <label className="flex cursor-pointer items-center gap-3">
+              <input
+                type="checkbox"
+                checked={formData.trackInventory ?? true}
+                onChange={(e) => handleChange('trackInventory', e.target.checked)}
+                className="text-forest-dark focus:ring-forest-dark size-4 rounded border-gray-300"
+              />
+              <span className="text-sm font-medium">Track inventory for this product</span>
+            </label>
+            <p className="text-muted-foreground mt-1 ml-7 text-xs">
+              Evercraft will track stock levels and show &quot;Out of Stock&quot; when quantity
+              reaches zero
+            </p>
+          </div>
+
+          {(formData.trackInventory ?? true) && (
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label htmlFor="inventoryQuantity" className="mb-2 block text-sm font-medium">
+                  Quantity in Stock <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  id="inventoryQuantity"
+                  type="number"
+                  min="0"
+                  value={formData.inventoryQuantity ?? 0}
+                  onChange={(e) =>
+                    handleChange('inventoryQuantity', e.target.value ? parseInt(e.target.value) : 0)
+                  }
+                  placeholder="100"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="lowStockThreshold" className="mb-2 block text-sm font-medium">
+                  Low Stock Alert (optional)
+                </label>
+                <Input
+                  id="lowStockThreshold"
+                  type="number"
+                  min="0"
+                  value={formData.lowStockThreshold ?? ''}
+                  onChange={(e) =>
+                    handleChange(
+                      'lowStockThreshold',
+                      e.target.value ? parseInt(e.target.value) : undefined
+                    )
+                  }
+                  placeholder="10"
+                />
+                <p className="text-muted-foreground mt-1 text-xs">
+                  Get notified when stock falls below this number
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Shop Sections */}
       {sections.length > 0 && (

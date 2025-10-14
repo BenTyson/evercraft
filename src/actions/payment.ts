@@ -12,6 +12,8 @@ import { syncUserToDatabase } from '@/lib/auth';
 interface CartItem {
   id: string;
   productId: string;
+  variantId?: string;
+  variantName?: string;
   title: string;
   price: number;
   quantity: number;
@@ -121,9 +123,45 @@ export async function createOrder(input: CreateOrderInput) {
 
     const total = subtotal + donationAmount + shipping;
 
-    // Check inventory availability for all products
+    // Check inventory availability for all products/variants
     const inventoryCheck = await Promise.all(
       input.items.map(async (item) => {
+        // If item has a variant, check variant inventory
+        if (item.variantId) {
+          const variant = await db.productVariant.findUnique({
+            where: { id: item.variantId },
+            select: {
+              id: true,
+              name: true,
+              trackInventory: true,
+              inventoryQuantity: true,
+              product: {
+                select: {
+                  id: true,
+                  title: true,
+                },
+              },
+            },
+          });
+
+          if (!variant) {
+            return {
+              success: false,
+              error: `Product variant ${item.variantName || 'not found'}`,
+            };
+          }
+
+          if (variant.trackInventory && variant.inventoryQuantity < item.quantity) {
+            return {
+              success: false,
+              error: `Insufficient inventory for ${variant.product.title} - ${variant.name}. Available: ${variant.inventoryQuantity}, Requested: ${item.quantity}`,
+            };
+          }
+
+          return { success: true, variant };
+        }
+
+        // Otherwise, check product inventory
         const product = await db.product.findUnique({
           where: { id: item.productId },
           select: {
@@ -194,6 +232,7 @@ export async function createOrder(input: CreateOrderInput) {
           data: {
             orderId: newOrder.id,
             productId: item.productId,
+            variantId: item.variantId || null,
             shopId: product.shopId,
             quantity: item.quantity,
             priceAtPurchase: item.price,
@@ -203,7 +242,25 @@ export async function createOrder(input: CreateOrderInput) {
         });
 
         // Decrement inventory if tracking is enabled
-        if (product.trackInventory) {
+        if (item.variantId) {
+          // Decrement variant inventory
+          const variant = await tx.productVariant.findUnique({
+            where: { id: item.variantId },
+            select: { trackInventory: true },
+          });
+
+          if (variant?.trackInventory) {
+            await tx.productVariant.update({
+              where: { id: item.variantId },
+              data: {
+                inventoryQuantity: {
+                  decrement: item.quantity,
+                },
+              },
+            });
+          }
+        } else if (product.trackInventory) {
+          // Decrement product inventory
           await tx.product.update({
             where: { id: item.productId },
             data: {
@@ -231,6 +288,7 @@ export async function createOrder(input: CreateOrderInput) {
           orderTotal: total,
           items: input.items.map((item) => ({
             title: item.title,
+            variantName: item.variantName,
             quantity: item.quantity,
             price: item.price,
           })),

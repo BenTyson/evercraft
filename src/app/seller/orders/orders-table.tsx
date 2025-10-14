@@ -30,6 +30,11 @@ interface Order {
       title: string;
       images: Array<{ url: string; altText: string | null }>;
     };
+    variant?: {
+      id: string;
+      name: string;
+      sku: string | null;
+    } | null;
   }>;
 }
 
@@ -307,13 +312,16 @@ export function OrdersTable({ orders: initialOrders }: OrdersTableProps) {
                               >
                                 {item.product.title}
                               </Link>
+                              {item.variant && (
+                                <p className="text-muted-foreground text-sm font-medium">
+                                  {item.variant.name}
+                                </p>
+                              )}
                               <p className="text-muted-foreground text-sm">
                                 Qty: {item.quantity} × ${(item.subtotal / item.quantity).toFixed(2)}
                               </p>
                             </div>
-                            <div className="text-sm font-semibold">
-                              ${item.subtotal.toFixed(2)}
-                            </div>
+                            <div className="text-sm font-semibold">${item.subtotal.toFixed(2)}</div>
                           </div>
                         </div>
                       ))}

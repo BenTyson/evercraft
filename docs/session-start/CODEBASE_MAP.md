@@ -1,7 +1,7 @@
 # EVERCRAFT CODEBASE MAP
 
 **Generated:** October 8, 2025
-**Last Updated:** October 13, 2025 (Session 12 - Shop Sections Feature ✅)
+**Last Updated:** October 14, 2025 (Session 13 - Product Variants Refinements ✅)
 **Purpose:** Comprehensive reference for understanding the Evercraft marketplace codebase structure, implementations, and capabilities.
 
 > **DOCUMENTATION POLICY:**
@@ -226,14 +226,15 @@
 
 **Seller Components:**
 
-- `/src/app/seller/products/product-form.tsx` - Product creation/edit form with section multi-select ⭐
+- `/src/app/seller/products/product-form.tsx` - Product creation/edit form with section multi-select and variant support ⭐
 - `/src/app/seller/products/products-list.tsx` - Product listing with grid/list views
 - `/src/app/seller/products/product-actions.tsx` - Product action buttons with compact mode
 - `/src/app/seller/products/view-toggle.tsx` - Grid/list view toggle component
 - `/src/app/seller/products/status-tabs.tsx` - Status filtering with Favorites tab
-- `/src/components/seller/section-manager.tsx` ⭐ NEW - Section CRUD with reordering, visibility toggle (313 lines)
-- `/src/components/seller/section-form-dialog.tsx` ⭐ NEW - Create/edit section dialog with slug preview (173 lines)
-- `/src/components/seller/section-product-assignment.tsx` ⭐ NEW - Multi-select product assignment UI (228 lines)
+- `/src/components/seller/section-manager.tsx` ⭐ - Section CRUD with reordering, visibility toggle (313 lines)
+- `/src/components/seller/section-form-dialog.tsx` ⭐ - Create/edit section dialog with slug preview (173 lines)
+- `/src/components/seller/section-product-assignment.tsx` ⭐ - Multi-select product assignment UI (228 lines)
+- `/src/components/seller/variant-manager.tsx` ⭐ - Variant option management and generation (~500 lines, Session 13 modal redesign)
 - `/src/app/seller/orders/orders-table.tsx` - Order management table (283 lines)
 - `/src/app/seller/orders/shipping-label-manager.tsx` - Shippo label generation UI (219 lines)
 
@@ -633,18 +634,18 @@
 - ✅ Includes eco-profile data in queries
 - ✅ Includes shop eco-profile tier and completeness
 
-**File:** `/src/actions/seller-products.ts` (485 lines) ⭐ UPDATED
+**File:** `/src/actions/seller-products.ts` (636 lines) ⭐ UPDATED (Session 13)
 
-| Function                                                            | Purpose                                               |
-| ------------------------------------------------------------------- | ----------------------------------------------------- |
-| `getSellerShop(userId)`                                             | Get seller's shop details with eco-profile ⭐         |
-| `getSellerProducts(shopId, statusFilter?, userId?, favoritesOnly?)` | Get seller's products with filters ⭐                 |
-| `getSellerProductCounts(shopId, userId?)`                           | Get product counts by status + favorites ⭐           |
-| `createProduct(input)`                                              | Create new product with eco-profile initialization ⭐ |
-| `updateProduct(id, input)`                                          | Update existing product and eco-profile ⭐            |
-| `deleteProduct(id)`                                                 | Delete product                                        |
-| Product status management                                           | (DRAFT → ACTIVE → ARCHIVED)                           |
-| Bulk operations                                                     | Bulk publish, unpublish, delete                       |
+| Function                                                            | Purpose                                              |
+| ------------------------------------------------------------------- | ---------------------------------------------------- |
+| `getSellerShop(userId)`                                             | Get seller's shop details with eco-profile ⭐        |
+| `getSellerProducts(shopId, statusFilter?, userId?, favoritesOnly?)` | Get seller's products with filters ⭐                |
+| `getSellerProductCounts(shopId, userId?)`                           | Get product counts by status + favorites ⭐          |
+| `createProduct(input)`                                              | Create product with variants, images, eco-profile ⭐ |
+| `updateProduct(id, input)`                                          | Update product with variants, images, eco-profile ⭐ |
+| `deleteProduct(id)`                                                 | Delete product                                       |
+| Product status management                                           | (DRAFT → ACTIVE → ARCHIVED)                          |
+| Bulk operations                                                     | Bulk publish, unpublish, delete                      |
 
 **Features:**
 
@@ -654,6 +655,34 @@
 - ✅ Favorites filtering (sellers can filter their favorited products) ⭐
 - ✅ Status filtering with counts (All, Favorites, Draft, Active, Sold Out, Archived) ⭐
 - ✅ Includes favorite status for current user ⭐
+- ✅ **Variant support**: Creates/updates ProductVariant records ⭐ (Session 13)
+- ✅ **Image ID mapping**: Maps frontend indices to database UUIDs ⭐ (Session 13)
+- ✅ **Section assignment**: Assigns products to shop sections ⭐
+
+**Variant Implementation (Session 13):**
+
+Both `createProduct` and `updateProduct` include image ID mapping logic:
+
+```typescript
+// After product.images are created, map indices to UUIDs
+const imageIdMap = new Map<string, string>();
+product.images.forEach((img, index) => {
+  imageIdMap.set(index.toString(), img.id);
+});
+
+// Create variants with mapped image IDs
+await db.productVariant.createMany({
+  data: input.variants.map((variant) => {
+    let actualImageId = null;
+    if (variant.imageId) {
+      actualImageId = imageIdMap.get(variant.imageId) || null;
+    }
+    return { productId, name, price, imageId: actualImageId, ... };
+  }),
+});
+```
+
+Prevents foreign key constraint errors when variants reference images.
 
 ### Order Actions
 
@@ -786,6 +815,26 @@
 | `<Collapsible>` ⭐ | `collapsible.tsx` | Expandable content sections     |
 | `<Slider>` ⭐      | `slider.tsx`      | Range slider input              |
 
+### Product Components
+
+**Location:** `/src/components/product/`
+
+| Component                | File                   | Lines | Purpose                                                   |
+| ------------------------ | ---------------------- | ----- | --------------------------------------------------------- |
+| `<VariantSelector>` ⭐   | `variant-selector.tsx` | ~200  | Buyer-facing variant selection (dropdowns, price updates) |
+| `<AddToCartButton>` ⭐   | See product detail     | ~80   | Add to cart with variant support and validation           |
+| `<ProductInfoClient>` ⭐ | See product detail     | ~370  | Client wrapper for product detail (handles variant state) |
+| `<FavoriteButton>` ⭐    | `favorite-button.tsx`  | ~65   | Product favorite toggle with optimistic updates           |
+
+**Variant Selector Features:**
+
+- Dynamic option dropdowns (Size, Color, etc.)
+- Real-time price updates based on variant selection
+- Automatic image switching to variant-specific images
+- Stock status display per variant
+- Required validation (must select all options)
+- Integration with cart (passes variantId + variantName)
+
 ### Eco/Sustainability Components
 
 **Location:** `/src/components/eco/`
@@ -800,7 +849,6 @@
 | `<SustainabilityScore>`   | `sustainability-score.tsx` | ~150  | Product sustainability scoring display (legacy)            |
 | `<ImpactWidget>`          | `impact-widget.tsx`        | ~100  | Impact metrics widget                                      |
 | `<ProductCard>`           | `product-card.tsx`         | ~200  | Product grid card with ratings, certifications             |
-| `<FavoriteButton>` ⭐     | `favorite-button.tsx`      | ~65   | Product favorite toggle with optimistic updates            |
 
 ### Seller Components ⭐ NEW
 
@@ -871,6 +919,66 @@
 | `<ImageUpload>`          | `image-upload.tsx`                  | UploadThing image uploader                     |
 | `<OrderTracking>`        | `order-tracking.tsx`                | Order tracking display with Shippo integration |
 | `<DesignSystemShowcase>` | `examples/DesignSystemShowcase.tsx` | Component demo page                            |
+
+---
+
+## TYPE DEFINITIONS
+
+**Location:** `/src/types/`
+
+### Variants Types ⭐ NEW (Session 12-13)
+
+**File:** `/src/types/variants.ts` (243 lines)
+
+**Key Types:**
+
+| Type                      | Purpose                                                          |
+| ------------------------- | ---------------------------------------------------------------- |
+| `VariantOptionsData`      | Complete structure stored in Product.variantOptions (Json field) |
+| `VariantOption`           | Single option type (e.g., Size, Color) with values array         |
+| `VariantInput`            | Input for creating/updating variants in product form             |
+| `VariantDisplay`          | Extended variant data with computed fields for UI                |
+| `VariantCombination`      | Object mapping option names to selected values                   |
+| `SelectedVariant`         | Variant data passed to cart/checkout                             |
+| `VariantValidationResult` | Validation result for variant options                            |
+
+**Constants:**
+
+- `PREDEFINED_OPTION_TYPES`: ["Size", "Color", "Material", "Style", "Finish", "Pattern"]
+- `MAX_OPTION_TYPES`: 2 (Etsy standard)
+- `MAX_VALUES_PER_TYPE`: 70 (Etsy standard)
+- `MAX_OPTION_NAME_LENGTH`: 20 characters
+- `MAX_VALUE_NAME_LENGTH`: 20 characters
+
+**Helper Functions:**
+
+- `formatVariantName(combination)` - Generates display name: "Large / Red"
+- `parseVariantName(name, optionNames)` - Parses name back to combination object
+- `generateCombinations(options)` - Creates Cartesian product of all combinations
+- `validateVariantOptions(data)` - Validates options against constraints
+- `getInventoryStatus(quantity, trackInventory, threshold)` - Calculates stock status
+- `isPredefinedType(typeName)` - Type guard for predefined option types
+
+**Example Usage:**
+
+```typescript
+// Generate combinations
+const options = [
+  { name: 'Size', values: ['S', 'M', 'L'] },
+  { name: 'Color', values: ['Red', 'Blue'] },
+];
+const combinations = generateCombinations(options);
+// Result: [
+//   { Size: 'S', Color: 'Red' },
+//   { Size: 'S', Color: 'Blue' },
+//   { Size: 'M', Color: 'Red' },
+//   // ... (6 total combinations)
+// ]
+
+// Format variant name
+formatVariantName({ Size: 'Large', Color: 'Red' });
+// Returns: "Large / Red"
+```
 
 ---
 
@@ -1035,6 +1143,7 @@
 | **Marketing Tools**      | ✅ Complete | Promotion codes, discount management, usage tracking           |
 | **Seller Settings**      | ✅ Complete | Shop profile, branding, nonprofit partnership, eco-profile ⭐  |
 | **Eco-Impact V2**        | ✅ Complete | Badge-based system, completeness tracking, 13 eco-filters ⭐   |
+| **Product Variants**     | ✅ Complete | Full variant system with images, prices, inventory (S12-13) ⭐ |
 
 ### Admin Panel (Phase 8 - ✅ 100% Complete)
 
@@ -1124,6 +1233,7 @@
 | **Sustainability Scoring**   | ✅ Schema Ready | `SustainabilityScore` model exists, UI displays scores                    |
 | **Nonprofit Integration**    | ✅ Complete     | Full integration: admin mgmt, seller selection, donation tracking         |
 | **Inventory Management**     | ✅ Complete     | Track quantity, low stock alerts, auto-decrement on purchase              |
+| **Product Variants** ⭐      | ✅ Complete     | Full variant system: options, prices, images, inventory, cart (S12-13)    |
 | **Shipping Profiles**        | 🚧 Partial      | Schema exists (`ShippingProfile` model), view-only UI built               |
 | **Grid/List View Toggle** ⭐ | ✅ Complete     | Seller products page supports both grid and list layouts with URL state   |
 | **Promotions/Coupons**       | ✅ Complete     | Full CRUD, usage tracking, expiration, discount management ⭐             |
@@ -1286,10 +1396,10 @@
 ## NOTES FOR AGENTS
 
 1. **Always check this map before building** - Many features already exist!
-2. **Server Actions are comprehensive** - Most business logic is already implemented (14 action files, ~4,775 lines)
+2. **Server Actions are comprehensive** - Most business logic is already implemented (16 action files, ~5,400 lines)
 3. **Schema is ahead of UI** - Many models exist without frontend
 4. **Integration setup is complete** - Clerk, Stripe, Shippo, Resend all working
-5. **Component library exists** - Use existing UI components before creating new ones (20 components)
+5. **Component library exists** - Use existing UI components before creating new ones (26 components)
 6. **State management** - Use Zustand stores (`cart-store.ts`, `checkout-store.ts`)
 7. **Category system complete** - Full category browsing with SEO optimization and hierarchical structure
 8. **Database is up-to-date** - All migrations applied, schema matches Prisma file
@@ -1334,11 +1444,25 @@
     - Header checks database role (server pages) or Clerk metadata (client pages)
     - SiteHeaderWrapper for server pages, SiteHeader for client pages
     - Scripts in `/scripts/` for admin promotion and seller role sync
+23. **⭐ Product Variants System** - Full implementation (Sessions 12-13):
+    - ProductVariant model with price, inventory, and image overrides
+    - VariantManager component for seller product forms (~500 lines)
+    - VariantSelector component for buyer product pages (~200 lines)
+    - Cart integration with variantId and variantName fields
+    - Order confirmation emails show variant details
+    - ⚠️ **Image ID Mapping Required**: Frontend uses indices ("0", "1"), database needs UUIDs
+    - Pattern implemented in `createProduct()` and `updateProduct()` (seller-products.ts)
+24. **⭐ useCallback Pattern for Child Components**:
+    - When passing callbacks to components with useEffect dependencies
+    - Wrap callbacks in `useCallback` with appropriate dependency arrays
+    - Empty `[]` if callback doesn't depend on parent state
+    - Prevents infinite re-render loops (2 instances fixed in Session 13)
+    - Critical for: VariantManager, VariantSelector, and similar stateful children
 
 ---
 
 **End of Codebase Map**
-_Last Updated: October 12, 2025 (Session 10)_
+_Last Updated: October 14, 2025 (Session 13)_
 
 ## SESSION 10 UPDATES (October 12, 2025) ⭐
 
@@ -1668,3 +1792,258 @@ Built industry-standard 2-level category taxonomy with full admin CRUD interface
 ---
 
 **End of Session 11 Updates**
+
+## SESSION 13 UPDATES (October 14, 2025) ⭐
+
+### Product Variants System Refinements (✅ Complete)
+
+**Overview:**
+This session focused on bug fixes and UX improvements for the product variants feature implemented in Session 12. Addressed infinite render loops, foreign key constraint errors, and redesigned the variant image selection interface.
+
+**Key Files Modified (6 files):**
+
+1. **`/src/app/seller/products/product-form.tsx`**
+   - Added `useCallback` to `handleVariantChange` function
+   - Fixed infinite loop error between parent form and VariantManager child
+   - Import: Added `useCallback` from React
+
+2. **`/src/components/seller/variant-manager.tsx`** (Major redesign)
+   - Replaced inline thumbnail grid with modal-based image selector
+   - Added modal state management (`imageModalOpen`, `imageModalVariantIndex`)
+   - Implemented large thumbnail grid (3 columns) in modal
+   - Clean "No image" option with subtle gray X icon
+   - Smart image labeling: Alt text → Filename from URL → "Image N" fallback
+   - URL decoding and truncation for long filenames
+   - Click to select, auto-close modal behavior
+   - Selected state with checkmark overlay
+
+3. **`/src/actions/seller-products.ts`**
+   - Fixed foreign key constraint error in `createProduct()` function
+   - Added image ID mapping: Frontend indices → Database UUIDs
+   - Pattern: Create imageIdMap after product.images are created
+   - Applied same fix to `updateProduct()` function
+   - Maps variant.imageId (index string like "0", "1") to actual database image ID
+
+4. **`/src/app/products/[id]/product-info-client.tsx`**
+   - Added `useCallback` to `handleVariantChange` function
+   - Added `useCallback` to `handleImageChange` function
+   - Fixed infinite loop in variant selector on product detail page
+   - Provides stable function references to prevent useEffect re-triggers
+
+5. **`/src/lib/email.ts`**
+   - Added `variantName` support to order confirmation emails
+   - Updated email template to show variant name in parentheses
+   - Format: "Product Title (Variant Name) x2 - $50.00"
+
+6. **`/src/actions/payment.ts`**
+   - Updated `createOrder()` to pass variant names to email function
+   - Maps cart items to include variantName field
+
+### Bug Fixes (4 critical issues resolved)
+
+**1. Infinite Loop in Product Form (Fixed)**
+
+- **Symptom**: "Maximum update depth exceeded" error when editing product
+- **Root Cause**: `handleVariantChange` function recreated on every render
+- **Impact**: VariantManager's useEffect triggered infinitely
+- **Solution**: Wrapped function with `useCallback` and empty dependency array
+- **File**: `/src/app/seller/products/product-form.tsx:81`
+
+**2. Foreign Key Constraint Violation (Fixed)**
+
+- **Symptom**: "Foreign key constraint violated on ProductVariant_imageId_fkey"
+- **Root Cause**: Frontend uses image indices ("0", "1", "2") but database expects UUIDs
+- **Impact**: Product save failed when variants had assigned images
+- **Solution**: Created mapping from indices to database IDs after image creation
+- **Files**:
+  - `/src/actions/seller-products.ts:108-131` (createProduct)
+  - `/src/actions/seller-products.ts:228-252` (updateProduct)
+- **Pattern**:
+  ```typescript
+  const imageIdMap = new Map<string, string>();
+  product.images.forEach((img, index) => {
+    imageIdMap.set(index.toString(), img.id);
+  });
+  // Then: actualImageId = imageIdMap.get(variant.imageId) || null;
+  ```
+
+**3. Image Labels Showing Wrong Text (Fixed)**
+
+- **Symptom**: All variant images showed product name instead of image name
+- **Root Cause**: Label logic used `img.altText || product.title`
+- **Impact**: Confusing UX - couldn't distinguish between images
+- **Solution**: Implemented smart label extraction with fallback chain
+- **File**: `/src/components/seller/variant-manager.tsx:295-315`
+- **Priority**: Alt text → Filename from URL → "Image N"
+
+**4. Infinite Loop in Variant Selector (Fixed)**
+
+- **Symptom**: "Maximum update depth exceeded" on product detail page
+- **Root Cause**: `onVariantChange` and `onImageChange` callbacks recreated on every render
+- **Impact**: Selecting variant options triggered infinite re-renders
+- **Solution**: Wrapped both callbacks with `useCallback`
+- **File**: `/src/app/products/[id]/product-info-client.tsx:81-88`
+
+### UX Improvements
+
+**Modal Image Selector Design:**
+
+- **Before**: Inline thumbnail grid in table cell with dropdown-style interaction
+- **After**: Full modal with large thumbnails and visual selection
+- **Features**:
+  - 3-column grid layout with large thumbnails
+  - "No image" option with clean white background and subtle gray X icon
+  - Click to select, auto-close behavior
+  - Selected state with green checkmark overlay
+  - Image labels show actual filenames or alt text
+  - Responsive design with proper spacing
+
+**Smart Image Labeling:**
+
+```typescript
+// Priority order for image labels:
+1. Alt text (if exists and < 50 chars)
+2. Filename from URL (decoded, truncated to 30 chars)
+3. Fallback: "Image N"
+
+// Example outputs:
+- "Eco Tote Bag - Front View"  (from alt text)
+- "bamboo-cutlery-set.jpg"      (from filename)
+- "Image 3"                      (fallback)
+```
+
+**Email Enhancement:**
+
+Order confirmation emails now show variant details:
+
+```
+- Bamboo Cutlery Set (12-Piece) x1 - $29.99
+- Eco Tote Bag (Large / Navy Blue) x2 - $35.98
+```
+
+### Technical Patterns
+
+**useCallback Pattern for Stable Function References:**
+
+```typescript
+// Problem: Function recreated on every render
+const handleChange = (data) => {
+  setState(data);
+};
+
+// Solution: Stable reference with useCallback
+const handleChange = useCallback((data) => {
+  setState(data);
+}, []); // Empty deps if no external dependencies
+```
+
+**Image ID Mapping Pattern:**
+
+```typescript
+// Frontend uses indices during form editing
+variant.imageId = '0'; // First image
+
+// After saving product with images
+const imageIdMap = new Map<string, string>();
+product.images.forEach((img, index) => {
+  imageIdMap.set(index.toString(), img.id);
+});
+
+// Map frontend index to database UUID
+const actualImageId = imageIdMap.get(variant.imageId) || null;
+// actualImageId = "clx7k8p2q000008l6bqwe9h2v"
+```
+
+### Component Architecture
+
+**VariantManager Modal State:**
+
+```typescript
+const [imageModalOpen, setImageModalOpen] = useState(false);
+const [imageModalVariantIndex, setImageModalVariantIndex] = useState<number | null>(null);
+
+// Open modal for specific variant
+onClick={() => {
+  setImageModalVariantIndex(index);
+  setImageModalOpen(true);
+}}
+
+// Close and select
+onClick={(imgIndex) => {
+  handleImageAssignment(imageModalVariantIndex, imgIndex.toString());
+  setImageModalOpen(false);
+}}
+```
+
+### Files Statistics
+
+**Lines Modified:**
+
+- `variant-manager.tsx`: ~50 lines added (modal UI + smart labels)
+- `seller-products.ts`: ~40 lines added (image ID mapping logic)
+- `product-form.tsx`: ~2 lines modified (useCallback wrapper)
+- `product-info-client.tsx`: ~4 lines modified (2x useCallback)
+- `email.ts`: ~5 lines modified (variant name support)
+- `payment.ts`: ~3 lines modified (pass variant names)
+
+**Total Changes**: ~104 lines across 6 files
+
+### Testing Notes
+
+**Verified Workflows:**
+
+1. ✅ Create product with variants and assigned images
+2. ✅ Update product with variant image changes
+3. ✅ Select variants on product detail page without errors
+4. ✅ Complete checkout with variant products
+5. ✅ Receive order confirmation email with variant details
+6. ✅ Modal image selector UX and image labeling
+7. ✅ "No image" option selection and clearing
+
+**Edge Cases Handled:**
+
+- Products with no images (modal shows only "No image" option)
+- Long filenames (truncated with ellipsis)
+- Special characters in URLs (decoded properly)
+- Missing alt text (falls back to filename or number)
+- Multiple variant option types (Size, Color, etc.)
+- Variant regeneration after adding new option types
+
+### Architecture Notes
+
+**Infinite Loop Prevention Strategy:**
+
+When passing callbacks to child components that use them in useEffect dependencies:
+
+1. Wrap callbacks in `useCallback` with appropriate dependency arrays
+2. Use empty `[]` if callback doesn't depend on parent state
+3. Prevents child useEffect from triggering on every parent render
+4. Critical for components like VariantManager and VariantSelector
+
+**Image ID Management:**
+
+Frontend and database use different image identifiers:
+
+- **Frontend (pre-save)**: Array indices as strings ("0", "1", "2")
+- **Database (post-save)**: UUID strings ("clx7k8p2q000008l6...")
+- **Solution**: Create mapping after images are saved to database
+- **Applied**: Both createProduct and updateProduct flows
+
+### Related Session Work
+
+This session builds on Session 12's variant implementation:
+
+- **Session 12**: Core variant system (schema, CRUD, cart, checkout)
+- **Session 13**: Bug fixes and UX refinements (this session)
+
+### User Feedback Addressed
+
+1. ✅ "Maximum update depth exceeded" - Fixed with useCallback (2 instances)
+2. ✅ "Only first variant option showing" - Explained regeneration workflow
+3. ✅ "Horrific green X button" - Redesigned to clean white/gray aesthetic
+4. ✅ "Image labels showing product name" - Implemented smart filename extraction
+5. ✅ "Foreign key constraint error" - Fixed with image ID mapping
+
+---
+
+**End of Session 13 Updates**

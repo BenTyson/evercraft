@@ -151,6 +151,11 @@ export default async function OrderDetailPage({ params }: PageProps) {
                         >
                           {item.product.title}
                         </Link>
+                        {item.variant && (
+                          <p className="text-muted-foreground text-sm font-medium">
+                            {item.variant.name}
+                          </p>
+                        )}
                         <p className="text-muted-foreground text-sm">Quantity: {item.quantity}</p>
                       </div>
                       <div className="flex items-center justify-between">
