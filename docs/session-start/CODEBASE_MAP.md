@@ -1,7 +1,7 @@
 # EVERCRAFT CODEBASE MAP
 
 **Generated:** October 8, 2025
-**Last Updated:** October 14, 2025 (Session 13 - Product Variants Refinements ✅)
+**Last Updated:** October 14, 2025 (Session 14 - Buyer Account Management ✅)
 **Purpose:** Comprehensive reference for understanding the Evercraft marketplace codebase structure, implementations, and capabilities.
 
 > **DOCUMENTATION POLICY:**
@@ -1144,6 +1144,18 @@ formatVariantName({ Size: 'Large', Color: 'Red' });
 | **Seller Settings**      | ✅ Complete | Shop profile, branding, nonprofit partnership, eco-profile ⭐  |
 | **Eco-Impact V2**        | ✅ Complete | Badge-based system, completeness tracking, 13 eco-filters ⭐   |
 | **Product Variants**     | ✅ Complete | Full variant system with images, prices, inventory (S12-13) ⭐ |
+| **Buyer Account Mgmt**   | ✅ Complete | Dashboard, saved addresses, preferences, reorder (S14) ⭐      |
+
+### Buyer Account System (Session 14 - ✅ 100% Complete)
+
+| Feature                  | Status   | Location                           |
+| ------------------------ | -------- | ---------------------------------- |
+| Account Dashboard        | ✅ Built | `/src/app/account/page.tsx` ⭐     |
+| Saved Addresses          | ✅ Built | `/src/app/account/addresses/` ⭐   |
+| Notification Preferences | ✅ Built | `/src/app/account/preferences/` ⭐ |
+| Account Settings         | ✅ Built | `/src/app/account/settings/` ⭐    |
+| Checkout Integration     | ✅ Built | Saved address selector ⭐          |
+| Order Reorder            | ✅ Built | One-click reorder button ⭐        |
 
 ### Admin Panel (Phase 8 - ✅ 100% Complete)
 
@@ -1238,6 +1250,9 @@ formatVariantName({ Size: 'Large', Color: 'Red' });
 | **Grid/List View Toggle** ⭐ | ✅ Complete     | Seller products page supports both grid and list layouts with URL state   |
 | **Promotions/Coupons**       | ✅ Complete     | Full CRUD, usage tracking, expiration, discount management ⭐             |
 | **Favorites/Wishlist** ⭐    | ✅ Complete     | Full implementation with persistence, /favorites page, optimistic updates |
+| **Buyer Account System** ⭐  | ✅ Complete     | Dashboard, saved addresses, notification prefs, reorder (S14)             |
+| **Saved Addresses** ⭐       | ✅ Complete     | Full CRUD, checkout integration, default selection (S14)                  |
+| **Notification Prefs** ⭐    | ✅ Complete     | Email preferences with toggle switches (S14)                              |
 | **Messaging System**         | ❌ Not Built    | Schema exists (`Message` model), no UI                                    |
 | **Support Tickets**          | ❌ Not Built    | Schema exists (`SupportTicket` model), no UI                              |
 | **Analytics Events**         | 🚧 Partial      | Schema exists (`AnalyticsEvent` model), tracking not implemented          |
@@ -1246,31 +1261,23 @@ formatVariantName({ Size: 'Large', Color: 'Red' });
 
 ### Missing/Incomplete Features
 
-1. **Admin Panel (35% remaining):**
-   - User management (search, suspend/ban, activity logs)
-   - Nonprofit management (CRUD, performance tracking)
-   - Financial reporting (revenue breakdowns, payouts)
-   - Charts & visualizations
+1. **Messaging** - User-to-user and support messaging not implemented (schema ready)
 
-2. **Promotions System** - Schema ready, needs UI and application logic
+2. **Product Collections** - User-created collections not accessible (schema ready)
 
-3. **Messaging** - User-to-user and support messaging not implemented
+3. **Shipping Profiles UI** - Seller can't manage custom shipping configurations (schema ready)
 
-4. **Analytics Tracking** - Event recording not wired up
+4. **Nonprofit Directory** - No page to browse/select nonprofits (schema ready)
 
-5. **Product Collections** - User-created collections not accessible
+5. **Shop Pages** - Individual shop/seller pages not built
 
-6. **Wishlist Persistence** - Favorites exist in UI but don't save to DB
+6. **Search** - No search functionality on browse page (filter exists)
 
-7. **Shipping Profiles UI** - Seller can't manage custom shipping configurations
+7. **Analytics Tracking** - Event recording not wired up (schema ready)
 
-8. **Nonprofit Directory** - No page to browse/select nonprofits
+8. **Saved Payment Methods** - No Stripe Customer integration for saved cards
 
-9. **Shop Pages** - Individual shop/seller pages not built
-
-10. **Search** - No search functionality on browse page (filter exists)
-
-11. **Notifications** - NotificationPreference model exists, no notification system
+9. **Order Invoices** - No PDF invoice download
 
 ---
 
@@ -1339,25 +1346,27 @@ formatVariantName({ Size: 'Large', Color: 'Red' });
 - User authentication and role management
 - Product catalog with filters and sorting
 - Shopping cart (Zustand state)
-- Full checkout flow (Stripe integration)
+- Full checkout flow (Stripe integration, saved addresses)
 - Order management for buyers and sellers
+- Buyer account management (dashboard, saved addresses, preferences, reorder) ⭐
 - Seller dashboard with product CRUD
-- Admin dashboard (65% - dashboard, applications, products)
+- Admin dashboard (100% complete)
 - Review system (ratings, images, verified purchases, helpful votes)
 - Shipping label generation (Shippo integration)
 - Email notifications (order confirmation, status updates)
+- Notification preferences management ⭐
 - Impact dashboard
 - Inventory management (tracking, decrement on purchase)
 - Seller application workflow
+- Product variants system
+- Favorites/wishlist with persistence
 
 ✅ **Schema Ready (Can Build UI For):**
 
-- Promotions/discount codes
 - User messaging system
 - Support ticket system
 - Product collections
-- Wishlist/favorites
-- Shipping profiles
+- Shipping profiles editor
 - Analytics event tracking
 - Search history
 - Nonprofit directory
@@ -1458,11 +1467,20 @@ formatVariantName({ Size: 'Large', Color: 'Red' });
     - Empty `[]` if callback doesn't depend on parent state
     - Prevents infinite re-render loops (2 instances fixed in Session 13)
     - Critical for: VariantManager, VariantSelector, and similar stateful children
+25. **⭐ Buyer Account Management COMPLETE** - Full system (Session 14):
+    - Account dashboard at `/account` with stats and quick actions
+    - Saved addresses with full CRUD: `/src/actions/addresses.ts` (346 lines)
+    - Checkout integration: SavedAddressSelector auto-fills form
+    - Notification preferences: `/src/actions/preferences.ts` (177 lines)
+    - Account settings page with Clerk integration
+    - Reorder functionality: One-click cart population from past orders
+    - Auth guard on checkout: Early redirect prevents form frustration
+    - Address and NotificationPreference models fully implemented
 
 ---
 
 **End of Codebase Map**
-_Last Updated: October 14, 2025 (Session 13)_
+_Last Updated: October 14, 2025 (Session 14)_
 
 ## SESSION 10 UPDATES (October 12, 2025) ⭐
 
@@ -1792,6 +1810,159 @@ Built industry-standard 2-level category taxonomy with full admin CRUD interface
 ---
 
 **End of Session 11 Updates**
+
+## SESSION 14 UPDATES (October 14, 2025) ⭐
+
+### Buyer Account Management System (✅ Complete)
+
+**Overview:**
+Built complete buyer account management system with dashboard, saved addresses, notification preferences, account settings, and enhanced checkout/order flows.
+
+**New Files Created (12 files):**
+
+1. **Account Dashboard** (`/src/app/account/page.tsx` - 293 lines)
+   - Welcome message with user's first name
+   - 3 stats cards: Total Orders, Favorites, Reviews Written
+   - 4 quick action cards: Orders, Addresses, Preferences, Settings
+   - Recent orders preview (last 3 orders with thumbnails)
+   - Empty state with CTA to browse products
+
+2. **Saved Addresses - Server Actions** (`/src/actions/addresses.ts` - 346 lines)
+   - `getUserAddresses()` - Fetch all addresses sorted by default
+   - `getAddressById()` - Get single address with ownership check
+   - `createAddress()` - Create with auto-default handling
+   - `updateAddress()` - Edit with validation
+   - `deleteAddress()` - Delete with confirmation
+   - `setDefaultAddress()` - Set default (unsets others)
+   - `getDefaultAddress()` - Get default by type (SHIPPING/BILLING)
+
+3. **Addresses Page** (`/src/app/account/addresses/page.tsx` + `addresses-client.tsx`)
+   - Server + client component split
+   - Grid layout (1→2→3 columns responsive)
+   - Separate sections for Shipping vs Billing addresses
+   - Empty state with CTA
+
+4. **Address Components**:
+   - `AddressFormDialog` (`/src/components/account/address-form-dialog.tsx` - 390 lines)
+     - Type selector (Shipping/Billing)
+     - Full US address form with state dropdown
+     - Phone number (optional)
+     - "Set as default" checkbox
+     - Comprehensive validation
+   - `AddressCard` (`/src/components/account/address-card.tsx` - 122 lines)
+     - Default badge indicator
+     - Edit, Delete, Set as Default buttons
+     - Type icons and clean layout
+
+5. **Checkout Integration** (`/src/components/checkout/saved-address-selector.tsx` - 160 lines)
+   - Shows saved shipping addresses at checkout
+   - Click to select and auto-fill form
+   - Auto-selects default address on load
+   - "Enter New Address" option
+   - Selected state with checkmark
+   - Responsive grid layout
+
+6. **Notification Preferences - Server Actions** (`/src/actions/preferences.ts` - 177 lines)
+   - `getNotificationPreferences()` - Fetch preferences (creates defaults if none exist)
+   - `updateNotificationPreferences()` - Update any preference
+   - `resetNotificationPreferences()` - Reset to defaults
+
+7. **Preferences Page** (`/src/app/account/preferences/page.tsx` + `preferences-client.tsx`)
+   - Email notifications: Order Updates, Messages, Review Reminders, Marketing
+   - Other notifications: Push (coming soon), SMS (coming soon)
+   - Styled toggle switches (custom CSS)
+   - Save & Reset buttons with success/error messaging
+   - Auto-creates default preferences on first visit
+
+8. **Account Settings** (`/src/app/account/settings/page.tsx` - 165 lines)
+   - Profile information display (name, email, user ID)
+   - Security settings via Clerk
+   - Quick links: Password, Two-Factor Auth
+   - Danger zone: Account deletion option
+
+9. **Reorder Functionality** (`/src/components/orders/reorder-button.tsx` - 105 lines)
+   - One-click reorder button on order details
+   - Adds all items from order to cart
+   - Checks inventory availability
+   - Shows count of items added/skipped
+   - Auto-redirects to cart
+
+**Files Modified (4 files):**
+
+1. `/src/app/checkout/page.tsx`
+   - Added auth guard with early redirect to `/sign-in?redirect_url=/checkout`
+   - Integrated saved address selector
+   - Auto-fill form from selected address
+   - "Save this address" checkbox for new addresses
+   - Saves to database during checkout submit
+
+2. `/src/components/layout/site-header.tsx`
+   - Added "Account" button to desktop navigation (signed-in users)
+   - Positioned between UserButton and Favorites icon
+
+3. `/src/app/checkout/confirmation/page.tsx`
+   - Changed primary CTA to "View My Orders" (better post-purchase flow)
+
+4. `/src/app/orders/[id]/page.tsx`
+   - Added Reorder button to order details header
+
+**Key Features Delivered:**
+
+**Account Management:**
+
+- ✅ Unified account dashboard with stats
+- ✅ Recent orders preview
+- ✅ Quick action cards
+- ✅ Profile information display
+- ✅ Security settings (via Clerk)
+
+**Address Management:**
+
+- ✅ Save unlimited addresses (shipping/billing)
+- ✅ Set default addresses
+- ✅ Full CRUD operations
+- ✅ One-click selection at checkout
+- ✅ Auto-fill from saved addresses
+- ✅ Save new addresses during checkout
+
+**Notification Control:**
+
+- ✅ Email order updates
+- ✅ Message notifications
+- ✅ Review reminders
+- ✅ Marketing opt-in
+- ✅ Save & reset preferences
+
+**Order Enhancements:**
+
+- ✅ One-click reorder
+- ✅ Direct link from confirmation to orders
+
+**Checkout Experience:**
+
+- ✅ Early auth redirect (better UX)
+- ✅ Saved address selection
+- ✅ Auto-fill forms
+- ✅ Save address option
+
+**Database Models Used:**
+
+- Address (full CRUD implementation)
+- NotificationPreference (full CRUD implementation)
+- User (profile display)
+
+**Architecture Patterns:**
+
+- Server/client component split
+- Server actions for data mutations
+- Optimistic updates where appropriate
+- Consistent error handling
+- Type-safe inputs
+- Path revalidation
+
+**Lines Added:** ~3,500 lines of production TypeScript/React
+
+---
 
 ## SESSION 13 UPDATES (October 14, 2025) ⭐
 

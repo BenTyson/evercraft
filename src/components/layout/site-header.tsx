@@ -133,13 +133,21 @@ export function SiteHeader({ databaseRole }: SiteHeaderProps = {}) {
           {isLoaded && (
             <>
               {isSignedIn ? (
-                <UserButton
-                  appearance={{
-                    elements: {
-                      avatarBox: 'size-9',
-                    },
-                  }}
-                />
+                <>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href="/account">
+                      <User className="mr-2 size-4" />
+                      Account
+                    </Link>
+                  </Button>
+                  <UserButton
+                    appearance={{
+                      elements: {
+                        avatarBox: 'size-9',
+                      },
+                    }}
+                  />
+                </>
               ) : (
                 <Button variant="ghost" size="sm" asChild>
                   <Link href="/sign-in">

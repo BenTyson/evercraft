@@ -490,7 +490,7 @@ function ApplicationCard({
               <div>
                 <h4 className="mb-3 text-sm font-semibold text-gray-900">Eco-Practices</h4>
                 <div className="grid grid-cols-2 gap-2">
-                  {Object.entries(application.shopEcoProfileData).map(([key, value]) => {
+                  {Object.entries(application.shopEcoProfileData || {}).map(([key, value]) => {
                     if (typeof value === 'boolean' && value) {
                       const label = key
                         .replace(/([A-Z])/g, ' $1')
@@ -515,7 +515,7 @@ function ApplicationCard({
                         Sustainability Practices
                       </h4>
                       <p className="text-sm text-gray-700">
-                        {application.ecoQuestions.sustainabilityPractices}
+                        {String(application.ecoQuestions.sustainabilityPractices)}
                       </p>
                     </div>
                   )}

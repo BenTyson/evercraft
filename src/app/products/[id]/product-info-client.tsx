@@ -288,7 +288,8 @@ export function ProductInfoClient({ product, isFavorited }: ProductInfoClientPro
               variantOptions={product.variantOptions}
               variants={product.variants}
               basePrice={product.price}
-              images={product.images}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              images={product.images as any}
               onVariantChange={handleVariantChange}
               onImageChange={handleImageChange}
             />

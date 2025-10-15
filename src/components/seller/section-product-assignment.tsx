@@ -168,7 +168,7 @@ export function SectionProductAssignment({
                 >
                   <Checkbox
                     checked={selectedProducts.has(product.id)}
-                    onCheckedChange={() => handleToggleProduct(product.id)}
+                    onChange={() => handleToggleProduct(product.id)}
                   />
                   {product.images[0] ? (
                     <Image

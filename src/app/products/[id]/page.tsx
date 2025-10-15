@@ -5,7 +5,6 @@
  */
 
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
@@ -105,7 +104,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
         </nav>
 
         {/* Product Section */}
-        <ProductInfoClient product={product} isFavorited={favoriteResult.isFavorited} />
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <ProductInfoClient product={product as any} isFavorited={favoriteResult.isFavorited} />
 
         {/* Eco Impact Section */}
         {product.ecoProfile && (

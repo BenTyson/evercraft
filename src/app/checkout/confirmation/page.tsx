@@ -35,7 +35,7 @@ function ConfirmationContent() {
   if (isLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+        <Loader2 className="text-muted-foreground size-8 animate-spin" />
       </div>
     );
   }
@@ -67,7 +67,7 @@ function ConfirmationContent() {
               <div>
                 <h3 className="font-semibold">Order Confirmation Email</h3>
                 <p className="text-muted-foreground text-sm">
-                  You'll receive a confirmation email with your order details shortly.
+                  You&apos;ll receive a confirmation email with your order details shortly.
                 </p>
               </div>
             </div>
@@ -100,7 +100,7 @@ function ConfirmationContent() {
         </div>
 
         {/* Nonprofit Impact */}
-        <div className="bg-eco-light/20 mb-8 rounded-lg border border-eco-light p-6">
+        <div className="bg-eco-light/20 border-eco-light mb-8 rounded-lg border p-6">
           <Package className="text-eco-dark mx-auto mb-3 size-8" />
           <h3 className="text-eco-dark mb-2 text-lg font-bold">Making an Impact</h3>
           <p className="text-muted-foreground text-sm">
@@ -112,7 +112,7 @@ function ConfirmationContent() {
         {/* Shipping Address */}
         {shippingAddress && (
           <div className="bg-card mb-8 rounded-lg border p-6 text-left">
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide">Shipping Address</h3>
+            <h3 className="mb-3 text-sm font-semibold tracking-wide uppercase">Shipping Address</h3>
             <div className="text-sm">
               <p className="font-medium">
                 {shippingAddress.firstName} {shippingAddress.lastName}
@@ -132,10 +132,10 @@ function ConfirmationContent() {
         {/* Actions */}
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Button asChild size="lg">
-            <Link href="/browse">Continue Shopping</Link>
+            <Link href="/orders">View My Orders</Link>
           </Button>
           <Button asChild variant="outline" size="lg">
-            <Link href="/">Return Home</Link>
+            <Link href="/browse">Continue Shopping</Link>
           </Button>
         </div>
       </div>
@@ -150,7 +150,7 @@ export default function ConfirmationPage() {
       <Suspense
         fallback={
           <div className="flex min-h-[50vh] items-center justify-center">
-            <Loader2 className="size-8 animate-spin text-muted-foreground" />
+            <Loader2 className="text-muted-foreground size-8 animate-spin" />
           </div>
         }
       >

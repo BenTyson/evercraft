@@ -22,6 +22,9 @@ interface Section {
   description: string | null;
   position: number;
   isVisible: boolean;
+  _count: {
+    products: number;
+  };
 }
 
 interface SectionFormDialogProps {

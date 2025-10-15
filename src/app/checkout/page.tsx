@@ -6,23 +6,29 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, ShoppingBag, Loader2 } from 'lucide-react';
+import { useAuth } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SiteHeader } from '@/components/layout/site-header';
 import { useCartStore } from '@/store/cart-store';
 import { useCheckoutStore, ShippingAddress } from '@/store/checkout-store';
+import { SavedAddressSelector } from '@/components/checkout/saved-address-selector';
+import { createAddress } from '@/actions/addresses';
+import { calculateCartShipping, getShippingEstimateMessage } from '@/lib/shipping';
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const { userId, isLoaded } = useAuth();
   const { items, getTotalPrice, getTotalItems } = useCartStore();
   const { shippingAddress, setShippingAddress } = useCheckoutStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [saveAddress, setSaveAddress] = useState(false);
   const [formData, setFormData] = useState<ShippingAddress>({
     firstName: shippingAddress?.firstName || '',
     lastName: shippingAddress?.lastName || '',
@@ -36,6 +42,13 @@ export default function CheckoutPage() {
     country: shippingAddress?.country || 'US',
   });
 
+  // Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (isLoaded && !userId) {
+      router.push('/sign-in?redirect_url=/checkout');
+    }
+  }, [isLoaded, userId, router]);
+
   // Calculate shipping dynamically
   const cartItems = items.map((item) => ({
     price: item.price,
@@ -43,12 +56,31 @@ export default function CheckoutPage() {
     weight: 1, // Default weight per item (can be extended to use product weight)
   }));
 
-  const { calculateCartShipping, getShippingEstimateMessage, formatShippingCost } = require('@/lib/shipping');
   const shippingResult = calculateCartShipping({
     items: cartItems,
     destinationCountry: formData.country || 'US',
     destinationState: formData.state,
   });
+
+  // Show loading while checking auth
+  if (!isLoaded) {
+    return (
+      <>
+        <SiteHeader />
+        <div className="container mx-auto px-4 py-16">
+          <div className="mx-auto max-w-2xl text-center">
+            <Loader2 className="text-muted-foreground mx-auto mb-6 size-16 animate-spin" />
+            <p className="text-muted-foreground">Loading checkout...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // If not authenticated, show nothing (will redirect)
+  if (!userId) {
+    return null;
+  }
 
   const subtotal = getTotalPrice();
   const donationPercentage = 5;
@@ -66,7 +98,9 @@ export default function CheckoutPage() {
           <div className="mx-auto max-w-2xl text-center">
             <ShoppingBag className="text-muted-foreground mx-auto mb-6 size-16" />
             <h1 className="mb-4 text-3xl font-bold">Your cart is empty</h1>
-            <p className="text-muted-foreground mb-8">Add items to your cart before checking out.</p>
+            <p className="text-muted-foreground mb-8">
+              Add items to your cart before checking out.
+            </p>
             <Button asChild size="lg">
               <Link href="/browse">Browse Products</Link>
             </Button>
@@ -78,6 +112,33 @@ export default function CheckoutPage() {
 
   const handleChange = (field: keyof ShippingAddress, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear selected address when manually editing
+    if (selectedAddressId) {
+      setSelectedAddressId(null);
+    }
+  };
+
+  const handleSelectSavedAddress = (address: (ShippingAddress & { id: string }) | null) => {
+    if (address) {
+      // Auto-fill form from saved address
+      setFormData({
+        firstName: address.firstName,
+        lastName: address.lastName,
+        email: formData.email || '', // Keep email if already filled
+        phone: address.phone || '',
+        address1: address.address1,
+        address2: address.address2 || '',
+        city: address.city,
+        state: address.state,
+        zipCode: address.postalCode,
+        country: address.country,
+      });
+      setSelectedAddressId(address.id);
+      setSaveAddress(false); // No need to save if using saved address
+    } else {
+      // Manual entry mode
+      setSelectedAddressId(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,13 +146,30 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
 
     try {
-      // Save shipping address
+      // Save shipping address to checkout store
       setShippingAddress(formData);
+
+      // Save address to database if checkbox is checked
+      if (saveAddress && !selectedAddressId) {
+        await createAddress({
+          type: 'SHIPPING',
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          address1: formData.address1,
+          address2: formData.address2 || undefined,
+          city: formData.city,
+          state: formData.state,
+          postalCode: formData.zipCode,
+          country: formData.country,
+          phone: formData.phone || undefined,
+          isDefault: false,
+        });
+      }
 
       // Simulate validation delay
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Proceed to payment (will implement Stripe next)
+      // Proceed to payment
       router.push('/checkout/payment');
     } catch (error) {
       console.error('Error submitting shipping address:', error);
@@ -150,6 +228,12 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Saved Addresses */}
+              <SavedAddressSelector
+                onSelectAddress={handleSelectSavedAddress}
+                selectedAddressId={selectedAddressId}
+              />
 
               {/* Shipping Address */}
               <div className="bg-card rounded-lg border p-6">
@@ -259,13 +343,34 @@ export default function CheckoutPage() {
                       id="country"
                       value={formData.country}
                       onChange={(e) => handleChange('country', e.target.value)}
-                      className="border-input bg-background flex h-10 w-full rounded-md border px-3 py-2 text-sm ring-offset-background focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                      className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                       required
                     >
                       <option value="US">United States</option>
                       <option value="CA">Canada</option>
                     </select>
                   </div>
+
+                  {/* Save Address Checkbox */}
+                  {!selectedAddressId && (
+                    <div className="border-t pt-4">
+                      <div className="flex items-start space-x-2">
+                        <input
+                          type="checkbox"
+                          id="saveAddress"
+                          checked={saveAddress}
+                          onChange={(e) => setSaveAddress(e.target.checked)}
+                          className="mt-0.5 size-4 rounded border-gray-300"
+                        />
+                        <label htmlFor="saveAddress" className="cursor-pointer text-sm">
+                          <span className="font-medium">Save this address for future orders</span>
+                          <p className="text-muted-foreground text-xs">
+                            You can manage your saved addresses in your account settings
+                          </p>
+                        </label>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -308,9 +413,11 @@ export default function CheckoutPage() {
                       )}
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium line-clamp-2">{item.title}</p>
+                      <p className="line-clamp-2 text-sm font-medium">{item.title}</p>
                       <p className="text-muted-foreground text-xs">Qty: {item.quantity}</p>
-                      <p className="text-sm font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
+                      <p className="text-sm font-semibold">
+                        ${(item.price * item.quantity).toFixed(2)}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -336,7 +443,7 @@ export default function CheckoutPage() {
 
                 {/* Shipping Estimate Message */}
                 {shippingMessage && (
-                  <div className="bg-eco-light/10 rounded-md px-3 py-2 text-xs text-eco-dark">
+                  <div className="bg-eco-light/10 text-eco-dark rounded-md px-3 py-2 text-xs">
                     {shippingMessage}
                   </div>
                 )}

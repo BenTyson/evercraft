@@ -71,7 +71,7 @@ export async function syncExistingSellerRoles() {
       .filter((r) => r.status === 'fulfilled')
       .map(
         (r) =>
-          (r as PromiseFulfilledResult<{ success: boolean; email: string; shopName: string }>).value
+          (r as PromiseFulfilledResult<{ userId: string; email: string; shopName: string }>).value
       );
 
     console.log(`Role sync completed: ${successful} successful, ${failed} failed`);

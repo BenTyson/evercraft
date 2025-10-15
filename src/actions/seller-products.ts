@@ -78,7 +78,9 @@ export async function createProduct(input: CreateProductInput) {
         ecoAttributes: input.ecoAttributes || {},
         // Variant fields
         hasVariants: input.hasVariants || false,
-        variantOptions: input.variantOptions || null,
+        variantOptions: input.variantOptions
+          ? JSON.parse(JSON.stringify(input.variantOptions))
+          : null,
         certifications: input.certificationIds
           ? {
               connect: input.certificationIds.map((id) => ({ id })),
@@ -106,7 +108,7 @@ export async function createProduct(input: CreateProductInput) {
     if (input.hasVariants && input.variants && input.variants.length > 0) {
       // Map frontend image indices to actual database image IDs
       const imageIdMap = new Map<string, string>();
-      product.images.forEach((img, index) => {
+      (product as unknown as { images: { id: string }[] }).images.forEach((img, index: number) => {
         imageIdMap.set(index.toString(), img.id);
       });
 
@@ -200,7 +202,7 @@ export async function updateProduct(productId: string, input: CreateProductInput
       data: {
         ...data,
         hasVariants: hasVariants || false,
-        variantOptions: variantOptions || null,
+        variantOptions: variantOptions ? JSON.parse(JSON.stringify(variantOptions)) : null,
         certifications: certificationIds
           ? {
               disconnect: currentProduct?.certifications.map((cert) => ({ id: cert.id })) || [],
@@ -236,9 +238,11 @@ export async function updateProduct(productId: string, input: CreateProductInput
       if (variants.length > 0) {
         // Map frontend image indices to actual database image IDs
         const imageIdMap = new Map<string, string>();
-        product.images.forEach((img, index) => {
-          imageIdMap.set(index.toString(), img.id);
-        });
+        (product as unknown as { images: { id: string }[] }).images.forEach(
+          (img, index: number) => {
+            imageIdMap.set(index.toString(), img.id);
+          }
+        );
 
         await db.productVariant.createMany({
           data: variants.map((variant) => {

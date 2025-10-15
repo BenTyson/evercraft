@@ -790,26 +790,26 @@ model ShopSectionProduct {
 
 ---
 
-### Additional Entities (See PROJECT_PLAN.md for full list)
+### Additional Entities
 
-- **Addresses** - User shipping/billing addresses
-- **ShippingProfiles** - Seller shipping configurations
-- **Favorites** - Saved products
-- **Collections** - User-created product collections
-- **CollectionProducts** - Products in collections
-- **SellerApplications** - Seller verification applications
-- **Certifications** - Product/shop eco-certifications
+- **Addresses** - User shipping/billing addresses ✅ FULLY IMPLEMENTED (Session 14)
+- **NotificationPreferences** - User notification settings ✅ FULLY IMPLEMENTED (Session 14)
+- **Favorites** - Saved products ✅ FULLY IMPLEMENTED
+- **ShopEcoProfile** - Shop sustainability practices ✅ FULLY IMPLEMENTED (Eco-Impact V2)
+- **ProductEcoProfile** - Product eco-attributes ✅ FULLY IMPLEMENTED (Eco-Impact V2)
+- **ShopSection** - Seller-created product sections ✅ FULLY IMPLEMENTED
+- **ShopSectionProduct** - Junction table for section-product assignments ✅ FULLY IMPLEMENTED
+- **Promotions** - Coupons and discounts ✅ FULLY IMPLEMENTED
+- **SellerApplications** - Seller verification applications ✅ FULLY IMPLEMENTED
+- **Certifications** - Product/shop eco-certifications ✅ FULLY IMPLEMENTED
 - **SustainabilityScores** - Detailed eco-scoring (LEGACY - being replaced by eco-profiles)
-- **ShopEcoProfile** - Shop sustainability practices (Eco-Impact V2)
-- **ProductEcoProfile** - Product eco-attributes (Eco-Impact V2)
-- **ShopSection** - Seller-created product sections (e.g., "Bestsellers", "Spring Collection")
-- **ShopSectionProduct** - Junction table for section-product assignments (many-to-many)
-- **Promotions** - Coupons and discounts
-- **AnalyticsEvents** - Event tracking
-- **SupportTickets** - Customer support
-- **NotificationPreferences** - User notification settings
-- **SearchHistory** - User search tracking
-- **AdminLogs** - Admin action logging
+- **ShippingProfiles** - Seller shipping configurations (schema ready, no UI)
+- **Collections** - User-created product collections (schema ready, no UI)
+- **CollectionProducts** - Products in collections (schema ready, no UI)
+- **AnalyticsEvents** - Event tracking (schema ready, no implementation)
+- **SupportTickets** - Customer support (schema ready, no UI)
+- **SearchHistory** - User search tracking (schema ready, no implementation)
+- **AdminLogs** - Admin action logging (schema ready, no implementation)
 
 ---
 

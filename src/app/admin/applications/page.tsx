@@ -27,7 +27,8 @@ export default async function AdminApplicationsPage() {
         </p>
       </div>
 
-      <ApplicationsListEnhanced applications={applications || []} />
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      <ApplicationsListEnhanced applications={(applications || []) as any} />
     </div>
   );
 }

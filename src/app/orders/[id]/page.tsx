@@ -13,6 +13,7 @@ import { SiteHeaderWrapper } from '@/components/layout/site-header-wrapper';
 import { Button } from '@/components/ui/button';
 import { getOrderById } from '@/actions/orders';
 import { OrderTracking } from '@/components/order-tracking';
+import { ReorderButton } from '@/components/orders/reorder-button';
 import { cn } from '@/lib/utils';
 
 interface PageProps {
@@ -109,14 +110,18 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 })}
               </p>
             </div>
-            <span
-              className={cn(
-                'self-start rounded-full border px-4 py-2 text-sm font-semibold',
-                getStatusColor(order.status)
-              )}
-            >
-              {getStatusText(order.status)}
-            </span>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <span
+                className={cn(
+                  'self-start rounded-full border px-4 py-2 text-sm font-semibold',
+                  getStatusColor(order.status)
+                )}
+              >
+                {getStatusText(order.status)}
+              </span>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              <ReorderButton items={order.items as any} />
+            </div>
           </div>
         </div>
 

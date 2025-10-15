@@ -90,7 +90,7 @@ export async function createSellerApplication(input: CreateSellerApplicationInpu
         // Store both old and new formats for backward compatibility
         ecoQuestions: input.ecoQuestions || {},
         shopEcoProfileData: input.shopEcoProfileData
-          ? (input.shopEcoProfileData as Record<string, unknown>)
+          ? JSON.parse(JSON.stringify(input.shopEcoProfileData))
           : undefined,
         preferredNonprofit: input.preferredNonprofit,
         donationPercentage: input.donationPercentage,
@@ -306,24 +306,33 @@ export async function updateApplicationStatus(
             data: {
               shopId: newShop.id,
               // Tier 1: Basic practices
-              plasticFreePackaging: ecoData.plasticFreePackaging || false,
-              recycledPackaging: ecoData.recycledPackaging || false,
-              biodegradablePackaging: ecoData.biodegradablePackaging || false,
-              organicMaterials: ecoData.organicMaterials || false,
-              recycledMaterials: ecoData.recycledMaterials || false,
-              fairTradeSourcing: ecoData.fairTradeSourcing || false,
-              localSourcing: ecoData.localSourcing || false,
-              carbonNeutralShipping: ecoData.carbonNeutralShipping || false,
-              renewableEnergy: ecoData.renewableEnergy || false,
-              carbonOffset: ecoData.carbonOffset || false,
+              plasticFreePackaging: Boolean(ecoData.plasticFreePackaging),
+              recycledPackaging: Boolean(ecoData.recycledPackaging),
+              biodegradablePackaging: Boolean(ecoData.biodegradablePackaging),
+              organicMaterials: Boolean(ecoData.organicMaterials),
+              recycledMaterials: Boolean(ecoData.recycledMaterials),
+              fairTradeSourcing: Boolean(ecoData.fairTradeSourcing),
+              localSourcing: Boolean(ecoData.localSourcing),
+              carbonNeutralShipping: Boolean(ecoData.carbonNeutralShipping),
+              renewableEnergy: Boolean(ecoData.renewableEnergy),
+              carbonOffset: Boolean(ecoData.carbonOffset),
               // Tier 2: Optional details
-              annualCarbonEmissions: ecoData.annualCarbonEmissions || null,
-              carbonOffsetPercent: ecoData.carbonOffsetPercent || null,
-              renewableEnergyPercent: ecoData.renewableEnergyPercent || null,
-              waterConservation: ecoData.waterConservation || false,
-              fairWageCertified: ecoData.fairWageCertified || false,
-              takeBackProgram: ecoData.takeBackProgram || false,
-              repairService: ecoData.repairService || false,
+              annualCarbonEmissions:
+                typeof ecoData.annualCarbonEmissions === 'number'
+                  ? ecoData.annualCarbonEmissions
+                  : null,
+              carbonOffsetPercent:
+                typeof ecoData.carbonOffsetPercent === 'number'
+                  ? ecoData.carbonOffsetPercent
+                  : null,
+              renewableEnergyPercent:
+                typeof ecoData.renewableEnergyPercent === 'number'
+                  ? ecoData.renewableEnergyPercent
+                  : null,
+              waterConservation: Boolean(ecoData.waterConservation),
+              fairWageCertified: Boolean(ecoData.fairWageCertified),
+              takeBackProgram: Boolean(ecoData.takeBackProgram),
+              repairService: Boolean(ecoData.repairService),
               // Store the completeness score and tier from application
               completenessPercent: application.completenessScore,
               tier: application.tier,
