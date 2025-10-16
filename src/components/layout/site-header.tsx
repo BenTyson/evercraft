@@ -88,7 +88,7 @@ export function SiteHeader({ databaseRole }: SiteHeaderProps = {}) {
           </Link>
           <Link
             href="/impact"
-            className="text-eco-dark hover:text-forest-dark text-sm font-semibold transition-colors"
+            className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
           >
             Impact
           </Link>
@@ -111,7 +111,7 @@ export function SiteHeader({ databaseRole }: SiteHeaderProps = {}) {
           {isAdmin && (
             <Link
               href="/admin"
-              className="text-sm font-semibold text-red-600 transition-colors hover:text-red-700"
+              className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-slate-800"
             >
               Admin
             </Link>
@@ -219,7 +219,7 @@ export function SiteHeader({ databaseRole }: SiteHeaderProps = {}) {
               </Link>
               <Link
                 href="/impact"
-                className="text-eco-dark hover:text-forest-dark text-base font-semibold transition-colors"
+                className="text-foreground hover:text-forest-dark text-base font-medium transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Impact
@@ -245,7 +245,7 @@ export function SiteHeader({ databaseRole }: SiteHeaderProps = {}) {
               {isAdmin && (
                 <Link
                   href="/admin"
-                  className="text-base font-semibold text-red-600 transition-colors hover:text-red-700"
+                  className="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-base font-medium text-white transition-colors hover:bg-slate-800"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Admin Panel

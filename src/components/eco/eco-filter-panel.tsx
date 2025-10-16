@@ -133,101 +133,47 @@ function EcoFilterPanel({
   const activeFilters = FILTER_OPTIONS.filter((opt) => filters[opt.key] === true);
 
   return (
-    <div className={cn('space-y-4', className)} {...props}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className="size-5" />
-          <h3 className="font-semibold">Eco-Filters</h3>
-          {activeCount > 0 && (
-            <Badge variant="secondary" className="bg-eco-light text-forest-dark">
-              {activeCount}
-            </Badge>
-          )}
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="lg:hidden"
-        >
-          {isExpanded ? 'Hide' : 'Show'}
-        </Button>
-      </div>
-
+    <div className={cn('space-y-6', className)} {...props}>
+      {/* Completeness slider */}
       {isExpanded && (
-        <>
-          {/* Result count */}
-          {resultCount !== undefined && (
-            <p className="text-muted-foreground text-sm">
-              {resultCount} {resultCount === 1 ? 'product' : 'products'} found
-            </p>
-          )}
-
-          {/* Active filter chips */}
-          {activeFilters.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {activeFilters.map((filter) => (
-                <Badge
-                  key={filter.key}
-                  variant="secondary"
-                  className="hover:bg-destructive hover:text-destructive-foreground cursor-pointer gap-1"
-                  onClick={() => toggleFilter(filter.key)}
-                >
-                  {filter.label}
-                  <X className="size-3" />
-                </Badge>
-              ))}
-              {showClearAll && (
-                <Button variant="ghost" size="sm" onClick={clearAll} className="h-6 px-2 text-xs">
-                  Clear all
-                </Button>
-              )}
-            </div>
-          )}
-
-          {/* Completeness slider */}
-          <div className="space-y-2 border-b pb-4">
-            <label className="text-sm font-medium">
-              Min. Eco-Info: {filters.minCompleteness || 0}%
-            </label>
-            <Slider
-              value={[filters.minCompleteness || 0]}
-              onValueChange={(value) => onFilterChange({ ...filters, minCompleteness: value[0] })}
-              min={0}
-              max={100}
-              step={10}
-              className="w-full"
-            />
-            <p className="text-muted-foreground text-xs">
-              Show products with at least {filters.minCompleteness || 0}% eco-info complete
-            </p>
-          </div>
-
-          {/* Filter groups */}
-          {Object.entries(groupedFilters).map(([group, options]) => (
-            <div key={group} className="space-y-3 border-b pb-4 last:border-0">
-              <h4 className="text-sm font-semibold">{group}</h4>
-              <div className="space-y-2">
-                {options.map((option) => (
-                  <label
-                    key={option.key}
-                    className="hover:bg-accent flex cursor-pointer items-center gap-2 rounded-md p-2"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={filters[option.key] === true}
-                      onChange={() => toggleFilter(option.key)}
-                      className="text-forest-dark focus:ring-forest-dark size-4 rounded border-gray-300"
-                    />
-                    <span className="text-sm">{option.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          ))}
-        </>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">
+            Min. Eco-Info: {filters.minCompleteness || 0}%
+          </label>
+          <Slider
+            value={[filters.minCompleteness || 0]}
+            onValueChange={(value) => onFilterChange({ ...filters, minCompleteness: value[0] })}
+            min={0}
+            max={100}
+            step={10}
+            className="w-full"
+          />
+          <p className="text-muted-foreground text-xs">
+            Show products with at least {filters.minCompleteness || 0}% eco-info complete
+          </p>
+        </div>
       )}
+
+      {/* Filter groups */}
+      {isExpanded &&
+        Object.entries(groupedFilters).map(([group, options]) => (
+          <div key={group}>
+            <h4 className="mb-3 text-sm font-semibold">{group}</h4>
+            <div className="space-y-2">
+              {options.map((option) => (
+                <label key={option.key} className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={filters[option.key] === true}
+                    onChange={() => toggleFilter(option.key)}
+                    className="accent-forest-dark size-4 rounded"
+                  />
+                  <span className="text-sm">{option.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
     </div>
   );
 }

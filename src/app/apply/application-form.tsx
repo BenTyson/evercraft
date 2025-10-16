@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Store, Globe, Heart, Loader2, Sparkles, Clock, CheckCircle2 } from 'lucide-react';
+import { Store, Globe, Heart, Loader2, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ShopEcoProfileForm, ShopEcoProfileData } from '@/components/seller/shop-eco-profile-form';
@@ -10,25 +10,49 @@ import {
   createSellerApplication,
   type CreateSellerApplicationInput,
 } from '@/actions/seller-application';
-import { scoreApplication } from '@/lib/application-scoring';
-import { getTierEmoji } from '@/lib/application-scoring';
+
+const BUSINESS_AGE_OPTIONS = [
+  { value: '<1 year', label: 'Less than 1 year' },
+  { value: '1-4 years', label: '1-4 years' },
+  { value: '5+ years', label: '5+ years' },
+] as const;
 
 export function ApplicationForm() {
   const router = useRouter();
+  const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<{
+    // Step 1: Business Info
     businessName: string;
-    businessWebsite: string;
+    businessEmail: string;
+    businessAge: string;
     businessDescription: string;
-    donationPercentage: number;
+    businessWebsite: string;
+    storefronts: {
+      etsy: string;
+      faire: string;
+      amazon: string;
+      other: string;
+    };
+    // Step 2: Sustainability
     shopEcoProfileData: ShopEcoProfileData;
+    ecoCommentary: Record<string, string>;
+    // Step 3: Give Back
+    donationPercentage: number;
   }>({
     businessName: '',
-    businessWebsite: '',
+    businessEmail: '',
+    businessAge: '',
     businessDescription: '',
-    donationPercentage: 1.0,
+    businessWebsite: '',
+    storefronts: {
+      etsy: '',
+      faire: '',
+      amazon: '',
+      other: '',
+    },
     shopEcoProfileData: {
       // Tier 1: Basic toggles
       plasticFreePackaging: false,
@@ -50,20 +74,20 @@ export function ApplicationForm() {
       takeBackProgram: false,
       repairService: false,
     },
+    ecoCommentary: {},
+    donationPercentage: 1.0,
   });
 
-  // Calculate live application score
-  const applicationScore = scoreApplication(
-    formData.shopEcoProfileData,
-    formData.businessDescription
-  );
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setError(null);
 
     // Validation
-    if (!formData.businessName || !formData.businessDescription) {
+    if (
+      !formData.businessName ||
+      !formData.businessEmail ||
+      !formData.businessAge ||
+      !formData.businessDescription
+    ) {
       setError('Please fill in all required fields');
       return;
     }
@@ -73,9 +97,13 @@ export function ApplicationForm() {
     try {
       const input: CreateSellerApplicationInput = {
         businessName: formData.businessName,
+        businessEmail: formData.businessEmail,
         businessWebsite: formData.businessWebsite || undefined,
         businessDescription: formData.businessDescription,
+        businessAge: formData.businessAge,
+        storefronts: formData.storefronts,
         shopEcoProfileData: formData.shopEcoProfileData,
+        ecoCommentary: formData.ecoCommentary,
         donationPercentage: formData.donationPercentage,
       };
 
@@ -93,16 +121,96 @@ export function ApplicationForm() {
     }
   };
 
-  const handleChange = (field: string, value: string | number) => {
+  const handleChange = (field: string, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleStorefrontChange = (platform: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      storefronts: {
+        ...prev.storefronts,
+        [platform]: value,
+      },
+    }));
   };
 
   const handleEcoProfileChange = (data: ShopEcoProfileData) => {
     setFormData((prev) => ({ ...prev, shopEcoProfileData: data }));
   };
 
+  const handleEcoCommentaryChange = (field: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      ecoCommentary: {
+        ...prev.ecoCommentary,
+        [field]: value,
+      },
+    }));
+  };
+
+  const goToStep = (step: number) => {
+    // Validate before moving forward
+    if (step > currentStep) {
+      if (currentStep === 1) {
+        if (
+          !formData.businessName ||
+          !formData.businessEmail ||
+          !formData.businessAge ||
+          !formData.businessDescription
+        ) {
+          setError('Please fill in all required fields before continuing');
+          return;
+        }
+      }
+    }
+    setError(null);
+    setCurrentStep(step);
+  };
+
+  const nextStep = () => goToStep(currentStep + 1);
+  const prevStep = () => goToStep(currentStep - 1);
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <div className="space-y-8">
+      {/* Progress Stepper */}
+      <div className="space-y-3">
+        {/* Circles and connecting lines */}
+        <div className="relative flex items-center justify-between">
+          {[1, 2, 3, 4].map((step) => (
+            <button
+              key={step}
+              onClick={() => goToStep(step)}
+              disabled={step > currentStep + 1}
+              className={`relative z-10 flex size-10 items-center justify-center rounded-full border-2 font-semibold transition-colors ${
+                step < currentStep
+                  ? 'border-forest-dark bg-forest-dark text-white'
+                  : step === currentStep
+                    ? 'border-forest-dark text-forest-dark bg-white'
+                    : 'border-gray-300 bg-white text-gray-400'
+              } ${step <= currentStep ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed'}`}
+            >
+              {step < currentStep ? <Check className="size-5" /> : step}
+            </button>
+          ))}
+          {/* Connecting line */}
+          <div className="absolute top-1/2 left-0 z-0 h-0.5 w-full -translate-y-1/2 bg-gray-300">
+            <div
+              className="bg-forest-dark h-full transition-all duration-300"
+              style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Labels */}
+        <div className="flex items-center justify-between text-center text-sm">
+          <div style={{ width: '40px' }}>Business Info</div>
+          <div style={{ width: '40px' }}>Sustainability</div>
+          <div style={{ width: '40px' }}>Give Back</div>
+          <div style={{ width: '40px' }}>Review</div>
+        </div>
+      </div>
+
       {/* Error Message */}
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
@@ -110,241 +218,329 @@ export function ApplicationForm() {
         </div>
       )}
 
-      {/* Application Score Preview - Always show for feedback */}
-      <div className="from-forest-light/10 to-eco-light/20 border-forest-light/30 rounded-lg border bg-gradient-to-br p-6">
-        <div className="flex items-start justify-between gap-6">
-          <div className="flex-1">
-            <div className="mb-2 flex items-center gap-2">
-              <Sparkles className="text-forest-light size-5" />
-              <h3 className="text-lg font-semibold text-neutral-800">Application Score</h3>
-            </div>
-            <p className="mb-4 text-sm text-neutral-600">
-              Your application is{' '}
-              <span className="font-semibold">{applicationScore.completeness}%</span> complete (
-              {getTierEmoji(applicationScore.tier)}{' '}
-              {applicationScore.tier.charAt(0).toUpperCase() + applicationScore.tier.slice(1)} Tier)
-            </p>
-
-            {/* Estimated Review Time */}
-            <div className="flex items-center gap-2 text-sm text-neutral-700">
-              <Clock className="size-4" />
-              <span>
-                Expected review time:{' '}
-                <span className="text-forest-dark font-medium">
-                  {applicationScore.estimatedReviewTime}
-                </span>
-              </span>
+      {/* Step Content */}
+      <div className="min-h-[400px]">
+        {/* Step 1: Business Information */}
+        {currentStep === 1 && (
+          <div className="space-y-6 rounded-lg border p-6">
+            <div className="mb-6 flex items-center gap-2">
+              <Store className="text-forest-dark size-6" />
+              <h2 className="text-2xl font-semibold">Business Information</h2>
             </div>
 
-            {/* Improvement Suggestions */}
-            {applicationScore.improvementSuggestions.length > 0 && (
-              <div className="mt-4 space-y-2">
-                <p className="text-sm font-medium text-neutral-800">To improve your score:</p>
-                <ul className="space-y-1">
-                  {applicationScore.improvementSuggestions.map((suggestion, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-neutral-600">
-                      <CheckCircle2 className="text-forest-light mt-0.5 size-4 flex-shrink-0" />
-                      <span>{suggestion}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+            <div>
+              <label htmlFor="businessName" className="mb-2 block text-sm font-medium">
+                Business Name <span className="text-red-500">*</span>
+              </label>
+              <Input
+                id="businessName"
+                value={formData.businessName}
+                onChange={(e) => handleChange('businessName', e.target.value)}
+                placeholder="Your business or brand name"
+                required
+              />
+            </div>
 
-          {/* Visual Score Indicator */}
-          <div className="flex flex-col items-center gap-2">
-            <div className="relative size-20">
-              <svg className="size-20 -rotate-90 transform">
-                <circle
-                  cx="40"
-                  cy="40"
-                  r="36"
-                  stroke="currentColor"
-                  strokeWidth="8"
-                  fill="none"
-                  className="text-neutral-200"
+            <div>
+              <label htmlFor="businessEmail" className="mb-2 block text-sm font-medium">
+                Business Email <span className="text-red-500">*</span>
+              </label>
+              <Input
+                id="businessEmail"
+                type="email"
+                value={formData.businessEmail}
+                onChange={(e) => handleChange('businessEmail', e.target.value)}
+                placeholder="contact@yourbusiness.com"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="businessAge" className="mb-2 block text-sm font-medium">
+                Years in Business <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="businessAge"
+                value={formData.businessAge}
+                onChange={(e) => handleChange('businessAge', e.target.value)}
+                className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                required
+              >
+                <option value="">Select...</option>
+                {BUSINESS_AGE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="businessDescription" className="mb-2 block text-sm font-medium">
+                Business Description <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                id="businessDescription"
+                value={formData.businessDescription}
+                onChange={(e) => handleChange('businessDescription', e.target.value)}
+                placeholder="Tell us about your business, what you sell, and your sustainability mission..."
+                required
+                rows={4}
+                className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[80px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="businessWebsite" className="mb-2 block text-sm font-medium">
+                Website (optional)
+              </label>
+              <div className="relative">
+                <Globe className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                <Input
+                  id="businessWebsite"
+                  type="url"
+                  value={formData.businessWebsite}
+                  onChange={(e) => handleChange('businessWebsite', e.target.value)}
+                  placeholder="https://yourbusiness.com"
+                  className="pl-10"
                 />
-                <circle
-                  cx="40"
-                  cy="40"
-                  r="36"
-                  stroke="currentColor"
-                  strokeWidth="8"
-                  fill="none"
-                  strokeDasharray={`${2 * Math.PI * 36}`}
-                  strokeDashoffset={`${2 * Math.PI * 36 * (1 - applicationScore.completeness / 100)}`}
-                  className="text-forest-dark transition-all duration-500"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-forest-dark text-lg font-bold">
-                  {applicationScore.completeness}%
-                </span>
               </div>
             </div>
-            {applicationScore.autoApprovalEligible && (
-              <span className="bg-eco-dark rounded-full px-2 py-1 text-xs font-medium text-white">
-                Auto-Approved
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
 
-      {/* Business Information */}
-      <div className="space-y-4 rounded-lg border border-neutral-200 bg-white p-6">
-        <div className="mb-4 flex items-center gap-2">
-          <Store className="text-forest-dark size-5" />
-          <h2 className="text-xl font-semibold text-neutral-800">Business Information</h2>
-        </div>
+            <div className="space-y-4 border-t pt-6">
+              <h3 className="font-medium">Other Storefronts (optional)</h3>
+              <p className="text-muted-foreground text-sm">
+                Let us know where else you sell your products
+              </p>
 
-        <div>
-          <label htmlFor="businessName" className="mb-2 block text-sm font-medium text-neutral-700">
-            Business Name <span className="text-red-500">*</span>
-          </label>
-          <Input
-            id="businessName"
-            value={formData.businessName}
-            onChange={(e) => handleChange('businessName', e.target.value)}
-            placeholder="Your business or brand name"
-            required
-            className="focus:border-forest-light focus:ring-forest-light border-neutral-300"
-          />
-        </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="etsy" className="mb-1 block text-sm">
+                    Etsy Shop URL
+                  </label>
+                  <Input
+                    id="etsy"
+                    value={formData.storefronts.etsy}
+                    onChange={(e) => handleStorefrontChange('etsy', e.target.value)}
+                    placeholder="etsy.com/shop/yourshop"
+                  />
+                </div>
 
-        <div>
-          <label
-            htmlFor="businessWebsite"
-            className="mb-2 block text-sm font-medium text-neutral-700"
-          >
-            Website (optional)
-          </label>
-          <div className="relative">
-            <Globe className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400" />
-            <Input
-              id="businessWebsite"
-              type="url"
-              value={formData.businessWebsite}
-              onChange={(e) => handleChange('businessWebsite', e.target.value)}
-              placeholder="https://yourbusiness.com"
-              className="focus:border-forest-light focus:ring-forest-light border-neutral-300 pl-10"
-            />
-          </div>
-        </div>
+                <div>
+                  <label htmlFor="faire" className="mb-1 block text-sm">
+                    Faire Shop URL
+                  </label>
+                  <Input
+                    id="faire"
+                    value={formData.storefronts.faire}
+                    onChange={(e) => handleStorefrontChange('faire', e.target.value)}
+                    placeholder="faire.com/yourshop"
+                  />
+                </div>
 
-        <div>
-          <label
-            htmlFor="businessDescription"
-            className="mb-2 block text-sm font-medium text-neutral-700"
-          >
-            Business Description <span className="text-red-500">*</span>
-          </label>
-          <p className="mb-2 text-xs text-neutral-500">
-            Describe your business, products, and sustainability mission. Include keywords like
-            &quot;handmade&quot;, &quot;organic&quot;, or &quot;certified&quot; to improve your
-            score.
-          </p>
-          <textarea
-            id="businessDescription"
-            value={formData.businessDescription}
-            onChange={(e) => handleChange('businessDescription', e.target.value)}
-            placeholder="Tell us about your business, what you sell, and your sustainability mission..."
-            required
-            rows={4}
-            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring focus-visible:ring-forest-light flex min-h-[80px] w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-          />
-        </div>
-      </div>
+                <div>
+                  <label htmlFor="amazon" className="mb-1 block text-sm">
+                    Amazon Store Name
+                  </label>
+                  <Input
+                    id="amazon"
+                    value={formData.storefronts.amazon}
+                    onChange={(e) => handleStorefrontChange('amazon', e.target.value)}
+                    placeholder="Your Amazon storefront"
+                  />
+                </div>
 
-      {/* Eco-Profile (ShopEcoProfileForm embedded) */}
-      <div className="rounded-lg border border-neutral-200 bg-white p-6">
-        <div className="mb-6">
-          <h2 className="mb-2 text-xl font-semibold text-neutral-800">Sustainability Practices</h2>
-          <p className="text-sm text-neutral-600">
-            Complete your eco-profile to improve your application score. The more practices you
-            implement, the faster your approval.
-          </p>
-        </div>
-
-        <ShopEcoProfileForm
-          initialData={formData.shopEcoProfileData}
-          onSubmit={async (data) => {
-            handleEcoProfileChange(data);
-          }}
-          onChange={(data) => {
-            handleEcoProfileChange(data);
-          }}
-          showSaveButton={false}
-        />
-      </div>
-
-      {/* Nonprofit Partnership */}
-      <div className="space-y-4 rounded-lg border border-neutral-200 bg-white p-6">
-        <div className="mb-4 flex items-center gap-2">
-          <Heart className="text-eco-dark size-5" />
-          <h2 className="text-xl font-semibold text-neutral-800">Give Back</h2>
-        </div>
-
-        <div className="bg-eco-light/20 border-eco-light rounded-lg border p-4">
-          <p className="text-sm text-neutral-700">
-            Evercraft donates a percentage of each sale to environmental nonprofits. You can choose
-            your preferred organization or let customers choose at checkout.
-          </p>
-        </div>
-
-        <div>
-          <label
-            htmlFor="donationPercentage"
-            className="mb-2 block text-sm font-medium text-neutral-700"
-          >
-            Donation Percentage
-          </label>
-          <div className="flex items-center gap-4">
-            <Input
-              id="donationPercentage"
-              type="number"
-              min="1"
-              max="100"
-              step="0.5"
-              value={formData.donationPercentage}
-              onChange={(e) =>
-                handleChange('donationPercentage', parseFloat(e.target.value) || 1.0)
-              }
-              className="focus:border-forest-light focus:ring-forest-light w-32 border-neutral-300"
-            />
-            <span className="text-sm text-neutral-600">
-              % of each sale (minimum 1%, recommended 5%)
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Submit Button */}
-      <div className="flex justify-end gap-4 pt-4">
-        {applicationScore.autoApprovalEligible && (
-          <div className="text-eco-dark flex items-center gap-2 text-sm font-medium">
-            <CheckCircle2 className="size-5" />
-            <span>Qualifies for instant approval!</span>
+                <div>
+                  <label htmlFor="other" className="mb-1 block text-sm">
+                    Other (specify)
+                  </label>
+                  <Input
+                    id="other"
+                    value={formData.storefronts.other}
+                    onChange={(e) => handleStorefrontChange('other', e.target.value)}
+                    placeholder="Any other platforms"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         )}
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          size="lg"
-          className="bg-forest-dark hover:bg-forest-light text-white"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 size-5 animate-spin" />
-              Submitting...
-            </>
-          ) : (
-            <>Submit Application</>
-          )}
-        </Button>
+
+        {/* Step 2: Sustainability Practices */}
+        {currentStep === 2 && (
+          <div className="rounded-lg border p-6">
+            <div className="mb-6">
+              <h2 className="mb-2 text-2xl font-semibold">Sustainability Practices</h2>
+              <p className="text-muted-foreground text-sm">
+                Tell us about your eco-friendly practices. You can add optional details for any
+                practice you implement.
+              </p>
+            </div>
+
+            <ShopEcoProfileForm
+              initialData={formData.shopEcoProfileData}
+              commentary={formData.ecoCommentary}
+              onSubmit={async (data) => {
+                handleEcoProfileChange(data);
+              }}
+              onChange={(data) => {
+                handleEcoProfileChange(data);
+              }}
+              onCommentaryChange={handleEcoCommentaryChange}
+              showSaveButton={false}
+              hideCompleteness={true}
+            />
+          </div>
+        )}
+
+        {/* Step 3: Give Back */}
+        {currentStep === 3 && (
+          <div className="space-y-6 rounded-lg border p-6">
+            <div className="mb-6 flex items-center gap-2">
+              <Heart className="text-eco-dark size-6" />
+              <h2 className="text-2xl font-semibold">Give Back</h2>
+            </div>
+
+            <div className="bg-eco-light/20 border-eco-light rounded-lg border p-4">
+              <p className="text-sm">
+                Evercraft donates a percentage of each sale to environmental nonprofits. You can
+                choose your preferred organization or let customers choose at checkout.
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="donationPercentage" className="mb-2 block text-sm font-medium">
+                Donation Percentage
+              </label>
+              <div className="flex items-center gap-4">
+                <Input
+                  id="donationPercentage"
+                  type="number"
+                  min="1"
+                  max="100"
+                  step="0.5"
+                  value={formData.donationPercentage}
+                  onChange={(e) =>
+                    handleChange('donationPercentage', parseFloat(e.target.value) || 1.0)
+                  }
+                  className="w-32"
+                />
+                <span className="text-muted-foreground text-sm">
+                  % of each sale (minimum 1%, recommended 5%)
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: Review & Submit */}
+        {currentStep === 4 && (
+          <div className="space-y-6 rounded-lg border p-6">
+            <h2 className="mb-6 text-2xl font-semibold">Review Your Application</h2>
+
+            {/* Business Info Summary */}
+            <div className="border-b pb-4">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="font-semibold">Business Information</h3>
+                <Button variant="ghost" size="sm" onClick={() => setCurrentStep(1)}>
+                  Edit
+                </Button>
+              </div>
+              <dl className="space-y-2 text-sm">
+                <div>
+                  <dt className="text-muted-foreground">Business Name</dt>
+                  <dd className="font-medium">{formData.businessName}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Business Email</dt>
+                  <dd className="font-medium">{formData.businessEmail}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Years in Business</dt>
+                  <dd className="font-medium">{formData.businessAge}</dd>
+                </div>
+                {formData.businessWebsite && (
+                  <div>
+                    <dt className="text-muted-foreground">Website</dt>
+                    <dd className="font-medium">{formData.businessWebsite}</dd>
+                  </div>
+                )}
+                <div>
+                  <dt className="text-muted-foreground">Description</dt>
+                  <dd className="font-medium">{formData.businessDescription}</dd>
+                </div>
+              </dl>
+            </div>
+
+            {/* Sustainability Summary */}
+            <div className="border-b pb-4">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="font-semibold">Sustainability Practices</h3>
+                <Button variant="ghost" size="sm" onClick={() => setCurrentStep(2)}>
+                  Edit
+                </Button>
+              </div>
+              <p className="text-muted-foreground text-sm">
+                {
+                  Object.values(formData.shopEcoProfileData).filter(
+                    (v) => v === true || (typeof v === 'number' && v > 0)
+                  ).length
+                }{' '}
+                practices enabled
+              </p>
+            </div>
+
+            {/* Give Back Summary */}
+            <div className="pb-4">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="font-semibold">Give Back</h3>
+                <Button variant="ghost" size="sm" onClick={() => setCurrentStep(3)}>
+                  Edit
+                </Button>
+              </div>
+              <p className="text-sm">
+                Donating <span className="font-semibold">{formData.donationPercentage}%</span> of
+                each sale to environmental nonprofits
+              </p>
+            </div>
+          </div>
+        )}
       </div>
-    </form>
+
+      {/* Navigation Buttons */}
+      <div className="flex items-center justify-between">
+        <Button
+          variant="outline"
+          onClick={prevStep}
+          disabled={currentStep === 1}
+          className={currentStep === 1 ? 'invisible' : ''}
+        >
+          <ChevronLeft className="mr-2 size-4" />
+          Back
+        </Button>
+
+        {currentStep < 4 ? (
+          <Button onClick={nextStep}>
+            Next
+            <ChevronRight className="ml-2 size-4" />
+          </Button>
+        ) : (
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="bg-forest-dark hover:bg-forest-light text-white"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 size-5 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              'Submit Application'
+            )}
+          </Button>
+        )}
+      </div>
+    </div>
   );
 }

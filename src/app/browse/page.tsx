@@ -16,7 +16,8 @@ import { Input } from '@/components/ui/input';
 import { SiteHeader } from '@/components/layout/site-header';
 import { ProductCard } from '@/components/eco/product-card';
 import { EcoFilterPanel } from '@/components/eco/eco-filter-panel';
-import { getProducts, getCategories, getCertifications } from '@/actions/products';
+import { HierarchicalCategoryFilter } from '@/components/filters/hierarchical-category-filter';
+import { getProducts, getCategoriesHierarchical, getCertifications } from '@/actions/products';
 import { toggleFavorite as toggleFavoriteAction, getFavorites } from '@/actions/favorites';
 
 type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'newest';
@@ -66,7 +67,12 @@ interface Product {
 interface Category {
   id: string;
   name: string;
-  count: number;
+  productCount: number;
+  children: Array<{
+    id: string;
+    name: string;
+    productCount: number;
+  }>;
 }
 
 interface Certification {
@@ -113,7 +119,7 @@ export default function BrowsePage() {
       try {
         setIsLoading(true);
         const [productsData, categoriesData, certificationsData, favoritesData] = await Promise.all(
-          [getProducts({}), getCategories(), getCertifications(), getFavorites()]
+          [getProducts({}), getCategoriesHierarchical(), getCertifications(), getFavorites()]
         );
 
         setProducts(productsData.products as Product[]);
@@ -207,6 +213,20 @@ export default function BrowsePage() {
     setEcoFilters({});
   };
 
+  // Helper to find category by ID in hierarchical structure
+  const findCategory = (categoryId: string) => {
+    for (const category of categories) {
+      if (category.id === categoryId) {
+        return category;
+      }
+      const child = category.children.find((c) => c.id === categoryId);
+      if (child) {
+        return child;
+      }
+    }
+    return undefined;
+  };
+
   const activeEcoFilterCount = Object.values(ecoFilters).filter(
     (v) => v === true || (typeof v === 'number' && v > 0)
   ).length;
@@ -284,22 +304,11 @@ export default function BrowsePage() {
               {/* Categories */}
               <div className="mb-6">
                 <h3 className="mb-3 text-sm font-semibold tracking-wide uppercase">Categories</h3>
-                <div className="space-y-2">
-                  {categories.map((category) => (
-                    <label key={category.id} className="flex cursor-pointer items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedCategories.includes(category.id)}
-                        onChange={() => toggleCategory(category.id)}
-                        className="accent-forest-dark size-4 rounded"
-                      />
-                      <span className="text-sm">{category.name}</span>
-                      <span className="text-muted-foreground ml-auto text-xs">
-                        {category.count}
-                      </span>
-                    </label>
-                  ))}
-                </div>
+                <HierarchicalCategoryFilter
+                  categories={categories}
+                  selectedCategories={selectedCategories}
+                  onToggleCategory={toggleCategory}
+                />
               </div>
 
               {/* Certifications */}
@@ -324,17 +333,12 @@ export default function BrowsePage() {
               </div>
 
               {/* Eco Attributes */}
-              <div>
-                <h3 className="mb-3 text-sm font-semibold tracking-wide uppercase">
-                  Eco Attributes
-                </h3>
-                <EcoFilterPanel
-                  filters={ecoFilters}
-                  onFilterChange={setEcoFilters}
-                  resultCount={totalCount}
-                  showClearAll={false}
-                />
-              </div>
+              <EcoFilterPanel
+                filters={ecoFilters}
+                onFilterChange={setEcoFilters}
+                resultCount={totalCount}
+                showClearAll={false}
+              />
             </div>
           </aside>
 
@@ -390,7 +394,7 @@ export default function BrowsePage() {
             {activeFilterCount > 0 && (
               <div className="mb-6 flex flex-wrap gap-2">
                 {selectedCategories.map((catId) => {
-                  const category = categories.find((c) => c.id === catId);
+                  const category = findCategory(catId);
                   return (
                     <button
                       key={catId}
@@ -493,20 +497,11 @@ export default function BrowsePage() {
             {/* Categories */}
             <div className="mb-6">
               <h3 className="mb-3 text-sm font-semibold tracking-wide uppercase">Categories</h3>
-              <div className="space-y-2">
-                {categories.map((category) => (
-                  <label key={category.id} className="flex cursor-pointer items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedCategories.includes(category.id)}
-                      onChange={() => toggleCategory(category.id)}
-                      className="accent-forest-dark size-4 rounded"
-                    />
-                    <span className="text-sm">{category.name}</span>
-                    <span className="text-muted-foreground ml-auto text-xs">{category.count}</span>
-                  </label>
-                ))}
-              </div>
+              <HierarchicalCategoryFilter
+                categories={categories}
+                selectedCategories={selectedCategories}
+                onToggleCategory={toggleCategory}
+              />
             </div>
 
             {/* Certifications */}
@@ -530,7 +525,6 @@ export default function BrowsePage() {
 
             {/* Eco Attributes */}
             <div className="mb-6">
-              <h3 className="mb-3 text-sm font-semibold tracking-wide uppercase">Eco Attributes</h3>
               <EcoFilterPanel
                 filters={ecoFilters}
                 onFilterChange={setEcoFilters}

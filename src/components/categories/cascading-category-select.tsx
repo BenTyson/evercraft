@@ -22,7 +22,7 @@ interface Category {
   name: string;
   slug: string;
   description: string | null;
-  count: number;
+  productCount: number;
 }
 
 interface HierarchicalCategory extends Category {

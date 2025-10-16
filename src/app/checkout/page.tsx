@@ -21,6 +21,23 @@ import { SavedAddressSelector } from '@/components/checkout/saved-address-select
 import { createAddress } from '@/actions/addresses';
 import { calculateCartShipping, getShippingEstimateMessage } from '@/lib/shipping';
 
+// Address type from database (matches Prisma Address model)
+interface Address {
+  id: string;
+  type: string;
+  firstName: string;
+  lastName: string;
+  company: string | null;
+  address1: string;
+  address2: string | null;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  phone: string | null;
+  isDefault: boolean;
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { userId, isLoaded } = useAuth();
@@ -118,7 +135,7 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleSelectSavedAddress = (address: (ShippingAddress & { id: string }) | null) => {
+  const handleSelectSavedAddress = (address: Address | null) => {
     if (address) {
       // Auto-fill form from saved address
       setFormData({
@@ -130,7 +147,7 @@ export default function CheckoutPage() {
         address2: address.address2 || '',
         city: address.city,
         state: address.state,
-        zipCode: address.postalCode,
+        zipCode: address.postalCode, // Map postalCode from Address to zipCode in ShippingAddress
         country: address.country,
       });
       setSelectedAddressId(address.id);

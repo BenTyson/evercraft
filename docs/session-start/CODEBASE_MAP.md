@@ -1,7 +1,7 @@
 # EVERCRAFT CODEBASE MAP
 
 **Generated:** October 8, 2025
-**Last Updated:** October 14, 2025 (Session 14 - Buyer Account Management ✅)
+**Last Updated:** October 16, 2025 (Session 15 - UI/UX Refinements & Application Wizard ✅)
 **Purpose:** Comprehensive reference for understanding the Evercraft marketplace codebase structure, implementations, and capabilities.
 
 > **DOCUMENTATION POLICY:**
@@ -72,8 +72,9 @@
    - Relations: Product, OrderItem, ShippingProfile, Promotion, SellerReview, AnalyticsEvent
 
 3. **SellerApplication** - Seller onboarding applications
-   - Fields: businessName, businessWebsite, businessDescription, ecoQuestions (JSON), status
+   - Fields: businessName, businessEmail, businessWebsite, businessDescription, businessAge, storefronts (JSON), shopEcoProfileData (JSON), ecoCommentary (JSON), donationPercentage, status, completenessScore, tier, autoApprovalEligible
    - Status: PENDING, UNDER_REVIEW, APPROVED, REJECTED
+   - Tiers: starter, verified, certified (based on Smart Gate scoring)
 
 #### Product & Inventory Models
 
@@ -169,7 +170,9 @@
 3. **20251007232813_add_shipping_tracking_fields** - Added Shippo integration fields (trackingNumber, trackingCarrier, shippingLabelUrl, shippoTransactionId)
 4. **20251011000632_add_eco_profiles_v2** - Added ShopEcoProfile and ProductEcoProfile models, enhanced Certification with verification fields
 5. **20251012xxxxxx_add_smart_gate_fields** - Added Smart Gate completenessScore, tier, autoApprovalEligible to SellerApplication
-6. **20251013201015_add_shop_sections** ⭐ NEW - Added ShopSection and ShopSectionProduct models for seller product organization
+6. **20251013201015_add_shop_sections** - Added ShopSection and ShopSectionProduct models for seller product organization
+7. **20251016191013_add_application_wizard_fields** ⭐ NEW (Session 15) - Added businessAge, storefronts (JSON), ecoCommentary (JSON) to SellerApplication
+8. **20251016205722_add_business_email** ⭐ NEW (Session 15) - Added businessEmail to SellerApplication (nullable)
 
 ---
 
@@ -769,10 +772,13 @@ Prevents foreign key constraint errors when variants reference images.
 
 **Features:**
 
-- ✅ Eco questionnaire (JSON field)
-- ✅ Nonprofit preference selection
-- ✅ Auto shop creation on approval
+- ✅ 4-step wizard form (Business Info, Sustainability, Give Back, Review)
+- ✅ Structured eco-profile data with optional commentary (JSON fields)
+- ✅ Business information: email, age, website, other storefronts (Session 15 ⭐)
+- ✅ Nonprofit preference selection with donation percentage
+- ✅ Auto shop creation on approval (with ShopEcoProfile)
 - ✅ Status workflow (PENDING → UNDER_REVIEW → APPROVED/REJECTED)
+- ✅ Smart Gate scoring (admin-only view as of Session 15)
 
 ### Impact Actions
 
@@ -850,14 +856,20 @@ Prevents foreign key constraint errors when variants reference images.
 | `<ImpactWidget>`          | `impact-widget.tsx`        | ~100  | Impact metrics widget                                      |
 | `<ProductCard>`           | `product-card.tsx`         | ~200  | Product grid card with ratings, certifications             |
 
-### Seller Components ⭐ NEW
+### Seller Components ⭐ UPDATED (Session 15)
 
 **Location:** `/src/components/seller/`
 
-| Component                    | File                           | Lines | Purpose                                      |
-| ---------------------------- | ------------------------------ | ----- | -------------------------------------------- |
-| `<ShopEcoProfileForm>` ⭐    | `shop-eco-profile-form.tsx`    | 340   | Shop eco-profile form with live calculations |
-| `<ProductEcoProfileForm>` ⭐ | `product-eco-profile-form.tsx` | 438   | Product eco-profile form with 17 toggles     |
+| Component                    | File                           | Lines | Purpose                                               |
+| ---------------------------- | ------------------------------ | ----- | ----------------------------------------------------- |
+| `<ShopEcoProfileForm>` ⭐    | `shop-eco-profile-form.tsx`    | 450   | Shop eco-profile form with optional commentary fields |
+| `<ProductEcoProfileForm>` ⭐ | `product-eco-profile-form.tsx` | 438   | Product eco-profile form with 17 toggles              |
+
+**Features:**
+
+- ShopEcoProfileForm now supports optional commentary/details for each eco practice
+- `hideCompleteness` prop to hide scoring from applicants
+- Carbon metrics inputs removed from application form (too technical)
 
 ### Review Components
 
@@ -870,13 +882,19 @@ Prevents foreign key constraint errors when variants reference images.
 | `<StarRating>`      | `star-rating.tsx`       | 56    | Star rating input/display                  |
 | `<UserReviewsList>` | `user-reviews-list.tsx` | 244   | User's review management page              |
 
-### Layout Components
+### Layout Components ⭐ UPDATED
 
 **Location:** `/src/components/layout/`
 
-| Component      | File              | Purpose                                |
-| -------------- | ----------------- | -------------------------------------- |
-| `<SiteHeader>` | `site-header.tsx` | Main navigation header with cart, auth |
+| Component      | File              | Purpose                                           |
+| -------------- | ----------------- | ------------------------------------------------- |
+| `<SiteHeader>` | `site-header.tsx` | Main navigation header with cart, auth, admin btn |
+| `<Footer>` ⭐  | `footer.tsx`      | Site-wide footer with links, copyright            |
+
+**Features:**
+
+- Footer now rendered globally in root layout on all pages
+- Admin nav item styled as dark button vs red text link
 
 ### Shop Components ⭐ NEW
 
@@ -911,6 +929,23 @@ Prevents foreign key constraint errors when variants reference images.
 - Hover effects with scale transitions
 - Links to browse page with category filters pre-applied
 - Responsive design (1→2→3→4 columns)
+
+### Filter Components ⭐ NEW (Session 15)
+
+**Location:** `/src/components/filters/`
+
+| Component                         | File                               | Lines | Purpose                                       |
+| --------------------------------- | ---------------------------------- | ----- | --------------------------------------------- |
+| `<HierarchicalCategoryFilter>` ⭐ | `hierarchical-category-filter.tsx` | 133   | Collapsible category tree with product counts |
+| `<EcoFilterPanel>` ⭐ UPDATED     | `../eco/eco-filter-panel.tsx`      | ~250  | Eco-attributes filter panel (simplified UI)   |
+
+**Features:**
+
+- Hierarchical category filters replace flat list on `/browse`
+- Collapsible parent categories with chevron icons
+- Hides categories with 0 products
+- Shows total product count (parent + children)
+- Clean minimal design (no hover backgrounds on eco filters)
 
 ### Other Components
 
@@ -1442,8 +1477,9 @@ formatVariantName({ Size: 'Large', Color: 'Red' });
 21. **⭐ Smart Gate Application System** - Auto-scoring and tiered approval:
     - Applications scored 0-100% based on structured eco-profile data
     - Auto-approval for 85%+ with no red flags and positive signals
-    - Live score preview with improvement suggestions for applicants
-    - Admin dashboard with tier filtering and score-based sorting
+    - ⚠️ **Session 15 Change**: Scoring now hidden from applicants (admin-only view)
+    - Applicants see 4-step guided wizard without score manipulation incentive
+    - Admin dashboard with tier filtering, score-based sorting, and full scoring data
     - Red flag detection: dropshipping, reselling, Amazon/Alibaba, greenwashing
     - Scoring engine in `/src/lib/application-scoring.ts` (427 lines)
 22. **⭐ Role Management System** - Clerk + Prisma synchronization:
@@ -1480,18 +1516,221 @@ formatVariantName({ Size: 'Large', Color: 'Red' });
 ---
 
 **End of Codebase Map**
-_Last Updated: October 14, 2025 (Session 14)_
+_Last Updated: October 16, 2025 (Session 15)_
+
+## SESSION 15 UPDATES (October 16, 2025) ⭐
+
+### UI/UX Refinements & Application Wizard Redesign (✅ Complete)
+
+**Overview:**
+Major UI cleanup focusing on filter organization, global layout consistency, and complete seller application form redesign with guided 4-step wizard experience.
+
+#### Browse Page Filter Improvements (✅ Complete)
+
+**Hierarchical Category Filter:**
+
+- **New Component**: `/src/components/filters/hierarchical-category-filter.tsx` (133 lines)
+  - Replaced flat 82-category list with collapsible tree structure
+  - Chevron icons for expand/collapse parent categories
+  - Shows product counts (parent + children totals)
+  - Hides categories with 0 products
+  - Clean, minimal design matching eco-filter styling
+- **Updated**: `/src/app/browse/page.tsx`
+  - Integrated `HierarchicalCategoryFilter` component
+  - Changed from `getCategories()` to `getCategoriesHierarchical()`
+  - Added `findCategory()` helper for active filter display
+  - Removed redundant "ECO ATTRIBUTES" heading
+- **Updated**: `/src/actions/products.ts`
+  - Changed `count` field to `productCount` for consistency
+
+**Eco Filter Panel Simplification:**
+
+- **Updated**: `/src/components/eco/eco-filter-panel.tsx`
+  - Removed green hover backgrounds (text readability issue)
+  - Removed excess padding, borders, rounded corners
+  - Simplified checkbox styling for consistency with category filters
+  - Removed redundant header badges and result count
+
+#### Global Layout Improvements (✅ Complete)
+
+**Site-Wide Footer:**
+
+- **New Component**: `/src/components/layout/footer.tsx` (95 lines)
+  - 4-column layout with Shop, Company, Support, About sections
+  - Navigation links, social links, copyright
+  - Consistent design with existing header
+- **Updated**: `/src/app/layout.tsx`
+  - Added flex layout with `flex-1` for main content
+  - Footer now renders on all pages (public, buyer, seller, admin)
+- **Updated**: Seller and Admin layouts
+  - Removed `min-h-screen` to allow footer to show correctly
+
+**Navigation Styling:**
+
+- **Updated**: `/src/components/layout/site-header.tsx`
+  - Changed "Impact" link from green to normal muted text
+  - Changed "Admin" link from red text to dark slate button (`bg-slate-900`)
+  - Professional, clean appearance without color-coded navigation
+
+#### Seller Application Wizard Redesign (✅ Complete)
+
+**Major Rewrite**: `/src/app/apply/application-form.tsx` (525 lines - COMPLETE REWRITE)
+
+**4-Step Wizard Structure:**
+
+1. **Step 1: Business Information**
+   - Business name (required)
+   - Business email (required, NEW ⭐)
+   - Years in business (NEW ⭐) - Dropdown: "<1 year", "1-4 years", "5+ years"
+   - Business description (required)
+   - Business website URL (optional)
+   - Other storefronts (NEW ⭐): Etsy, Faire, Amazon, Other URLs
+
+2. **Step 2: Sustainability Practices**
+   - ShopEcoProfileForm with 17 eco-practice checkboxes
+   - Optional commentary textareas (NEW ⭐) - Appear when checkbox is checked
+   - Allows applicants to provide context/details about each practice
+   - Removed complex carbon metrics (emissions, offset %, renewable energy %)
+
+3. **Step 3: Give Back**
+   - Nonprofit donation percentage slider
+   - Simple, focused step
+
+4. **Step 4: Review & Submit**
+   - Summary of all entered data
+   - Review before submission
+
+**Wizard Features:**
+
+- Progress stepper with clickable navigation (can go back/forward)
+- Completed steps show checkmarks
+- Step validation before proceeding to next step
+- No scoring visible to applicants (moved admin-only)
+- Clean slate-gray design (no yellow/blue/green colors)
+- Proper step label alignment with circles
+
+**Database Changes:**
+
+- Migration: `20251016191013_add_application_wizard_fields`
+  - `businessAge: String?` - Years in business
+  - `storefronts: Json?` - Other marketplace presence (Etsy, Faire, Amazon, Other)
+  - `ecoCommentary: Json?` - Optional commentary for each eco practice
+- Migration: `20251016205722_add_business_email`
+  - `businessEmail: String?` - Business email (nullable for existing records, required in form)
+
+**Updated**: `/src/actions/seller-application.ts`
+
+- Added new fields to `CreateSellerApplicationInput` interface
+- Updated `createSellerApplication()` to handle businessEmail, businessAge, storefronts, ecoCommentary
+- JSON serialization for storefronts and ecoCommentary objects
+
+**Updated**: `/src/app/apply/application-status.tsx` (154 lines - SIMPLIFIED)
+
+- Removed all scoring data from applicant view (completeness %, tier badges, improvement suggestions)
+- Removed red flag warnings
+- Simple status icons and text only
+- Neutral slate-gray design
+- Admin still sees full scoring data in their dashboard
+
+**Updated**: `/src/components/seller/shop-eco-profile-form.tsx`
+
+- Added `commentary` prop: `Record<string, string>`
+- Added `onCommentaryChange` callback
+- Added `hideCompleteness` prop to hide scoring from applicants
+- Optional textarea appears below each checked eco-practice
+- Removed carbon metrics inputs (annualCarbonEmissions, carbonOffsetPercent, renewableEnergyPercent)
+
+#### Admin Applications Dashboard Updates (✅ Complete)
+
+**Updated**: `/src/app/admin/applications/applications-list-enhanced.tsx`
+
+**New Fields Displayed:**
+
+- Business Email (mailto link)
+- Years in Business (businessAge)
+- Other Storefronts section showing Etsy, Faire, Amazon, Other URLs
+- Eco Commentary (Additional Practice Details) - Shows optional text for each practice
+
+**Color Scheme Cleanup:**
+
+- Removed red/yellow/green "traffic light" tier colors
+- Changed all tier badges to uniform slate-gray (`bg-slate-50`, `text-slate-900`, `border-slate-200`)
+- Removed color-coded emojis from tier badges (🟢🟡🔴 → ●)
+- Removed emojis from filter buttons
+- Changed auto-approval badge to neutral slate-900
+- Professional, modern appearance focused on data not decoration
+
+**Updated**: `/src/lib/application-scoring.ts`
+
+- `getTierColor()` - Returns uniform slate-gray for all tiers (certified/verified/starter)
+- `getTierEmoji()` - Returns neutral bullet point (●) instead of colored emojis
+
+#### Key Design Principles (Session 15)
+
+1. **Clean & Minimal**: Removed unnecessary visual clutter and color coding
+2. **Hierarchical Organization**: Replaced flat lists with collapsible tree structures
+3. **Consistency**: Unified styling across filters and forms
+4. **Guided Experience**: Multi-step wizard reduces cognitive load for applicants
+5. **Admin-Only Scoring**: Applicants focus on genuine information, not gaming the system
+6. **Professional Appearance**: Neutral colors, clear typography, intentional design
+7. **Global Layout**: Footer on every page for polished app feel
+
+#### Files Created (Session 15)
+
+1. `/src/components/filters/hierarchical-category-filter.tsx` (133 lines)
+2. `/src/components/layout/footer.tsx` (95 lines)
+
+#### Files Modified (Session 15)
+
+**Major Rewrites:**
+
+1. `/src/app/apply/application-form.tsx` (525 lines - complete rewrite)
+2. `/src/app/apply/application-status.tsx` (154 lines - simplified)
+
+**Significant Updates:**
+
+3. `/src/app/browse/page.tsx` - Integrated hierarchical categories
+4. `/src/components/seller/shop-eco-profile-form.tsx` - Added commentary support, removed carbon metrics
+5. `/src/app/admin/applications/applications-list-enhanced.tsx` - Display new fields, clean color scheme
+6. `/src/actions/seller-application.ts` - New field handling
+7. `/src/actions/products.ts` - Field name consistency
+
+**UI/Styling:**
+
+8. `/src/components/eco/eco-filter-panel.tsx` - Simplified styling
+9. `/src/components/layout/site-header.tsx` - Navigation styling updates
+10. `/src/lib/application-scoring.ts` - Neutral tier colors
+11. `/src/app/layout.tsx` - Global footer integration
+12. `/src/app/admin/layout.tsx` - Layout fix for footer
+13. `/src/app/seller/layout.tsx` - Layout fix for footer
+
+#### Database Migrations (Session 15)
+
+1. `20251016191013_add_application_wizard_fields` - businessAge, storefronts, ecoCommentary
+2. `20251016205722_add_business_email` - businessEmail (nullable)
+
+---
+
+## SESSION 14 UPDATES (October 14, 2025) ⭐
+
+### Buyer Account Management System (✅ Complete)
+
+_[Session 14 content preserved as-is]_
+
+---
 
 ## SESSION 10 UPDATES (October 12, 2025) ⭐
 
+> **Note**: Some features described below were modified in Session 15. The application form was redesigned as a 4-step wizard, and applicant-visible scoring was removed (now admin-only). See Session 15 section above for current implementation.
+
 ### Smart Gate Seller Application System (✅ Complete)
 
-**New Features:**
+**New Features (Session 10):**
 
 - **Auto-Scoring System**: Applications now receive 0-100% completeness score based on structured eco-profile data
 - **Tier Classification**: Starter (0-59%), Verified (60-84%), Certified (85-100%)
 - **Auto-Approval**: 85%+ applications with positive signals auto-approve and create shop immediately
-- **Live Score Preview**: Applicants see real-time score, tier badge, estimated review time, and improvement suggestions
+- **Live Score Preview**: ⚠️ _Changed in Session 15_ - Originally visible to applicants, now hidden (admin-only)
 
 **New Files Created:**
 
@@ -1503,18 +1742,14 @@ _Last Updated: October 14, 2025 (Session 14)_
 - `/scripts/sync-seller-roles.ts` - One-time script to fix existing approved sellers
 - `/scripts/README.md` - Documentation for all admin scripts
 
-**Updated Files:**
+**Updated Files (Session 10):**
 
-- `/src/app/apply/application-form.tsx` - Replaced free-text questions with structured ShopEcoProfileForm
-  - Live application score with circular progress indicator
-  - Tier badges (🟢 Certified / 🟡 Verified / 🔴 Starter)
-  - Real-time improvement suggestions
-  - Auto-approval eligibility indicator
-- `/src/app/apply/application-status.tsx` - Enhanced status page with:
-  - Score visualization
-  - Tier badge display
-  - Red flag warnings
-  - Estimated review time
+- `/src/app/apply/application-form.tsx` - ⚠️ _Completely rewritten in Session 15 as 4-step wizard_
+  - Original: Single-page form with live scoring visible to applicants
+  - Session 15: 4-step wizard without scoring display (see Session 15 section)
+- `/src/app/apply/application-status.tsx` - ⚠️ _Simplified in Session 15_
+  - Original: Score visualization, tier badges, red flag warnings, estimated review time
+  - Session 15: Removed all scoring data from applicant view
 - `/src/actions/seller-application.ts` - Updated approval flows:
   - Auto-approval: Creates shop + ShopEcoProfile + promotes user to SELLER role
   - Manual approval: Same logic when admin approves

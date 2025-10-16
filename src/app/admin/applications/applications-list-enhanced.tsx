@@ -21,10 +21,14 @@ import type { ApplicationTier } from '@/lib/application-scoring';
 interface Application {
   id: string;
   businessName: string;
+  businessEmail?: string | null;
   businessWebsite?: string | null;
   businessDescription: string;
+  businessAge?: string | null;
+  storefronts?: Record<string, unknown> | null;
   ecoQuestions: Record<string, unknown>;
   shopEcoProfileData?: Record<string, unknown>;
+  ecoCommentary?: Record<string, unknown> | null;
   donationPercentage: number;
   status: string;
   createdAt: Date;
@@ -173,7 +177,7 @@ export function ApplicationsListEnhanced({
               onClick={() => setFilterType('certified')}
               className={filterType === 'certified' ? 'bg-gray-900 hover:bg-gray-800' : ''}
             >
-              🟢 Certified ({tierCounts.certified})
+              Certified ({tierCounts.certified})
             </Button>
             <Button
               variant={filterType === 'verified' ? 'default' : 'outline'}
@@ -181,7 +185,7 @@ export function ApplicationsListEnhanced({
               onClick={() => setFilterType('verified')}
               className={filterType === 'verified' ? 'bg-gray-900 hover:bg-gray-800' : ''}
             >
-              🟡 Verified ({tierCounts.verified})
+              Verified ({tierCounts.verified})
             </Button>
             <Button
               variant={filterType === 'starter' ? 'default' : 'outline'}
@@ -189,7 +193,7 @@ export function ApplicationsListEnhanced({
               onClick={() => setFilterType('starter')}
               className={filterType === 'starter' ? 'bg-gray-900 hover:bg-gray-800' : ''}
             >
-              🔴 Starter ({tierCounts.starter})
+              Starter ({tierCounts.starter})
             </Button>
             <Button
               variant={filterType === 'auto-approved' ? 'default' : 'outline'}
@@ -383,11 +387,10 @@ function ApplicationCard({
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-lg font-semibold text-gray-900">
-                    {getTierEmoji(application.tier as ApplicationTier)}{' '}
                     {application.tier.charAt(0).toUpperCase() + application.tier.slice(1)} Tier
                   </span>
                   {application.autoApprovalEligible && (
-                    <span className="bg-eco-dark rounded-full px-2 py-0.5 text-xs font-medium text-white">
+                    <span className="rounded-full bg-slate-900 px-2 py-0.5 text-xs font-medium text-white">
                       <Sparkles className="mr-1 inline size-3" />
                       Auto-Approved
                     </span>
@@ -471,6 +474,25 @@ function ApplicationCard({
               <p className="text-sm text-gray-700">{application.businessDescription}</p>
             </div>
 
+            {application.businessEmail && (
+              <div>
+                <h4 className="mb-2 text-sm font-semibold text-gray-900">Business Email</h4>
+                <a
+                  href={`mailto:${application.businessEmail}`}
+                  className="text-forest-dark text-sm hover:underline"
+                >
+                  {application.businessEmail}
+                </a>
+              </div>
+            )}
+
+            {application.businessAge && (
+              <div>
+                <h4 className="mb-2 text-sm font-semibold text-gray-900">Years in Business</h4>
+                <p className="text-sm text-gray-700">{application.businessAge}</p>
+              </div>
+            )}
+
             {application.businessWebsite && (
               <div>
                 <h4 className="mb-2 text-sm font-semibold text-gray-900">Website</h4>
@@ -485,27 +507,92 @@ function ApplicationCard({
               </div>
             )}
 
+            {/* Other Storefronts */}
+            {(() => {
+              const storefronts = application.storefronts as Record<string, string> | null;
+              if (!storefronts || !Object.values(storefronts).some((v) => v)) return null;
+
+              return (
+                <div>
+                  <h4 className="mb-2 text-sm font-semibold text-gray-900">Other Storefronts</h4>
+                  <div className="space-y-1">
+                    {storefronts.etsy && (
+                      <p className="text-sm text-gray-700">
+                        <span className="font-medium">Etsy:</span> {storefronts.etsy}
+                      </p>
+                    )}
+                    {storefronts.faire && (
+                      <p className="text-sm text-gray-700">
+                        <span className="font-medium">Faire:</span> {storefronts.faire}
+                      </p>
+                    )}
+                    {storefronts.amazon && (
+                      <p className="text-sm text-gray-700">
+                        <span className="font-medium">Amazon:</span> {storefronts.amazon}
+                      </p>
+                    )}
+                    {storefronts.other && (
+                      <p className="text-sm text-gray-700">
+                        <span className="font-medium">Other:</span> {storefronts.other}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Show structured eco-profile if available, otherwise legacy questions */}
             {hasEcoProfileData ? (
-              <div>
-                <h4 className="mb-3 text-sm font-semibold text-gray-900">Eco-Practices</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  {Object.entries(application.shopEcoProfileData || {}).map(([key, value]) => {
-                    if (typeof value === 'boolean' && value) {
-                      const label = key
-                        .replace(/([A-Z])/g, ' $1')
-                        .replace(/^./, (str) => str.toUpperCase());
-                      return (
-                        <div key={key} className="flex items-center gap-2 text-sm text-gray-700">
-                          <CheckCircle className="text-eco-dark size-4" />
-                          <span>{label}</span>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })}
+              <>
+                <div>
+                  <h4 className="mb-3 text-sm font-semibold text-gray-900">Eco-Practices</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {Object.entries(application.shopEcoProfileData || {}).map(([key, value]) => {
+                      if (typeof value === 'boolean' && value) {
+                        const label = key
+                          .replace(/([A-Z])/g, ' $1')
+                          .replace(/^./, (str) => str.toUpperCase());
+                        return (
+                          <div key={key} className="flex items-center gap-2 text-sm text-gray-700">
+                            <CheckCircle className="text-eco-dark size-4" />
+                            <span>{label}</span>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })}
+                  </div>
                 </div>
-              </div>
+
+                {/* Eco Commentary */}
+                {application.ecoCommentary &&
+                  Object.values(application.ecoCommentary).some((v) => v) && (
+                    <div>
+                      <h4 className="mb-3 text-sm font-semibold text-gray-900">
+                        Additional Practice Details
+                      </h4>
+                      <div className="space-y-3">
+                        {Object.entries(application.ecoCommentary).map(([key, value]) => {
+                          if (value && String(value).trim()) {
+                            const label = key
+                              .replace(/([A-Z])/g, ' $1')
+                              .replace(/^./, (str) => str.toUpperCase());
+                            return (
+                              <div
+                                key={key}
+                                className="rounded-lg border border-gray-200 bg-gray-50 p-3"
+                              >
+                                <p className="mb-1 text-sm font-medium text-gray-900">{label}</p>
+                                <p className="text-sm text-gray-700">{String(value)}</p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
+                    </div>
+                  )}
+              </>
             ) : (
               application.ecoQuestions && (
                 <>

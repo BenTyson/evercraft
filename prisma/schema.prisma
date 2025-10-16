@@ -419,10 +419,14 @@ model SellerApplication {
   id                    String            @id @default(cuid())
   userId                String
   businessName          String
+  businessEmail         String?
   businessWebsite       String?
   businessDescription   String
+  businessAge           String? // "<1 year" | "1-4 years" | "5+ years"
+  storefronts           Json? // { etsy, faire, amazon, website, other }
   ecoQuestions          Json // Legacy: unstructured text answers (deprecated)
   shopEcoProfileData    Json? // New: structured ShopEcoProfile data
+  ecoCommentary         Json? // Optional commentary for each eco practice
   preferredNonprofit    String?
   donationPercentage    Float             @default(1.0)
   status                ApplicationStatus @default(PENDING)

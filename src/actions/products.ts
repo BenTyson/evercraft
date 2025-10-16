@@ -513,13 +513,13 @@ export async function getCategoriesHierarchical() {
       name: parent.name,
       slug: parent.slug,
       description: parent.description,
-      count: parent._count.products,
+      productCount: parent._count.products,
       children: parent.children.map((child) => ({
         id: child.id,
         name: child.name,
         slug: child.slug,
         description: child.description,
-        count: child._count.products,
+        productCount: child._count.products,
       })),
     }));
   } catch (error) {

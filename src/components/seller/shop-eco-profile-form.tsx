@@ -17,8 +17,6 @@ import * as React from 'react';
 import { Loader2, ChevronDown, ChevronUp, Info } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Slider } from '@/components/ui/slider';
 import { EcoCompletenessBar } from '@/components/eco/eco-completeness-bar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
@@ -53,6 +51,10 @@ export interface ShopEcoProfileFormProps {
    */
   initialData?: Partial<ShopEcoProfileData>;
   /**
+   * Commentary/additional details for each practice
+   */
+  commentary?: Record<string, string>;
+  /**
    * Callback when form is submitted
    */
   onSubmit: (data: ShopEcoProfileData) => Promise<void>;
@@ -61,9 +63,17 @@ export interface ShopEcoProfileFormProps {
    */
   onChange?: (data: ShopEcoProfileData) => void;
   /**
+   * Callback when commentary changes
+   */
+  onCommentaryChange?: (field: string, value: string) => void;
+  /**
    * Show save button (false for auto-save mode)
    */
   showSaveButton?: boolean;
+  /**
+   * Hide completeness bar (for application form)
+   */
+  hideCompleteness?: boolean;
   /**
    * Loading state
    */
@@ -92,9 +102,12 @@ const DEFAULT_PROFILE: ShopEcoProfileData = {
 
 export function ShopEcoProfileForm({
   initialData,
+  commentary = {},
   onSubmit,
   onChange,
+  onCommentaryChange,
   showSaveButton = true,
+  hideCompleteness = false,
   isLoading = false,
 }: ShopEcoProfileFormProps) {
   const [formData, setFormData] = React.useState<ShopEcoProfileData>({
@@ -168,7 +181,7 @@ export function ShopEcoProfileForm({
   return (
     <Wrapper {...(showSaveButton ? { onSubmit: handleSubmit } : {})} className="space-y-6">
       {/* Completeness bar */}
-      <EcoCompletenessBar percent={completeness} tier={tier} showTierBadge />
+      {!hideCompleteness && <EcoCompletenessBar percent={completeness} tier={tier} showTierBadge />}
 
       {/* Tier 1: Basic Practices */}
       <div className="bg-card space-y-4 rounded-lg border p-6">
@@ -187,126 +200,144 @@ export function ShopEcoProfileForm({
             checked={formData.plasticFreePackaging}
             onChange={() => handleToggle('plasticFreePackaging')}
             description="All packaging is free from plastic materials"
+            fieldKey="plasticFreePackaging"
+            commentaryValue={commentary.plasticFreePackaging}
+            onCommentaryChange={
+              onCommentaryChange
+                ? (value) => onCommentaryChange('plasticFreePackaging', value)
+                : undefined
+            }
           />
           <CheckboxField
             label="Recycled Packaging"
             checked={formData.recycledPackaging}
             onChange={() => handleToggle('recycledPackaging')}
             description="Use recycled or recyclable packaging materials"
+            fieldKey="recycledPackaging"
+            commentaryValue={commentary.recycledPackaging}
+            onCommentaryChange={
+              onCommentaryChange
+                ? (value) => onCommentaryChange('recycledPackaging', value)
+                : undefined
+            }
           />
           <CheckboxField
             label="Biodegradable Packaging"
             checked={formData.biodegradablePackaging}
             onChange={() => handleToggle('biodegradablePackaging')}
             description="Packaging materials are biodegradable or compostable"
+            fieldKey="biodegradablePackaging"
+            commentaryValue={commentary.biodegradablePackaging}
+            onCommentaryChange={
+              onCommentaryChange
+                ? (value) => onCommentaryChange('biodegradablePackaging', value)
+                : undefined
+            }
           />
           <CheckboxField
             label="Organic Materials"
             checked={formData.organicMaterials}
             onChange={() => handleToggle('organicMaterials')}
             description="Products use certified organic materials"
+            fieldKey="organicMaterials"
+            commentaryValue={commentary.organicMaterials}
+            onCommentaryChange={
+              onCommentaryChange
+                ? (value) => onCommentaryChange('organicMaterials', value)
+                : undefined
+            }
           />
           <CheckboxField
             label="Recycled Materials"
             checked={formData.recycledMaterials}
             onChange={() => handleToggle('recycledMaterials')}
             description="Products incorporate recycled materials"
+            fieldKey="recycledMaterials"
+            commentaryValue={commentary.recycledMaterials}
+            onCommentaryChange={
+              onCommentaryChange
+                ? (value) => onCommentaryChange('recycledMaterials', value)
+                : undefined
+            }
           />
           <CheckboxField
             label="Fair Trade Sourcing"
             checked={formData.fairTradeSourcing}
             onChange={() => handleToggle('fairTradeSourcing')}
             description="Materials sourced from Fair Trade certified suppliers"
+            fieldKey="fairTradeSourcing"
+            commentaryValue={commentary.fairTradeSourcing}
+            onCommentaryChange={
+              onCommentaryChange
+                ? (value) => onCommentaryChange('fairTradeSourcing', value)
+                : undefined
+            }
           />
           <CheckboxField
             label="Local Sourcing"
             checked={formData.localSourcing}
             onChange={() => handleToggle('localSourcing')}
             description="Source materials locally (within 100 miles)"
+            fieldKey="localSourcing"
+            commentaryValue={commentary.localSourcing}
+            onCommentaryChange={
+              onCommentaryChange ? (value) => onCommentaryChange('localSourcing', value) : undefined
+            }
           />
           <CheckboxField
             label="Carbon-Neutral Shipping"
             checked={formData.carbonNeutralShipping}
             onChange={() => handleToggle('carbonNeutralShipping')}
             description="Offer carbon-neutral shipping options"
+            fieldKey="carbonNeutralShipping"
+            commentaryValue={commentary.carbonNeutralShipping}
+            onCommentaryChange={
+              onCommentaryChange
+                ? (value) => onCommentaryChange('carbonNeutralShipping', value)
+                : undefined
+            }
           />
           <CheckboxField
             label="Renewable Energy"
             checked={formData.renewableEnergy}
             onChange={() => handleToggle('renewableEnergy')}
             description="Business powered by renewable energy"
+            fieldKey="renewableEnergy"
+            commentaryValue={commentary.renewableEnergy}
+            onCommentaryChange={
+              onCommentaryChange
+                ? (value) => onCommentaryChange('renewableEnergy', value)
+                : undefined
+            }
           />
           <CheckboxField
             label="Carbon Offset"
             checked={formData.carbonOffset}
             onChange={() => handleToggle('carbonOffset')}
             description="Purchase carbon offsets for emissions"
+            fieldKey="carbonOffset"
+            commentaryValue={commentary.carbonOffset}
+            onCommentaryChange={
+              onCommentaryChange ? (value) => onCommentaryChange('carbonOffset', value) : undefined
+            }
           />
         </div>
       </div>
 
-      {/* Tier 2: Detailed Information (Collapsible) */}
+      {/* Tier 2: Additional Practices (Collapsible) */}
       <Collapsible open={isTier2Open} onOpenChange={setIsTier2Open}>
         <CollapsibleTrigger asChild>
           <Button variant="outline" className="w-full justify-between" type="button">
             <span className="flex items-center gap-2">
               <Info className="size-4" />
-              Add Detailed Info (Optional - Unlocks +30% Completeness)
+              Additional Practices (Optional)
             </span>
             {isTier2Open ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-4">
           <div className="bg-card space-y-6 rounded-lg border p-6">
-            <h3 className="text-lg font-semibold">Detailed Eco-Metrics</h3>
-
-            {/* Carbon metrics */}
-            <div className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium">
-                  Annual Carbon Emissions (tons CO₂)
-                </label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  value={formData.annualCarbonEmissions || ''}
-                  onChange={(e) =>
-                    handleNumberChange(
-                      'annualCarbonEmissions',
-                      e.target.value ? parseFloat(e.target.value) : null
-                    )
-                  }
-                  placeholder="e.g., 12.5"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium">
-                  Carbon Offset Percentage: {formData.carbonOffsetPercent || 0}%
-                </label>
-                <Slider
-                  value={[formData.carbonOffsetPercent || 0]}
-                  onValueChange={(value) => handleNumberChange('carbonOffsetPercent', value[0])}
-                  min={0}
-                  max={100}
-                  step={5}
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium">
-                  Renewable Energy Percentage: {formData.renewableEnergyPercent || 0}%
-                </label>
-                <Slider
-                  value={[formData.renewableEnergyPercent || 0]}
-                  onValueChange={(value) => handleNumberChange('renewableEnergyPercent', value[0])}
-                  min={0}
-                  max={100}
-                  step={5}
-                />
-              </div>
-            </div>
+            <h3 className="text-lg font-semibold">Advanced Sustainability Practices</h3>
 
             {/* Additional practices */}
             <div className="grid gap-3 sm:grid-cols-2">
@@ -315,24 +346,52 @@ export function ShopEcoProfileForm({
                 checked={formData.waterConservation}
                 onChange={() => handleToggle('waterConservation')}
                 description="Implement water-saving practices"
+                fieldKey="waterConservation"
+                commentaryValue={commentary.waterConservation}
+                onCommentaryChange={
+                  onCommentaryChange
+                    ? (value) => onCommentaryChange('waterConservation', value)
+                    : undefined
+                }
               />
               <CheckboxField
                 label="Fair Wage Certified"
                 checked={formData.fairWageCertified}
                 onChange={() => handleToggle('fairWageCertified')}
                 description="Certified for fair labor practices"
+                fieldKey="fairWageCertified"
+                commentaryValue={commentary.fairWageCertified}
+                onCommentaryChange={
+                  onCommentaryChange
+                    ? (value) => onCommentaryChange('fairWageCertified', value)
+                    : undefined
+                }
               />
               <CheckboxField
                 label="Product Take-Back Program"
                 checked={formData.takeBackProgram}
                 onChange={() => handleToggle('takeBackProgram')}
                 description="Accept products back for recycling/disposal"
+                fieldKey="takeBackProgram"
+                commentaryValue={commentary.takeBackProgram}
+                onCommentaryChange={
+                  onCommentaryChange
+                    ? (value) => onCommentaryChange('takeBackProgram', value)
+                    : undefined
+                }
               />
               <CheckboxField
                 label="Repair Service"
                 checked={formData.repairService}
                 onChange={() => handleToggle('repairService')}
                 description="Offer product repair services"
+                fieldKey="repairService"
+                commentaryValue={commentary.repairService}
+                onCommentaryChange={
+                  onCommentaryChange
+                    ? (value) => onCommentaryChange('repairService', value)
+                    : undefined
+                }
               />
             </div>
           </div>
@@ -357,30 +416,60 @@ interface CheckboxFieldProps {
   checked: boolean;
   onChange: () => void;
   description?: string;
+  fieldKey?: string;
+  commentaryValue?: string;
+  onCommentaryChange?: (value: string) => void;
 }
 
-function CheckboxField({ label, checked, onChange, description }: CheckboxFieldProps) {
+function CheckboxField({
+  label,
+  checked,
+  onChange,
+  description,
+  fieldKey,
+  commentaryValue,
+  onCommentaryChange,
+}: CheckboxFieldProps) {
   return (
-    <label
+    <div
       className={cn(
-        'flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors',
+        'rounded-lg border p-4 transition-colors',
         checked
           ? 'border-eco-dark bg-eco-light/20'
           : 'hover:border-forest-light hover:bg-eco-light/10 border-neutral-200'
       )}
     >
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onChange}
-        className="text-forest-dark focus:ring-forest-dark mt-0.5 size-5 rounded border-gray-300"
-      />
-      <div className="flex-1">
-        <span className="block text-sm font-medium text-neutral-800">{label}</span>
-        {description && (
-          <span className="mt-0.5 block text-xs text-neutral-600">{description}</span>
-        )}
-      </div>
-    </label>
+      <label className="flex cursor-pointer items-start gap-3">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={onChange}
+          className="text-forest-dark focus:ring-forest-dark mt-0.5 size-5 rounded border-gray-300"
+        />
+        <div className="flex-1">
+          <span className="block text-sm font-medium text-neutral-800">{label}</span>
+          {description && (
+            <span className="mt-0.5 block text-xs text-neutral-600">{description}</span>
+          )}
+        </div>
+      </label>
+
+      {/* Optional commentary textarea */}
+      {checked && onCommentaryChange && (
+        <div className="mt-3 ml-8">
+          <label htmlFor={`${fieldKey}-commentary`} className="mb-1 block text-xs text-neutral-600">
+            Tell us more (optional)
+          </label>
+          <textarea
+            id={`${fieldKey}-commentary`}
+            value={commentaryValue || ''}
+            onChange={(e) => onCommentaryChange(e.target.value)}
+            placeholder="Add any additional details about this practice..."
+            rows={2}
+            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          />
+        </div>
+      )}
+    </div>
   );
 }

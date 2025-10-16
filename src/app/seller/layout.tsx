@@ -28,7 +28,7 @@ export default async function SellerLayout({ children }: { children: React.React
   }
 
   return (
-    <div className="min-h-screen">
+    <div>
       <SiteHeaderWrapper />
 
       <div className="border-b bg-neutral-50 dark:bg-neutral-900">

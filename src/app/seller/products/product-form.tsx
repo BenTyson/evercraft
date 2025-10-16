@@ -28,13 +28,13 @@ interface HierarchicalCategory {
   name: string;
   slug: string;
   description: string | null;
-  count: number;
+  productCount: number;
   children: Array<{
     id: string;
     name: string;
     slug: string;
     description: string | null;
-    count: number;
+    productCount: number;
   }>;
 }
 

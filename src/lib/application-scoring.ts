@@ -357,21 +357,21 @@ export function getTierColor(tier: ApplicationTier): {
   switch (tier) {
     case 'certified':
       return {
-        bg: 'bg-eco-dark/10',
-        text: 'text-eco-dark',
-        border: 'border-eco-dark',
+        bg: 'bg-slate-50',
+        text: 'text-slate-900',
+        border: 'border-slate-200',
       };
     case 'verified':
       return {
-        bg: 'bg-blue-50',
-        text: 'text-blue-700',
-        border: 'border-blue-200',
+        bg: 'bg-slate-50',
+        text: 'text-slate-900',
+        border: 'border-slate-200',
       };
     case 'starter':
       return {
-        bg: 'bg-neutral-100',
-        text: 'text-neutral-700',
-        border: 'border-neutral-300',
+        bg: 'bg-slate-50',
+        text: 'text-slate-900',
+        border: 'border-slate-200',
       };
   }
 }
@@ -382,11 +382,11 @@ export function getTierColor(tier: ApplicationTier): {
 export function getTierEmoji(tier: ApplicationTier): string {
   switch (tier) {
     case 'certified':
-      return '🟢';
+      return '●';
     case 'verified':
-      return '🟡';
+      return '●';
     case 'starter':
-      return '🔴';
+      return '●';
   }
 }
 

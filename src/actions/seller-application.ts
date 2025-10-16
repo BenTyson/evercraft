@@ -10,8 +10,16 @@ import { ShopEcoProfileData } from '@/components/seller/shop-eco-profile-form';
 
 export interface CreateSellerApplicationInput {
   businessName: string;
+  businessEmail?: string;
   businessWebsite?: string;
   businessDescription: string;
+  businessAge?: string; // "<1 year" | "1-4 years" | "5+ years"
+  storefronts?: {
+    etsy?: string;
+    faire?: string;
+    amazon?: string;
+    other?: string;
+  };
   // Legacy: unstructured text answers (deprecated, kept for backward compat)
   ecoQuestions?: {
     sustainabilityPractices: string;
@@ -21,6 +29,7 @@ export interface CreateSellerApplicationInput {
   };
   // New: structured ShopEcoProfile data (Smart Gate)
   shopEcoProfileData?: ShopEcoProfileData;
+  ecoCommentary?: Record<string, string>; // Optional commentary for each eco practice
   preferredNonprofit?: string;
   donationPercentage: number;
 }
@@ -85,12 +94,18 @@ export async function createSellerApplication(input: CreateSellerApplicationInpu
       data: {
         userId,
         businessName: input.businessName,
+        businessEmail: input.businessEmail,
         businessWebsite: input.businessWebsite,
         businessDescription: input.businessDescription,
+        businessAge: input.businessAge,
+        storefronts: input.storefronts ? JSON.parse(JSON.stringify(input.storefronts)) : undefined,
         // Store both old and new formats for backward compatibility
         ecoQuestions: input.ecoQuestions || {},
         shopEcoProfileData: input.shopEcoProfileData
           ? JSON.parse(JSON.stringify(input.shopEcoProfileData))
+          : undefined,
+        ecoCommentary: input.ecoCommentary
+          ? JSON.parse(JSON.stringify(input.ecoCommentary))
           : undefined,
         preferredNonprofit: input.preferredNonprofit,
         donationPercentage: input.donationPercentage,
