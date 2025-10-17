@@ -1,8 +1,8 @@
 # Evercraft Documentation
 
-**Last Updated:** October 8, 2025
+**Last Updated:** October 17, 2025
 
-This documentation is organized for optimal AI agent onboarding and reference.
+This documentation is organized for optimal AI agent onboarding and reference with **modular, linkable architecture**.
 
 ---
 
@@ -14,23 +14,60 @@ This documentation is organized for optimal AI agent onboarding and reference.
 
 **Contains:**
 
-- `CURRENT_STATUS.md` - Where you are now, what was done last session, what's next
-- `CODEBASE_MAP.md` - Comprehensive reference of all existing features, files, and implementations
+- `README.md` - Smart navigation router with context-based guidance (~200 lines)
+- `database_schema.md` - All 32 Prisma models, relationships, critical field names (1,079 lines)
 
-**Prompt:** `"Read everything in /docs/session-start"`
+**Prompt:** `"Read session-start"` (reads index, then you choose area docs as needed)
+
+**New in this structure:** The README.md acts as an intelligent router, guiding you to specific area or feature docs based on your task.
 
 ---
 
-### `/reference/` 📚 **DEVELOPMENT REFERENCE**
+### `/areas/` 🗂️ **SYSTEM AREAS** ⭐ NEW
 
-**When to read:** During active development, when writing queries or adding dependencies
+**When to read:** Based on what you're working on (seller features, admin tools, buyer experience)
 
 **Contains:**
 
-- `DATABASE_SCHEMA.md` - All Prisma models, relationships, fields, and schema notes
-- `TECH_STACK.md` - Technology versions, package details, integration status
+- `seller-dashboard.md` - Complete seller system reference (~700 lines)
+- `admin-dashboard.md` - Complete admin system reference (~600 lines)
+- `buyer-experience.md` - Complete buyer flows reference (~600 lines)
 
-**Prompt:** `"Also read /docs/reference"` or `"Read reference/DATABASE_SCHEMA.md"`
+**Prompt examples:**
+
+- `"Read session-start and areas/seller-dashboard"` (seller work)
+- `"Read session-start and areas/admin-dashboard"` (admin work)
+- `"Read session-start and areas/buyer-experience"` (buyer work)
+
+---
+
+### `/features/` ✨ **FEATURE DEEP-DIVES** ⭐ NEW
+
+**When to read:** Working on specific features requiring implementation details
+
+**Contains:**
+
+- `product-variants.md` - Variant system with critical image ID mapping pattern (~200 lines)
+- `shop-sections.md` - Section organization system (~150 lines)
+- `eco-impact-v2.md` - Badge-based eco-profiles, 13 browse filters (~200 lines)
+- `smart-gate.md` - Seller application auto-scoring system (~150 lines)
+
+**Prompt examples:**
+
+- `"Read features/product-variants"` (variant work, especially image ID mapping)
+- `"Read features/eco-impact-v2"` (eco-profile or browse filter work)
+
+---
+
+### `/reference/` 📚 **TECHNICAL REFERENCE**
+
+**When to read:** Need tech stack details or dependency information
+
+**Contains:**
+
+- `TECH_STACK.md` - Technology versions, package details, integration status, decision log
+
+**Prompt:** `"Read reference/TECH_STACK.md"`
 
 ---
 
@@ -44,7 +81,7 @@ This documentation is organized for optimal AI agent onboarding and reference.
 - `DESIGN_SYSTEM.md` - UI components, design tokens, styling patterns, accessibility
 - `UX_RESEARCH.md` - User personas, journey maps, competitive analysis (900+ lines)
 
-**Prompt:** `"Also read /docs/planning"` or specific file as needed
+**Prompt:** `"Read planning/PROJECT_PLAN.md"` or specific file as needed
 
 ---
 
@@ -66,45 +103,61 @@ This documentation is organized for optimal AI agent onboarding and reference.
 
 ## 🚀 Quick Start Prompts
 
-### Standard Development Session
+### Standard Session (Any Area)
 
 ```
-Read everything in /docs/session-start
+Read session-start
 ```
 
-Use this for 90% of sessions. Gives you current status and full codebase map.
+This loads the smart router (~200 lines) which guides you to relevant area/feature docs based on your task.
+
+### Seller Dashboard Work
+
+```
+Read session-start and areas/seller-dashboard
+```
+
+Loads seller system with links to relevant features (variants, sections, eco-profiles).
+
+### Admin Dashboard Work
+
+```
+Read session-start and areas/admin-dashboard
+```
+
+Loads admin system with links to Smart Gate and analytics.
+
+### Buyer Experience Work
+
+```
+Read session-start and areas/buyer-experience
+```
+
+Loads buyer flows with links to variants and eco-filters.
+
+### Product Variant Work
+
+```
+Read session-start, areas/seller-dashboard, and features/product-variants
+```
+
+Includes critical image ID mapping pattern.
 
 ### Database-Heavy Work
 
 ```
-Read everything in /docs/session-start and /docs/reference
+Read session-start
 ```
 
-Adds schema details and tech stack for complex queries.
-
-### Starting a New Phase
-
-```
-Read everything in /docs/session-start and /docs/planning
-```
-
-Adds project plan, design system, and UX research for architectural decisions.
-
-### Working on Specific Integration
-
-```
-Read everything in /docs/session-start and /docs/setup/STRIPE_SETUP.md
-```
-
-Adds integration-specific setup guide as needed.
+Then navigate to `database_schema.md` via links in the router as needed.
 
 ### Full Context (Rare)
 
 ```
-Read everything in /docs/session-start, /docs/reference, and /docs/planning
+Read session-start, all areas/, and planning/
 ```
 
-Use for major architectural decisions or cross-cutting changes.
+Use for major architectural decisions or cross-cutting changes (~2,000 lines total vs old 3,500+ lines).
 
 ---
 
@@ -112,21 +165,19 @@ Use for major architectural decisions or cross-cutting changes.
 
 ### After Each Session
 
-Update `session-start/CURRENT_STATUS.md`:
+Update relevant area or feature docs:
 
-- Add session summary to history
-- Update phase completion percentages
-- Document bugs fixed or features added
-- Update "Next Steps" section
+- **Seller work:** Update `areas/seller-dashboard.md` with new routes/components/actions
+- **Admin work:** Update `areas/admin-dashboard.md` similarly
+- **New feature:** Create new doc in `/features/` with internal links to area docs
+- **Database changes:** Update `session-start/database_schema.md`
 
 ### After Major Features
 
-Update `session-start/CODEBASE_MAP.md`:
-
-- Add new pages/routes
-- Add new server actions
-- Update file statistics
-- Add to "What's Built" section
+1. Create feature doc in `/features/` (~150-200 lines)
+2. Add cross-references in relevant area docs
+3. Add navigation link in `session-start/README.md` if needed
+4. Update file statistics in router
 
 ### When Adding Integrations
 
@@ -136,6 +187,13 @@ Create or update relevant file in `/setup/`
 
 ## 🎯 Context Budget Management
 
+**Benefits of modular structure:**
+
+1. **70% token reduction** - ~30k → ~7-10k at session start
+2. **Selective loading** - Load only what you need for current task
+3. **No file size errors** - All files readable in one operation
+4. **Better navigation** - Internal links guide you between docs
+
 **Recommended session restart triggers:**
 
 1. After 2-3 context compactions
@@ -143,7 +201,7 @@ Create or update relevant file in `/setup/`
 3. When switching to completely different feature areas
 4. When noticing increased errors or slower responses
 
-This folder structure makes session restarts seamless - just read `/session-start/` and continue where you left off.
+**Session restart is now even easier** - just read `session-start` (router), choose your area, and go!
 
 ---
 
