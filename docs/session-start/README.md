@@ -1,7 +1,7 @@
 # Evercraft Documentation Router
 
 **Last Updated:** October 17, 2025
-**Total Models:** 32 | **Total Routes:** 27 | **Status:** Session 15 Complete
+**Total Models:** 38 | **Total Routes:** 28 | **Status:** Session 17 Complete
 
 > **DOCUMENTATION POLICY:**
 >
@@ -23,6 +23,7 @@
 - Creating/editing products → [Product Variants](../features/product-variants.md) (⚠️ image ID mapping pattern)
 - Organizing products → [Shop Sections](../features/shop-sections.md)
 - Managing eco-profiles → [Eco Impact V2](../features/eco-impact-v2.md)
+- Finance/payouts → See seller-dashboard.md#finance-management (Session 17)
 - Analytics/marketing → See seller-dashboard.md sections
 
 ### Working on Admin Panel?
@@ -51,7 +52,7 @@
 
 ### Database
 
-- **[Database Schema](./database_schema.md)** - All 32 models, relations, indexes
+- **[Database Schema](./database_schema.md)** - All 38 models, relations, indexes
   - ⚠️ [Critical Field Names](./database_schema.md#critical-field-names-reference)
   - Common mistakes: OrderItem.subtotal vs price, Product.inventoryQuantity vs quantity
 
@@ -168,10 +169,10 @@ See [TECH_STACK.md](../reference/TECH_STACK.md) for full details and decision lo
 - **Database models:** 32
 - **Migrations:** 8
 - **Lines of code:**
-  - `/src/app/`: ~7,418 lines
-  - `/src/actions/`: ~5,400 lines
+  - `/src/app/`: ~8,200 lines (Session 17: +782 finance UI)
+  - `/src/actions/`: ~6,230 lines (Session 17: +830 finance actions)
   - `/src/components/`: ~2,660 lines
-  - `/src/lib/`: ~721 lines
+  - `/src/lib/`: ~730 lines (Session 17: +9 for Stripe optional)
 
 ---
 
@@ -186,6 +187,7 @@ See [TECH_STACK.md](../reference/TECH_STACK.md) for full details and decision lo
 - Shopping cart and checkout
 - Order management and fulfillment
 - Reviews and ratings system
+- Seller finance system (balance, payouts, transactions, Stripe Connect) - Session 17
 
 ### 🚧 In Progress (Phase 8)
 

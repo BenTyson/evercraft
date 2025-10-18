@@ -229,6 +229,7 @@ model Order {
   buyer                User          @relation(fields: [buyerId], references: [id])
   items                OrderItem[]
   payments             Payment[]
+  taxRecords           TaxRecord[]
 
   @@index([buyerId])
   @@index([createdAt])
@@ -262,20 +263,27 @@ model OrderItem {
 }
 
 model Payment {
-  id                    String        @id @default(cuid())
+  id                    String              @id @default(cuid())
   orderId               String
-  stripePaymentIntentId String        @unique
+  shopId                String
+  stripePaymentIntentId String              @unique
   amount                Float
   platformFee           Float
   sellerPayout          Float
   nonprofitDonation     Float
-  status                PaymentStatus @default(PENDING)
-  createdAt             DateTime      @default(now())
-  order                 Order         @relation(fields: [orderId], references: [id])
+  status                PaymentStatus       @default(PENDING)
+  payoutId              String?
+  createdAt             DateTime            @default(now())
+  order                 Order               @relation(fields: [orderId], references: [id])
+  shop                  Shop                @relation(fields: [shopId], references: [id])
+  payout                SellerPayout?       @relation(fields: [payoutId], references: [id])
+  payoutItems           PaymentPayoutItem[]
 
   @@index([createdAt])
   @@index([orderId])
+  @@index([shopId])
   @@index([status])
+  @@index([payoutId])
 }
 
 model Product {
@@ -486,32 +494,37 @@ model ShippingProfile {
 }
 
 model Shop {
-  id                 String             @id @default(cuid())
-  userId             String             @unique
-  slug               String             @unique
+  id                 String                  @id @default(cuid())
+  userId             String                  @unique
+  slug               String                  @unique
   name               String
   bio                String?
   story              String?
   bannerImage        String?
   logo               String?
   colors             Json?
-  isVerified         Boolean            @default(false)
-  verificationStatus VerificationStatus @default(PENDING)
-  stripeAccountId    String?            @unique
+  isVerified         Boolean                 @default(false)
+  verificationStatus VerificationStatus      @default(PENDING)
+  stripeAccountId    String?                 @unique
   nonprofitId        String?
-  donationPercentage Float              @default(1.0)
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  donationPercentage Float                   @default(1.0)
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
   analyticsEvents    AnalyticsEvent[]
   orderItems         OrderItem[]
   products           Product[]
   promotions         Promotion[]
   sellerReviews      SellerReview[]
   shippingProfiles   ShippingProfile[]
-  nonprofit          Nonprofit?         @relation(fields: [nonprofitId], references: [id])
-  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nonprofit          Nonprofit?              @relation(fields: [nonprofitId], references: [id])
+  user               User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   ecoProfile         ShopEcoProfile?
   sections           ShopSection[]
+  connectedAccount   SellerConnectedAccount?
+  payouts            SellerPayout[]
+  balance            SellerBalance?
+  taxData            Seller1099Data[]
+  payments           Payment[]
 
   @@index([isVerified])
   @@index([nonprofitId])
@@ -704,6 +717,108 @@ model User {
   @@index([createdAt])
   @@index([email])
   @@index([role])
+}
+
+model SellerConnectedAccount {
+  id                  String   @id @default(cuid())
+  shopId              String   @unique
+  stripeAccountId     String   @unique
+  accountType         String   @default("express")
+  payoutSchedule      String   @default("weekly")
+  status              String   @default("pending")
+  onboardingCompleted Boolean  @default(false)
+  chargesEnabled      Boolean  @default(false)
+  payoutsEnabled      Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  shop                Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+  @@index([stripeAccountId])
+  @@index([status])
+}
+
+model SellerPayout {
+  id               String              @id @default(cuid())
+  shopId           String
+  stripePayoutId   String?             @unique
+  amount           Float
+  currency         String              @default("usd")
+  status           String              @default("pending")
+  periodStart      DateTime
+  periodEnd        DateTime
+  transactionCount Int
+  metadata         Json?
+  failureReason    String?
+  createdAt        DateTime            @default(now())
+  paidAt           DateTime?
+  shop             Shop                @relation(fields: [shopId], references: [id])
+  payments         Payment[]
+  paymentItems     PaymentPayoutItem[]
+
+  @@index([shopId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([paidAt])
+}
+
+model PaymentPayoutItem {
+  id        String       @id @default(cuid())
+  payoutId  String
+  paymentId String
+  amount    Float
+  payout    SellerPayout @relation(fields: [payoutId], references: [id], onDelete: Cascade)
+  payment   Payment      @relation(fields: [paymentId], references: [id])
+
+  @@unique([payoutId, paymentId])
+  @@index([payoutId])
+  @@index([paymentId])
+}
+
+model SellerBalance {
+  id               String   @id @default(cuid())
+  shopId           String   @unique
+  availableBalance Float    @default(0)
+  pendingBalance   Float    @default(0)
+  totalEarned      Float    @default(0)
+  totalPaidOut     Float    @default(0)
+  updatedAt        DateTime @updatedAt
+  shop             Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+}
+
+model TaxRecord {
+  id              String   @id @default(cuid())
+  orderId         String
+  state           String
+  taxAmount       Float
+  taxRate         Float
+  taxableAmount   Float
+  taxJurisdiction Json?
+  createdAt       DateTime @default(now())
+  order           Order    @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@index([state])
+  @@index([createdAt])
+}
+
+model Seller1099Data {
+  id                String   @id @default(cuid())
+  shopId            String
+  taxYear           Int
+  grossPayments     Float    @default(0)
+  transactionCount  Int      @default(0)
+  reportingRequired Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  shop              Shop     @relation(fields: [shopId], references: [id])
+
+  @@unique([shopId, taxYear])
+  @@index([shopId])
+  @@index([taxYear])
+  @@index([reportingRequired])
 }
 
 enum ApplicationStatus {

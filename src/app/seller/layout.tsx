@@ -6,7 +6,16 @@
 
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Package, Settings, BarChart3, Leaf, ShoppingBag, LayoutList } from 'lucide-react';
+import {
+  Home,
+  Package,
+  Settings,
+  BarChart3,
+  Leaf,
+  ShoppingBag,
+  LayoutList,
+  DollarSign,
+} from 'lucide-react';
 import { SiteHeaderWrapper } from '@/components/layout/site-header-wrapper';
 import { cn } from '@/lib/utils';
 import { isSeller } from '@/lib/auth';
@@ -16,6 +25,7 @@ const navigation = [
   { name: 'Products', href: '/seller/products', icon: Package },
   { name: 'Sections', href: '/seller/sections', icon: LayoutList },
   { name: 'Orders', href: '/seller/orders', icon: ShoppingBag },
+  { name: 'Finance', href: '/seller/finance', icon: DollarSign },
   { name: 'Analytics', href: '/seller/analytics', icon: BarChart3 },
   { name: 'Settings', href: '/seller/settings', icon: Settings },
 ];

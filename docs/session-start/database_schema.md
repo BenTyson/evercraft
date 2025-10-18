@@ -1,7 +1,7 @@
 # Database Schema
 
-**Last Updated:** October 14, 2025
-**Status:** ✅ Production - Fully implemented with 32 models (Analytics-optimized with Eco-Impact V2 + Shop Sections + Product Variants)
+**Last Updated:** October 17, 2025
+**Status:** ✅ Production - Fully implemented with 38 models (Analytics-optimized with Eco-Impact V2 + Shop Sections + Product Variants + Seller Finance)
 
 > **DOCUMENTATION POLICY:**
 >
@@ -129,11 +129,17 @@ model Shop {
   nonprofit           Nonprofit? @relation(fields: [nonprofitId], references: [id])
   products            Product[]
   orderItems          OrderItem[]  // ⚠️ Use this to access orders (NOT "orders" relation)
+  payments            Payment[]  // Session 17: Per-shop payment tracking
   shippingProfiles    ShippingProfile[]
   promotions          Promotion[]
   sellerReviews       SellerReview[]
   analyticsEvents     AnalyticsEvent[]
   ecoProfile          ShopEcoProfile?  // Eco-Impact V2 (shop sustainability practices)
+  sections            ShopSection[]  // Shop sections for product organization
+  connectedAccount    SellerConnectedAccount?  // Session 17: Stripe Connect account
+  payouts             SellerPayout[]  // Session 17: Payout history
+  balance             SellerBalance?  // Session 17: Real-time balance
+  tax1099Data         Seller1099Data[]  // Session 17: 1099-K tracking
 }
 
 enum VerificationStatus {
@@ -434,24 +440,218 @@ model OrderItem {
 
 ### Payments
 
-Payment records (Stripe integration).
+Payment records (Stripe integration). **Session 17:** Enhanced with per-shop tracking and payout linking.
 
 ```prisma
 model Payment {
-  id                    String        @id @default(cuid())
+  id                    String              @id @default(cuid())
   orderId               String
-  stripePaymentIntentId String        @unique
-  amount                Float
-  platformFee           Float
-  sellerPayout          Float
-  nonprofitDonation     Float
-  status                PaymentStatus @default(PENDING)
-  createdAt             DateTime      @default(now())
+  shopId                String              // NEW: Which shop receives this payment
+  stripePaymentIntentId String              @unique
+  amount                Float               // Gross amount for this shop
+  platformFee           Float               // 6.5% of amount
+  sellerPayout          Float               // Amount seller receives (after fees & donations)
+  nonprofitDonation     Float               // Seller's committed donation %
+  status                PaymentStatus       @default(PENDING)
+  payoutId              String?             // NEW: Links to SellerPayout when paid out
+  createdAt             DateTime            @default(now())
 
   // Relations
-  order                 Order         @relation(fields: [orderId], references: [id])
+  order                 Order               @relation(fields: [orderId], references: [id])
+  shop                  Shop                @relation(fields: [shopId], references: [id])
+  payout                SellerPayout?       @relation(fields: [payoutId], references: [id])
+  payoutItems           PaymentPayoutItem[]
 }
 ```
+
+**⚠️ Important Notes:**
+
+- **Multi-shop orders**: One order can have multiple Payment records (one per shop)
+- **Platform fee**: Currently 6.5% of gross amount
+- **Seller payout**: `amount - platformFee - nonprofitDonation`
+- **Payout tracking**: `payoutId` links to actual bank transfer when processed
+
+---
+
+### SellerConnectedAccount
+
+Stripe Connect accounts for seller payouts. **Session 17:** Part of seller finance system.
+
+```prisma
+model SellerConnectedAccount {
+  id                  String   @id @default(cuid())
+  shopId              String   @unique
+  stripeAccountId     String   @unique
+  accountType         String   @default("express")
+  payoutSchedule      String   @default("weekly")  // daily/weekly/monthly
+  status              String   @default("pending")
+  onboardingCompleted Boolean  @default(false)
+  chargesEnabled      Boolean  @default(false)
+  payoutsEnabled      Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relations
+  shop                Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+}
+```
+
+**Features:**
+
+- **Stripe Express accounts**: Recommended account type for marketplace sellers
+- **Payout scheduling**: daily, weekly (default: Monday), or monthly
+- **Status tracking**: pending, onboarding, active, disabled
+- **Verification flags**: onboardingCompleted, chargesEnabled, payoutsEnabled
+
+---
+
+### SellerPayout
+
+Payout records for seller bank transfers. **Session 17:** Part of seller finance system.
+
+```prisma
+model SellerPayout {
+  id               String              @id @default(cuid())
+  shopId           String
+  stripePayoutId   String?             @unique
+  amount           Float
+  currency         String              @default("usd")
+  status           String              @default("pending")  // pending/processing/paid/failed
+  periodStart      DateTime
+  periodEnd        DateTime
+  transactionCount Int
+  metadata         Json?
+  failureReason    String?
+  createdAt        DateTime            @default(now())
+  paidAt           DateTime?
+
+  // Relations
+  shop             Shop                @relation(fields: [shopId], references: [id])
+  payments         Payment[]
+  paymentItems     PaymentPayoutItem[]
+}
+```
+
+**Features:**
+
+- **Payout tracking**: Links multiple Payment records to bank transfer
+- **Period-based**: Each payout covers a date range (e.g., weekly periods)
+- **Stripe integration**: stripePayoutId links to actual Stripe payout
+- **Transaction count**: Number of payments included in payout
+
+---
+
+### PaymentPayoutItem
+
+Junction table linking payments to payouts. **Session 17:** Part of seller finance system.
+
+```prisma
+model PaymentPayoutItem {
+  id        String       @id @default(cuid())
+  paymentId String
+  payoutId  String
+  amount    Float
+  createdAt DateTime     @default(now())
+
+  // Relations
+  payment   Payment      @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  payout    SellerPayout @relation(fields: [payoutId], references: [id], onDelete: Cascade)
+
+  @@unique([paymentId, payoutId])
+}
+```
+
+**Features:**
+
+- **Many-to-many relationship**: Payment can be split across payouts, payout includes many payments
+- **Amount tracking**: Portion of payment included in this payout
+
+---
+
+### SellerBalance
+
+Real-time balance tracking for sellers. **Session 17:** Part of seller finance system.
+
+```prisma
+model SellerBalance {
+  id               String   @id @default(cuid())
+  shopId           String   @unique
+  availableBalance Float    @default(0)  // Ready for payout
+  pendingBalance   Float    @default(0)  // Processing, not yet available
+  totalEarned      Float    @default(0)  // All-time earnings
+  totalPaidOut     Float    @default(0)  // All-time payouts
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  shop             Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+}
+```
+
+**Features:**
+
+- **Automatic updates**: Balance updated on each payment (see `/src/actions/payment.ts`)
+- **Available balance**: Amount ready for next payout
+- **Pending balance**: Orders being processed or held
+- **Lifetime metrics**: totalEarned and totalPaidOut track all-time performance
+
+---
+
+### TaxRecord
+
+Tax compliance tracking (architecture-ready, not fully implemented). **Session 17:** Part of seller finance system.
+
+```prisma
+model TaxRecord {
+  id              String   @id @default(cuid())
+  orderId         String
+  shopId          String
+  state           String?
+  taxRate         Float
+  taxAmount       Float
+  taxType         String   // sales_tax, vat, etc.
+  remittanceDate  DateTime?
+  remittanceId    String?
+  createdAt       DateTime @default(now())
+}
+```
+
+**Features:**
+
+- **US marketplace facilitator laws**: Platform collects and remits sales tax
+- **Per-order tracking**: Links tax to specific order and shop
+- **Remittance tracking**: When and where tax was remitted
+- **Future Stripe Tax integration**: Schema ready for Stripe Tax API
+
+---
+
+### Seller1099Data
+
+1099-K tax form data tracking (US tax compliance). **Session 17:** Part of seller finance system.
+
+```prisma
+model Seller1099Data {
+  id                String   @id @default(cuid())
+  shopId            String
+  taxYear           Int
+  grossPayments     Float    @default(0)
+  transactionCount  Int      @default(0)
+  reportingRequired Boolean  @default(false)  // $20k OR 200 transactions
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  shop              Shop     @relation(fields: [shopId], references: [id])
+
+  @@unique([shopId, taxYear])
+}
+```
+
+**Features:**
+
+- **1099-K thresholds**: $20,000 gross payments OR 200 transactions (IRS requirements)
+- **Annual tracking**: One record per shop per tax year
+- **Auto-updated**: Updated on each payment (see `/src/actions/payment.ts:113-129`)
+- **Reporting flag**: Automatically set when threshold reached
 
 ---
 
@@ -792,6 +992,12 @@ model ShopSectionProduct {
 
 ### Additional Entities
 
+- **SellerConnectedAccount** - Stripe Connect accounts for payouts ✅ FULLY IMPLEMENTED (Session 17)
+- **SellerPayout** - Payout records for bank transfers ✅ FULLY IMPLEMENTED (Session 17)
+- **PaymentPayoutItem** - Junction table linking payments to payouts ✅ FULLY IMPLEMENTED (Session 17)
+- **SellerBalance** - Real-time balance tracking ✅ FULLY IMPLEMENTED (Session 17)
+- **Seller1099Data** - 1099-K tax form data tracking ✅ FULLY IMPLEMENTED (Session 17)
+- **TaxRecord** - Tax compliance tracking (architecture-ready, not fully implemented)
 - **Addresses** - User shipping/billing addresses ✅ FULLY IMPLEMENTED (Session 14)
 - **NotificationPreferences** - User notification settings ✅ FULLY IMPLEMENTED (Session 14)
 - **Favorites** - Saved products ✅ FULLY IMPLEMENTED
@@ -1075,4 +1281,31 @@ All models include appropriate indexes for:
 - Added indexes for filtering and performance
 - Non-breaking migration (legacy `ecoScore` and `ecoAttributes` preserved)
 
-**Status:** ✅ Complete - All 32 models operational (includes Product Variants system - Sessions 12-13)
+**Migration #8: `add_seller_finance_system` (October 17, 2025) - Session 17**
+
+- Added `SellerConnectedAccount` model for Stripe Connect integration:
+  - Fields: stripeAccountId, accountType, payoutSchedule, status, onboarding flags
+  - Unique constraint on shopId (one-to-one with Shop)
+  - Indexes on shopId, stripeAccountId
+- Added `SellerPayout` model for payout tracking:
+  - Fields: stripePayoutId, amount, status, periodStart, periodEnd, transactionCount
+  - Relations to Shop, Payment[], PaymentPayoutItem[]
+- Added `PaymentPayoutItem` junction table for payment-to-payout linking:
+  - Many-to-many relationship between Payment and SellerPayout
+  - Unique constraint on [paymentId, payoutId]
+- Added `SellerBalance` model for real-time balance tracking:
+  - Fields: availableBalance, pendingBalance, totalEarned, totalPaidOut
+  - Unique constraint on shopId (one-to-one with Shop)
+- Added `TaxRecord` model for tax compliance (architecture-ready):
+  - Fields: orderId, shopId, state, taxRate, taxAmount, taxType, remittance tracking
+- Added `Seller1099Data` model for 1099-K tracking:
+  - Fields: taxYear, grossPayments, transactionCount, reportingRequired
+  - Unique constraint on [shopId, taxYear]
+- Updated `Payment` model with new fields:
+  - Added `shopId` field with foreign key to Shop
+  - Added `payoutId` field with foreign key to SellerPayout
+  - Added `platformFee` and `sellerPayout` fields for fee calculations
+- Updated `Shop` model with new finance relations:
+  - Added `payments`, `connectedAccount`, `payouts`, `balance`, `tax1099Data` relations
+
+**Status:** ✅ Complete - All 38 models operational (includes Seller Finance System - Session 17)

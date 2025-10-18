@@ -10,20 +10,34 @@ description: |
 
 # Revenue Calculation Patterns
 
-## Core Principle: Use OrderItem for Revenue
+## Core Principle: Use OrderItem for Revenue, Payment for Payout Tracking
 
-**Evercraft is a marketplace:**
+**Evercraft is a marketplace (Session 17 Update):**
 
 - One Order can have items from multiple shops
 - OrderItem links items to their shops
+- **Payment records track per-shop fees and payouts** (Session 17)
 - Revenue is calculated at OrderItem level, not Order level
+- Payout tracking uses Payment model (one Payment per shop per order)
 
 ```
 Order (buyer places one order)
 ├── OrderItem (from Shop A) → Shop A revenue
 ├── OrderItem (from Shop A) → Shop A revenue
-└── OrderItem (from Shop B) → Shop B revenue
+├── OrderItem (from Shop B) → Shop B revenue
+└── Payment records (Session 17):
+    ├── Payment (Shop A) - tracks platformFee, sellerPayout, nonprofitDonation
+    └── Payment (Shop B) - tracks platformFee, sellerPayout, nonprofitDonation
 ```
+
+**Session 17 Payment Model:**
+
+- `Payment.shopId` - Which shop receives payment
+- `Payment.amount` - Gross amount for this shop (sum of OrderItems)
+- `Payment.platformFee` - 6.5% of amount
+- `Payment.nonprofitDonation` - Seller's committed donation %
+- `Payment.sellerPayout` - Amount seller receives: `amount - platformFee - nonprofitDonation`
+- `Payment.payoutId` - Links to SellerPayout when paid out
 
 ## ⚠️ ORDER vs ORDERITEM Subtotal Ambiguity
 
@@ -76,6 +90,49 @@ const revenue = result._sum.subtotal || 0;
 ```
 
 ## Shop Revenue Calculation
+
+### Method 1: Using Payment Model (Session 17 - Recommended for Payout Tracking)
+
+**Use this for:**
+
+- Seller payout calculations
+- Platform fee tracking
+- Financial overview dashboard
+- 1099-K reporting
+
+```typescript
+export async function getShopRevenueFromPayments(shopId: string) {
+  // Get paid payments for this shop
+  const payments = await db.payment.findMany({
+    where: {
+      shopId,
+      status: 'PAID',
+    },
+  });
+
+  return {
+    grossRevenue: payments.reduce((sum, p) => sum + p.amount, 0),
+    platformFees: payments.reduce((sum, p) => sum + p.platformFee, 0),
+    donations: payments.reduce((sum, p) => sum + p.nonprofitDonation, 0),
+    sellerPayouts: payments.reduce((sum, p) => sum + p.sellerPayout, 0),
+  };
+}
+```
+
+**Benefits:**
+
+- ✅ Accurate fee tracking (6.5% platform fee)
+- ✅ Direct payout amounts (no calculation needed)
+- ✅ Links to actual Stripe payouts via `payoutId`
+- ✅ Matches seller finance dashboard
+
+### Method 2: Using OrderItem Model (Legacy - Still Valid for Analytics)
+
+**Use this for:**
+
+- Historical analytics (pre-Session 17 data)
+- Customer behavior analysis
+- Product performance metrics
 
 ### Seller Revenue (Single Shop)
 
@@ -346,6 +403,116 @@ export async function getRevenueWithGrowth(shopId: string) {
 }
 ```
 
+## Session 17: Seller Finance Patterns
+
+### Seller Balance Tracking
+
+```typescript
+export async function getSellerBalance(shopId: string) {
+  const balance = await db.sellerBalance.findUnique({
+    where: { shopId },
+  });
+
+  return {
+    availableBalance: balance?.availableBalance || 0, // Ready for payout
+    pendingBalance: balance?.pendingBalance || 0, // Processing
+    totalEarned: balance?.totalEarned || 0, // All-time
+    totalPaidOut: balance?.totalPaidOut || 0, // All-time
+  };
+}
+```
+
+**Note:** SellerBalance is automatically updated in `/src/actions/payment.ts` on each payment.
+
+### Seller Transaction History
+
+```typescript
+export async function getSellerTransactions(shopId: string, limit = 100) {
+  const payments = await db.payment.findMany({
+    where: { shopId },
+    include: {
+      order: {
+        select: {
+          orderNumber: true,
+          createdAt: true,
+          buyer: {
+            select: { name: true, email: true },
+          },
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+  });
+
+  return payments.map((payment) => ({
+    id: payment.id,
+    orderNumber: payment.order.orderNumber,
+    orderDate: payment.order.createdAt,
+    buyerName: payment.order.buyer.name,
+    buyerEmail: payment.order.buyer.email,
+    amount: payment.amount, // Gross
+    platformFee: payment.platformFee, // 6.5%
+    nonprofitDonation: payment.nonprofitDonation,
+    sellerPayout: payment.sellerPayout, // Net to seller
+    status: payment.status,
+    payoutId: payment.payoutId, // null if not yet paid out
+  }));
+}
+```
+
+### Seller Payout History
+
+```typescript
+export async function getSellerPayouts(shopId: string, limit = 50) {
+  const payouts = await db.sellerPayout.findMany({
+    where: { shopId },
+    include: {
+      _count: {
+        select: { payments: true },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+  });
+
+  return payouts.map((payout) => ({
+    id: payout.id,
+    amount: payout.amount,
+    status: payout.status, // pending/processing/paid/failed
+    transactionCount: payout.transactionCount,
+    periodStart: payout.periodStart,
+    periodEnd: payout.periodEnd,
+    createdAt: payout.createdAt,
+    paidAt: payout.paidAt,
+    stripePayoutId: payout.stripePayoutId,
+  }));
+}
+```
+
+### 1099-K Tax Tracking
+
+```typescript
+export async function getSeller1099Data(shopId: string, year?: number) {
+  const taxYear = year || new Date().getFullYear();
+
+  const data = await db.seller1099Data.findUnique({
+    where: {
+      shopId_taxYear: { shopId, taxYear },
+    },
+  });
+
+  return {
+    taxYear,
+    grossPayments: data?.grossPayments || 0,
+    transactionCount: data?.transactionCount || 0,
+    reportingRequired: data?.reportingRequired || false, // $20k OR 200 transactions
+  };
+}
+```
+
+**Note:** Seller1099Data is automatically updated in `/src/actions/payment.ts:113-129` on each payment.
+
 ## Common Mistakes to Avoid
 
 ### ❌ Mistake 1: Using Order.subtotal for Shop Revenue
@@ -422,13 +589,40 @@ const uniqueCustomers = new Set(items.map((i) => i.order.buyerId)).size;
 
 When calculating revenue:
 
-- [ ] Use `OrderItem.subtotal`, not `Order.subtotal`
+- [ ] **Session 17:** Use `Payment` model for seller payouts and fee tracking
+- [ ] Use `OrderItem.subtotal`, not `Order.subtotal` for revenue analytics
 - [ ] Pre-fetch order IDs to avoid JOIN ambiguity
-- [ ] Filter by `paymentStatus: 'PAID'`
+- [ ] Filter by `paymentStatus: 'PAID'` (OrderItem) or `status: 'PAID'` (Payment)
 - [ ] Filter by `shopId` for seller revenue
 - [ ] Handle null aggregates (use `|| 0`)
 - [ ] Use Set for unique counts (not Prisma distinct)
 - [ ] Calculate MoM growth with previous period
 - [ ] Include donation amounts separately
+- [ ] **Session 17:** Access `platformFee` and `sellerPayout` from Payment model
+- [ ] **Session 17:** Link payouts via `Payment.payoutId` → `SellerPayout.id`
 
 This ensures accurate, consistent revenue calculations across the platform.
+
+## Session 17 Summary
+
+**Payment Model Changes:**
+
+- Added `shopId` field (foreign key to Shop)
+- Added `platformFee` field (6.5% of amount)
+- Added `sellerPayout` field (amount - fees - donations)
+- Added `payoutId` field (links to SellerPayout)
+
+**New Models:**
+
+- `SellerBalance` - Real-time balance tracking (auto-updated)
+- `SellerPayout` - Payout records with period tracking
+- `SellerConnectedAccount` - Stripe Connect integration
+- `Seller1099Data` - Tax year tracking (auto-updated)
+- `PaymentPayoutItem` - Junction table for payment-payout linking
+- `TaxRecord` - Tax compliance (architecture-ready)
+
+**Key Files:**
+
+- `/src/actions/payment.ts` - Auto-updates SellerBalance and Seller1099Data
+- `/src/actions/seller-finance.ts` - Finance dashboard queries
+- `/src/actions/stripe-connect.ts` - Stripe Connect management

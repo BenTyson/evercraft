@@ -51,6 +51,12 @@ Sellers can manage products, orders, analytics, marketing, and shop settings thr
 | ---------------- | --------------------------------- | -------------------------------------------- |
 | `/seller/orders` | `/src/app/seller/orders/page.tsx` | Seller order management with shipping labels |
 
+### Finance Management
+
+| Route             | File                               | Lines | Description                                                               |
+| ----------------- | ---------------------------------- | ----- | ------------------------------------------------------------------------- |
+| `/seller/finance` | `/src/app/seller/finance/page.tsx` | 45    | Finance dashboard with 4 tabs (Overview, Payouts, Transactions, Settings) |
+
 ### Analytics & Tools
 
 | Route               | File                                 | Lines | Description                                                 |
@@ -203,6 +209,58 @@ Sellers can manage products, orders, analytics, marketing, and shop settings thr
 
 - **File:** `/src/app/seller/marketing/promotion-form-wrapper.tsx` (20 lines)
 - **Purpose:** Modal wrapper component
+
+### Finance Components
+
+**Finance Tabs** ⭐
+
+- **File:** `/src/app/seller/finance/finance-tabs.tsx` (120 lines)
+- **Purpose:** 4-tab navigation for finance management
+- **Tabs:** Overview, Payouts, Transactions, Settings
+- **Pattern:** Client component managing tab state, receives data from server page
+- **Session 17:** Complete finance system implementation
+
+**Overview Tab**
+
+- **File:** `/src/app/seller/finance/overview-tab.tsx` (165 lines)
+- **Purpose:** Financial overview dashboard
+- **Features:**
+  - Balance cards (Available, Pending, This Week, Total Earned)
+  - Next payout schedule and amount
+  - Stats grid (Total Orders, Total Payouts, Total Paid Out)
+  - Earnings breakdown (Gross - Fees - Donations = Net)
+
+**Payouts Tab**
+
+- **File:** `/src/app/seller/finance/payouts-tab.tsx` (128 lines)
+- **Purpose:** Payout history table
+- **Features:**
+  - Payout history with date, period, orders, amount, status
+  - Status badges (paid, pending, processing, failed)
+  - Export CSV functionality (UI ready, backend TBD)
+  - Info card explaining payout schedule (weekly Mondays, 5-7 day transfer)
+
+**Transactions Tab**
+
+- **File:** `/src/app/seller/finance/transactions-tab.tsx` (170 lines)
+- **Purpose:** Detailed transaction breakdown
+- **Features:**
+  - Transaction table with order #, date, customer, gross, fees, donations, net
+  - Payment status badges
+  - Payout status (Upcoming vs Paid Out)
+  - Transaction summary card with totals
+  - Export CSV functionality (UI ready, backend TBD)
+
+**Settings Tab (Finance)**
+
+- **File:** `/src/app/seller/finance/settings-tab.tsx` (250 lines)
+- **Purpose:** Stripe Connect and payout preferences
+- **Features:**
+  - Bank account connection via Stripe Connect
+  - Payout schedule selector (daily/weekly/monthly)
+  - Stripe dashboard access link
+  - 1099-K tax information display
+  - Handles Stripe not configured scenario with info message
 
 ### Settings Components
 
@@ -420,6 +478,77 @@ await db.productVariant.createMany({
 
 **See full documentation:** [shop-sections.md](../features/shop-sections.md)
 
+### Finance Actions
+
+**File:** `/src/actions/seller-finance.ts` (450 lines) ⭐ Session 17
+
+| Function                                      | Purpose                                         |
+| --------------------------------------------- | ----------------------------------------------- |
+| `getSellerBalance()`                          | Get current seller balance (available, pending) |
+| `getSellerPayoutHistory(limit = 50)`          | Get payout history with status                  |
+| `getSellerTransactions(limit = 100)`          | Get detailed transaction list with fees         |
+| `getSellerFinancialOverview()`                | Dashboard stats (balances, earnings, payouts)   |
+| `getSeller1099Data(year?)`                    | Tax year data (defaults to current year)        |
+| `getPayoutDetails(payoutId)`                  | Single payout with included payments            |
+| `exportTransactionsCSV(startDate?, endDate?)` | Export transactions to CSV (TBD)                |
+
+**Features:**
+
+- ✅ Real-time balance tracking
+- ✅ Transaction history with full fee breakdown
+- ✅ Payout history with period tracking
+- ✅ 1099-K threshold monitoring ($20k or 200 transactions)
+- ✅ Next payout date calculation (every Monday)
+- ✅ Earnings breakdown (gross, fees, donations, net)
+- ✅ Shop ownership verification on all queries
+
+**Stripe Connect Actions**
+
+**File:** `/src/actions/stripe-connect.ts` (380 lines) ⭐ Session 17
+
+| Function                                      | Purpose                                  |
+| --------------------------------------------- | ---------------------------------------- |
+| `createConnectAccount()`                      | Initialize Stripe Express account        |
+| `createOnboardingLink(returnUrl, refreshUrl)` | Generate Stripe onboarding URL           |
+| `getConnectedAccountStatus()`                 | Check verification and capabilities      |
+| `createLoginLink()`                           | Access Stripe Express dashboard          |
+| `updatePayoutSchedule(schedule)`              | Set daily/weekly/monthly payout schedule |
+| `getPayoutSchedule()`                         | Get current payout schedule              |
+
+**Features:**
+
+- ✅ Stripe Connect Express account setup
+- ✅ Onboarding flow with redirect URLs
+- ✅ Account status verification (charges/payouts enabled)
+- ✅ Payout schedule management
+- ✅ Handles Stripe not configured scenario
+- ✅ Shop ownership verification on all mutations
+
+**Payment Processing Updates**
+
+**File:** `/src/actions/payment.ts` (enhanced in Session 17)
+
+**Session 17 Enhancements:**
+
+- ✅ Per-shop Payment record creation (one Payment per shop in order)
+- ✅ Platform fee calculation (6.5% of shop subtotal)
+- ✅ Automatic SellerBalance updates on payment
+- ✅ Automatic Seller1099Data tracking (annual aggregation)
+- ✅ Fee structure:
+  - Platform fee: 6.5% from seller
+  - Stripe processing: 2.9% + $0.30 from buyer
+  - Nonprofit donation: Seller's committed %
+  - Seller payout: `subtotal - platformFee - donation`
+
+**Critical Pattern - Multi-shop Orders:**
+
+```typescript
+// One order with items from 2 shops creates 2 Payment records
+Order #12345
+├── Payment (Shop A) - $50 subtotal, $3.25 platform fee, $1 donation, $45.75 payout
+└── Payment (Shop B) - $30 subtotal, $1.95 platform fee, $0.60 donation, $27.45 payout
+```
+
 ### Eco-Profile Actions
 
 **File:** `/src/actions/shop-eco-profile.ts` (205 lines)
@@ -555,6 +684,75 @@ await db.productVariant.createMany({
 **See:** [database_schema.md#shopecoprofole](../session-start/database_schema.md#shopecoprofole)
 **See also:** [eco-impact-v2.md#shop-eco-profile](../features/eco-impact-v2.md#shop-eco-profile)
 
+### Payment
+
+**File:** `schema.prisma`
+**Relations:** Order, Shop (Session 17: added shopId), SellerPayout (Session 17: added payoutId)
+**Key Fields:**
+
+- `shopId` - Which shop receives this payment (Session 17)
+- `amount` - Gross amount for this shop
+- `platformFee` - 6.5% of amount (Session 17)
+- `sellerPayout` - Amount seller receives after fees & donations (Session 17)
+- `nonprofitDonation` - Seller's committed donation %
+- `payoutId` - Links to SellerPayout when paid out (Session 17)
+
+**See:** [database_schema.md#payments](../session-start/database_schema.md#payments)
+
+### SellerConnectedAccount
+
+**File:** `schema.prisma`
+**Relation:** Shop (one-to-one)
+**Key Fields:**
+
+- `stripeAccountId` - Stripe Express account ID
+- `accountType` - "express" (default)
+- `payoutSchedule` - "daily"/"weekly"/"monthly"
+- `status` - "pending"/"onboarding"/"active"/"disabled"
+- Verification flags: `onboardingCompleted`, `chargesEnabled`, `payoutsEnabled`
+
+**See:** [database_schema.md#sellerconnectedaccount](../session-start/database_schema.md#sellerconnectedaccount)
+
+### SellerPayout
+
+**File:** `schema.prisma`
+**Relations:** Shop, Payment[] (via payoutId), PaymentPayoutItem[]
+**Key Fields:**
+
+- `stripePayoutId` - Stripe payout object ID
+- `amount` - Total payout amount
+- `status` - "pending"/"processing"/"paid"/"failed"
+- `periodStart`, `periodEnd` - Date range for included payments
+- `transactionCount` - Number of payments in payout
+
+**See:** [database_schema.md#sellerpayout](../session-start/database_schema.md#sellerpayout)
+
+### SellerBalance
+
+**File:** `schema.prisma`
+**Relation:** Shop (one-to-one)
+**Key Fields:**
+
+- `availableBalance` - Ready for payout
+- `pendingBalance` - Processing, not yet available
+- `totalEarned` - All-time earnings
+- `totalPaidOut` - All-time payouts
+
+**See:** [database_schema.md#sellerbalance](../session-start/database_schema.md#sellerbalance)
+
+### Seller1099Data
+
+**File:** `schema.prisma`
+**Relation:** Shop (one-to-many, one per tax year)
+**Key Fields:**
+
+- `taxYear` - Tax year (e.g., 2025)
+- `grossPayments` - Total gross payments for year
+- `transactionCount` - Total transactions for year
+- `reportingRequired` - True if $20k or 200 transactions reached
+
+**See:** [database_schema.md#seller1099data](../session-start/database_schema.md#seller1099data)
+
 ---
 
 ## Common Patterns & Gotchas
@@ -667,6 +865,7 @@ await db.productVariant.create({
 - Product management (CRUD with variants)
 - Section management (CRUD with assignment)
 - Order management (status updates, shipping labels)
+- Finance dashboard (balance, payouts, transactions, Stripe Connect) - Session 17
 - Analytics dashboard (revenue, customers, impact)
 - Marketing tools (promotions, discounts)
 - Settings (profile, branding, eco-profile, nonprofit, account)
@@ -675,6 +874,8 @@ await db.productVariant.create({
 ### 🚧 Partially Implemented
 
 - Shipping profiles (view-only, CRUD deferred)
+- Payout processing (UI complete, actual Stripe payout automation TBD)
+- CSV exports (UI ready, backend implementation TBD)
 
 ### 📋 Not Yet Implemented
 

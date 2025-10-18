@@ -1,7 +1,7 @@
 'use server';
 
 import { auth, clerkClient } from '@clerk/nextjs/server';
-import { stripe } from '@/lib/stripe';
+import { stripe, isStripeConfigured } from '@/lib/stripe';
 import { db } from '@/lib/db';
 import { ShippingAddress } from '@/store/checkout-store';
 import { sendOrderConfirmationEmail } from '@/lib/email';
@@ -29,6 +29,10 @@ interface CreatePaymentIntentInput {
 
 export async function createPaymentIntent(input: CreatePaymentIntentInput) {
   try {
+    if (!isStripeConfigured || !stripe) {
+      return { success: false, error: 'Payment processing is not configured' };
+    }
+
     const { userId } = await auth();
 
     if (!userId) {
@@ -37,7 +41,6 @@ export async function createPaymentIntent(input: CreatePaymentIntentInput) {
 
     // Calculate totals
     const subtotal = input.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const donationAmount = subtotal * 0.05; // 5% donation
 
     // Calculate shipping dynamically
     const shippingResult = calculateCartShipping({
@@ -51,7 +54,12 @@ export async function createPaymentIntent(input: CreatePaymentIntentInput) {
     });
     const shipping = shippingResult.shippingCost;
 
-    const total = subtotal + donationAmount + shipping;
+    // Stripe processing fee (2.9% + $0.30) - passed to buyer
+    const stripeProcessingFee = (subtotal + shipping) * 0.029 + 0.3;
+
+    // Total includes subtotal, shipping, and processing fee
+    // Platform fee (6.5%) and nonprofit donation come from seller portion
+    const total = subtotal + shipping + stripeProcessingFee;
 
     // Create Stripe payment intent
     const paymentIntent = await stripe.paymentIntents.create({
@@ -63,8 +71,8 @@ export async function createPaymentIntent(input: CreatePaymentIntentInput) {
       metadata: {
         userId,
         subtotal: subtotal.toFixed(2),
-        donation: donationAmount.toFixed(2),
         shipping: shipping.toFixed(2),
+        processingFee: stripeProcessingFee.toFixed(2),
       },
     });
 
@@ -89,6 +97,10 @@ interface CreateOrderInput {
 
 export async function createOrder(input: CreateOrderInput) {
   try {
+    if (!isStripeConfigured || !stripe) {
+      return { success: false, error: 'Payment processing is not configured' };
+    }
+
     const { userId } = await auth();
 
     if (!userId) {
@@ -107,7 +119,6 @@ export async function createOrder(input: CreateOrderInput) {
 
     // Calculate totals
     const subtotal = input.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const donationAmount = subtotal * 0.05;
 
     // Calculate shipping dynamically
     const shippingResult = calculateCartShipping({
@@ -121,7 +132,11 @@ export async function createOrder(input: CreateOrderInput) {
     });
     const shipping = shippingResult.shippingCost;
 
-    const total = subtotal + donationAmount + shipping;
+    // Stripe processing fee (2.9% + $0.30)
+    const stripeProcessingFee = (subtotal + shipping) * 0.029 + 0.3;
+
+    // Total includes processing fee but not platform fee (platform fee comes from seller portion)
+    const total = subtotal + shipping + stripeProcessingFee;
 
     // Check inventory availability for all products/variants
     const inventoryCheck = await Promise.all(
@@ -196,6 +211,44 @@ export async function createOrder(input: CreateOrderInput) {
     // Generate unique order number
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
 
+    // Group items by shop to calculate per-shop payments
+    const itemsByShop = new Map<
+      string,
+      { shopId: string; items: typeof input.items; subtotal: number; donationPercentage: number }
+    >();
+
+    // First pass: get shop info and group items
+    for (const item of input.items) {
+      const product = await db.product.findUnique({
+        where: { id: item.productId },
+        select: {
+          shopId: true,
+          shop: {
+            select: {
+              donationPercentage: true,
+            },
+          },
+        },
+      });
+
+      if (!product) continue;
+
+      const existing = itemsByShop.get(product.shopId);
+      const itemSubtotal = item.price * item.quantity;
+
+      if (existing) {
+        existing.items.push(item);
+        existing.subtotal += itemSubtotal;
+      } else {
+        itemsByShop.set(product.shopId, {
+          shopId: product.shopId,
+          items: [item],
+          subtotal: itemSubtotal,
+          donationPercentage: product.shop.donationPercentage,
+        });
+      }
+    }
+
     // Create order with transaction to ensure atomicity
     const order = await db.$transaction(async (tx) => {
       // Create the order
@@ -208,13 +261,118 @@ export async function createOrder(input: CreateOrderInput) {
           shippingCost: shipping,
           tax: 0,
           total,
-          nonprofitDonation: donationAmount,
+          nonprofitDonation: 0, // Will be sum of all shop donations
           shippingAddress: input.shippingAddress as unknown as Prisma.InputJsonValue,
           billingAddress: input.shippingAddress as unknown as Prisma.InputJsonValue,
           paymentStatus: 'PAID',
           paymentIntentId: input.paymentIntentId,
           updatedAt: new Date(),
         },
+      });
+
+      let totalNonprofitDonation = 0;
+
+      // Create Payment records for each shop
+      for (const [shopId, shopData] of itemsByShop.entries()) {
+        // Calculate shop-specific values
+        const shopSubtotal = shopData.subtotal;
+        const shopDonation = shopSubtotal * (shopData.donationPercentage / 100);
+        const shopPlatformFee = shopSubtotal * platformFeeRate;
+        const shopPayout = shopSubtotal - shopPlatformFee - shopDonation;
+
+        totalNonprofitDonation += shopDonation;
+
+        // Create Payment record
+        await tx.payment.create({
+          data: {
+            orderId: newOrder.id,
+            shopId: shopId,
+            stripePaymentIntentId: input.paymentIntentId,
+            amount: shopSubtotal,
+            platformFee: shopPlatformFee,
+            sellerPayout: shopPayout,
+            nonprofitDonation: shopDonation,
+            status: 'PAID',
+          },
+        });
+
+        // Update or create SellerBalance
+        const existingBalance = await tx.sellerBalance.findUnique({
+          where: { shopId },
+        });
+
+        if (existingBalance) {
+          await tx.sellerBalance.update({
+            where: { shopId },
+            data: {
+              availableBalance: {
+                increment: shopPayout,
+              },
+              totalEarned: {
+                increment: shopPayout,
+              },
+            },
+          });
+        } else {
+          await tx.sellerBalance.create({
+            data: {
+              shopId,
+              availableBalance: shopPayout,
+              pendingBalance: 0,
+              totalEarned: shopPayout,
+              totalPaidOut: 0,
+            },
+          });
+        }
+
+        // Update Seller1099Data for the current year
+        const currentYear = new Date().getFullYear();
+        const existing1099 = await tx.seller1099Data.findUnique({
+          where: {
+            shopId_taxYear: {
+              shopId,
+              taxYear: currentYear,
+            },
+          },
+        });
+
+        if (existing1099) {
+          await tx.seller1099Data.update({
+            where: {
+              shopId_taxYear: {
+                shopId,
+                taxYear: currentYear,
+              },
+            },
+            data: {
+              grossPayments: {
+                increment: shopSubtotal,
+              },
+              transactionCount: {
+                increment: 1,
+              },
+              reportingRequired:
+                existing1099.grossPayments + shopSubtotal >= 20000 ||
+                existing1099.transactionCount + 1 >= 200,
+            },
+          });
+        } else {
+          await tx.seller1099Data.create({
+            data: {
+              shopId,
+              taxYear: currentYear,
+              grossPayments: shopSubtotal,
+              transactionCount: 1,
+              reportingRequired: shopSubtotal >= 20000,
+            },
+          });
+        }
+      }
+
+      // Update order with total nonprofit donation
+      await tx.order.update({
+        where: { id: newOrder.id },
+        data: { nonprofitDonation: totalNonprofitDonation },
       });
 
       // Create order items and decrement inventory
@@ -227,6 +385,11 @@ export async function createOrder(input: CreateOrderInput) {
 
         if (!product) continue;
 
+        const shopData = itemsByShop.get(product.shopId);
+        if (!shopData) continue;
+
+        const itemDonation = item.price * item.quantity * (shopData.donationPercentage / 100);
+
         // Create order item
         await tx.orderItem.create({
           data: {
@@ -237,7 +400,7 @@ export async function createOrder(input: CreateOrderInput) {
             quantity: item.quantity,
             priceAtPurchase: item.price,
             subtotal: item.price * item.quantity,
-            donationAmount: item.price * item.quantity * 0.05,
+            donationAmount: itemDonation,
           },
         });
 
