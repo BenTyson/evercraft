@@ -2,7 +2,7 @@
 
 Complete reference for admin-related routes, components, and server actions.
 
-**Last Updated:** October 17, 2025
+**Last Updated:** October 21, 2025 (Session 18: Financial Dashboard Modernization)
 
 ---
 
@@ -39,10 +39,10 @@ Administrators manage users, sellers, nonprofits, products, and platform analyti
 
 ### Analytics & Financial Pages
 
-| Route              | File                                | Lines | Description                                        |
-| ------------------ | ----------------------------------- | ----- | -------------------------------------------------- |
-| `/admin/analytics` | `/src/app/admin/analytics/page.tsx` | 115   | Business Intelligence with 6 tabs and 14 analytics |
-| `/admin/financial` | `/src/app/admin/financial/page.tsx` | 343   | CFO view: transactions, payouts, payment analytics |
+| Route              | File                                | Lines | Description                                                               |
+| ------------------ | ----------------------------------- | ----- | ------------------------------------------------------------------------- |
+| `/admin/analytics` | `/src/app/admin/analytics/page.tsx` | 115   | Business Intelligence with 6 tabs and 14 analytics                        |
+| `/admin/financial` | `/src/app/admin/financial/page.tsx` | 67    | Platform-wide financial management with 4 tabs (Session 18 modernization) |
 
 ---
 
@@ -118,21 +118,66 @@ Administrators manage users, sellers, nonprofits, products, and platform analyti
   - Feature product (homepage, collections)
   - Eco-score override
 
-### Financial Components
+### Financial Components (Session 18 Modernization)
 
-**Financial Overview**
+**Financial Tabs System**
 
-- **File:** `/src/app/admin/financial/page.tsx` (343 lines)
-- **Purpose:** CFO view with transactions, accounting, money flow
-- **Features:**
-  - Revenue, fees, payouts, donations with MoM growth
-  - Payment analytics (success rate, counts)
-  - Nonprofit donation breakdown table
-  - Recent transactions table with full breakdowns
-  - 12-month revenue trends
-  - Top sellers by revenue
-  - Revenue by category
-  - Payment method breakdown
+- **File:** `/src/app/admin/financial/admin-finance-tabs.tsx` (180 lines)
+- **Purpose:** Tab-based navigation for comprehensive financial management
+- **Architecture:** Mirrors seller finance dashboard styling and UX (forest-dark accent)
+- **Tabs:**
+  1. **Overview** - Platform-wide metrics, balances, fees, nonprofit donations
+  2. **Payouts** - All seller payouts with status tracking and filtering
+  3. **Sellers** - Per-seller balances, Stripe Connect status, drill-down capability
+  4. **Transactions** - Enhanced transaction history with shop breakdown
+
+**Overview Tab** (`admin-overview-tab.tsx`, 227 lines)
+
+- Platform balance cards (Total Available, Pending, Earned, Paid Out)
+- Platform fee metrics (total collected, this month, percentage breakdown)
+- Quick stats (active sellers, pending payouts, failed payments)
+- Payment success rate tracking
+- Top 5 nonprofit recipients with donation totals
+
+**Payouts Tab** (`admin-payouts-tab.tsx`, 234 lines)
+
+- Comprehensive payout table for all sellers
+- Status filtering (paid, pending, processing, failed)
+- Payout details: period, orders count, amount, Stripe payout ID
+- Summary stats (total payouts, paid amount, pending/failed counts)
+- Click-to-view payout details modal
+- Export CSV functionality (UI ready)
+
+**Sellers Tab** (`admin-sellers-tab.tsx`, 239 lines)
+
+- All seller financial overview in sortable table
+- Columns: Available/Pending balance, Total Earned, Paid Out, Payout count
+- Stripe Connect status badges (Active, Pending Setup, Disabled, Not Connected)
+- Platform totals summary cards
+- Sortable by Total Earned or Available Balance
+- Click-to-drill-down into seller's complete financial view
+
+**Transactions Tab** (`admin-transactions-tab.tsx`, 217 lines)
+
+- Enhanced transaction table with 100+ recent transactions
+- Columns: Order #, Date, Shop, Customer, Gross, Platform Fee, Donation, Net, Status
+- Transaction summary card (total gross, fees, donations, net)
+- Shop filtering and breakdown
+- Payout status linkage (shows which payout includes each transaction)
+- Export CSV functionality (UI ready)
+
+**Modal Components**
+
+- **Seller Finance Modal** (`seller-finance-modal.tsx`, 322 lines)
+  - Complete seller financial drill-down with 3 sub-tabs
+  - Shows balance cards, payout history, transaction list
+  - Read-only admin view matching seller's own dashboard
+
+- **Payout Details Modal** (`payout-details-modal.tsx`, 205 lines)
+  - Detailed payout breakdown with all included payments
+  - Stripe payout ID with link to Stripe dashboard
+  - Payment breakdown: gross → fees → donations → net
+  - Failure reason display for failed payouts
 
 ### Analytics Components
 
@@ -238,9 +283,11 @@ Administrators manage users, sellers, nonprofits, products, and platform analyti
 - ✅ Status management
 - ✅ Cascading deletes (variants, images, reviews)
 
-### Financial Analytics Actions
+### Financial Analytics Actions (Session 18 Enhanced)
 
-**File:** `/src/actions/admin-financial.ts` (450+ lines)
+**File:** `/src/actions/admin-financial.ts` (1,167 lines) ⭐ **SESSION 18 MODERNIZATION**
+
+**Legacy Actions (Pre-Session 18):**
 
 | Function                          | Purpose                                           |
 | --------------------------------- | ------------------------------------------------- |
@@ -252,14 +299,37 @@ Administrators manage users, sellers, nonprofits, products, and platform analyti
 | `getPaymentMethodBreakdown()`     | Payment status distribution and success rates     |
 | `getRecentTransactions()`         | Latest 20 payment transactions with details       |
 
-**Features:**
+**New Session 18 Actions (Platform-Wide Management):**
 
-- ✅ Comprehensive financial analytics and reporting
-- ✅ Month-over-month growth calculations
-- ✅ Revenue trends visualization data (12 months)
-- ✅ Top performers tracking (sellers, categories, nonprofits)
-- ✅ Payment success rate monitoring
-- ✅ Transaction history with full breakdowns
+| Function                        | Purpose                                                |
+| ------------------------------- | ------------------------------------------------------ |
+| `getPlatformFinancialMetrics()` | Platform-wide balances, fees, payouts, payment stats   |
+| `getAllSellerBalances()`        | All seller balances with Stripe status and sorting     |
+| `getAllPayouts()`               | Platform-wide payout history with filtering            |
+| `getPayoutDetails()`            | Individual payout with all included payments           |
+| `getSellerFinancialSummary()`   | Seller-specific summary for drill-down                 |
+| `getSellerFinancialDetails()`   | Complete seller financial view (balance, payouts, txs) |
+| `getTransactionsWithFilters()`  | Enhanced transactions with shop/status/date filtering  |
+| `getAllStripeConnectAccounts()` | All Stripe Connect accounts with status tracking       |
+
+**New Features:**
+
+- ✅ Real-time seller balance aggregation across platform
+- ✅ Payout management with status tracking (paid, pending, processing, failed)
+- ✅ Per-seller financial drill-down (admin view of seller's complete finances)
+- ✅ Enhanced transaction filtering (shop, status, date range)
+- ✅ Stripe Connect integration monitoring
+- ✅ Payment-to-payout linkage tracking
+- ✅ Platform fee tracking (total and monthly)
+- ✅ Active seller count (with Stripe payouts enabled)
+
+**Architecture Notes:**
+
+- Integrates with Session 17 Seller Finance System (SellerBalance, SellerPayout models)
+- Uses new Payment model fields (shopId, payoutId, platformFee, sellerPayout)
+- Supports future tax reporting (Seller1099Data, TaxRecord models ready)
+- All actions include admin authorization checks
+- Optimized queries with pagination and indexed lookups
 
 ### Admin Analytics Actions
 

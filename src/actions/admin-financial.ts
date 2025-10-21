@@ -3,6 +3,7 @@
 import { db } from '@/lib/db';
 import { isAdmin } from '@/lib/auth';
 import { startOfMonth, subMonths, eachMonthOfInterval, format } from 'date-fns';
+import { Prisma } from '@prisma/client';
 
 /**
  * Get comprehensive financial overview
@@ -489,6 +490,679 @@ export async function getRecentTransactions(limit = 20) {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to fetch transactions',
+    };
+  }
+}
+
+/**
+ * SESSION 17+ NEW ACTIONS
+ * Admin financial dashboard enhancements
+ */
+
+/**
+ * Get platform-wide financial metrics for Overview tab
+ */
+export async function getPlatformFinancialMetrics() {
+  try {
+    const admin = await isAdmin();
+    if (!admin) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const [platformBalances, payoutStats, paymentStats, sellerCount] = await Promise.all([
+      // Aggregate all seller balances
+      db.sellerBalance.aggregate({
+        _sum: {
+          availableBalance: true,
+          pendingBalance: true,
+          totalEarned: true,
+          totalPaidOut: true,
+        },
+      }),
+
+      // Payout statistics
+      Promise.all([
+        db.sellerPayout.count(),
+        db.sellerPayout.count({ where: { status: 'pending' } }),
+        db.sellerPayout.count({ where: { status: 'failed' } }),
+        db.sellerPayout.aggregate({
+          _sum: { amount: true },
+          where: { status: 'paid' },
+        }),
+      ]),
+
+      // Payment statistics
+      Promise.all([
+        db.payment.count({ where: { status: 'PAID' } }),
+        db.payment.count({ where: { status: 'FAILED' } }),
+        db.payment.aggregate({
+          _sum: { platformFee: true },
+          where: { status: 'PAID' },
+        }),
+        db.payment.aggregate({
+          _sum: { platformFee: true },
+          where: {
+            status: 'PAID',
+            createdAt: { gte: startOfMonth(new Date()) },
+          },
+        }),
+      ]),
+
+      // Active sellers with Stripe Connect
+      db.sellerConnectedAccount.count({
+        where: { status: 'active', payoutsEnabled: true },
+      }),
+    ]);
+
+    const [totalPayouts, pendingPayouts, failedPayouts, totalPaidOut] = payoutStats;
+    const [successfulPayments, failedPayments, totalPlatformFees, thisMonthFees] = paymentStats;
+
+    return {
+      success: true,
+      metrics: {
+        // Platform balances
+        totalAvailableBalance: platformBalances._sum.availableBalance || 0,
+        totalPendingBalance: platformBalances._sum.pendingBalance || 0,
+        totalEarned: platformBalances._sum.totalEarned || 0,
+        totalPaidOut: platformBalances._sum.totalPaidOut || 0,
+
+        // Platform fees
+        totalPlatformFees: totalPlatformFees._sum.platformFee || 0,
+        thisMonthPlatformFees: thisMonthFees._sum.platformFee || 0,
+
+        // Payout stats
+        totalPayouts,
+        pendingPayouts,
+        failedPayouts,
+        totalPayoutAmount: totalPaidOut._sum.amount || 0,
+
+        // Payment stats
+        successfulPayments,
+        failedPayments,
+        paymentSuccessRate:
+          successfulPayments + failedPayments > 0
+            ? (successfulPayments / (successfulPayments + failedPayments)) * 100
+            : 0,
+
+        // Seller stats
+        activeSellers: sellerCount,
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching platform financial metrics:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch platform metrics',
+    };
+  }
+}
+
+/**
+ * Get all seller balances with shop info for Sellers tab
+ */
+export async function getAllSellerBalances(filters?: {
+  sortBy?: 'availableBalance' | 'totalEarned' | 'shopName';
+  order?: 'asc' | 'desc';
+}) {
+  try {
+    const admin = await isAdmin();
+    if (!admin) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const balances = await db.sellerBalance.findMany({
+      include: {
+        shop: {
+          select: {
+            id: true,
+            name: true,
+            logo: true,
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+            connectedAccount: {
+              select: {
+                status: true,
+                payoutsEnabled: true,
+                chargesEnabled: true,
+                stripeAccountId: true,
+                payoutSchedule: true,
+              },
+            },
+            _count: {
+              select: {
+                payouts: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Map and sort
+    const sellers = balances.map((balance) => ({
+      shopId: balance.shop.id,
+      shopName: balance.shop.name,
+      shopLogo: balance.shop.logo,
+      ownerName: balance.shop.user.name,
+      ownerEmail: balance.shop.user.email,
+      availableBalance: balance.availableBalance,
+      pendingBalance: balance.pendingBalance,
+      totalEarned: balance.totalEarned,
+      totalPaidOut: balance.totalPaidOut,
+      payoutCount: balance.shop._count.payouts,
+      stripeStatus: balance.shop.connectedAccount?.status || 'not_connected',
+      payoutsEnabled: balance.shop.connectedAccount?.payoutsEnabled || false,
+      payoutSchedule: balance.shop.connectedAccount?.payoutSchedule || 'weekly',
+      stripeAccountId: balance.shop.connectedAccount?.stripeAccountId,
+    }));
+
+    // Apply sorting
+    const sortBy = filters?.sortBy || 'totalEarned';
+    const order = filters?.order || 'desc';
+
+    sellers.sort((a, b) => {
+      let aVal, bVal;
+
+      if (sortBy === 'shopName') {
+        aVal = a.shopName.toLowerCase();
+        bVal = b.shopName.toLowerCase();
+        return order === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      }
+
+      aVal = a[sortBy] as number;
+      bVal = b[sortBy] as number;
+      return order === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+
+    return {
+      success: true,
+      sellers,
+    };
+  } catch (error) {
+    console.error('Error fetching seller balances:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch seller balances',
+    };
+  }
+}
+
+/**
+ * Get all payouts with filters for Payouts tab
+ */
+export async function getAllPayouts(
+  limit = 100,
+  filters?: {
+    status?: string;
+    shopId?: string;
+    dateRange?: { start: Date; end: Date };
+  }
+) {
+  try {
+    const admin = await isAdmin();
+    if (!admin) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const where: Prisma.SellerPayoutWhereInput = {};
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+
+    if (filters?.shopId) {
+      where.shopId = filters.shopId;
+    }
+
+    if (filters?.dateRange) {
+      where.createdAt = {
+        gte: filters.dateRange.start,
+        lte: filters.dateRange.end,
+      };
+    }
+
+    const payouts = await db.sellerPayout.findMany({
+      where,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        shop: {
+          select: {
+            id: true,
+            name: true,
+            logo: true,
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return {
+      success: true,
+      payouts: payouts.map((payout) => ({
+        id: payout.id,
+        shopId: payout.shopId,
+        shopName: payout.shop.name,
+        shopLogo: payout.shop.logo,
+        ownerName: payout.shop.user.name,
+        ownerEmail: payout.shop.user.email,
+        amount: payout.amount,
+        status: payout.status,
+        transactionCount: payout.transactionCount,
+        periodStart: payout.periodStart,
+        periodEnd: payout.periodEnd,
+        createdAt: payout.createdAt,
+        paidAt: payout.paidAt,
+        stripePayoutId: payout.stripePayoutId,
+        failureReason: payout.failureReason,
+      })),
+    };
+  } catch (error) {
+    console.error('Error fetching payouts:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch payouts',
+    };
+  }
+}
+
+/**
+ * Get detailed payout information with included payments
+ */
+export async function getPayoutDetails(payoutId: string) {
+  try {
+    const admin = await isAdmin();
+    if (!admin) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const payout = await db.sellerPayout.findUnique({
+      where: { id: payoutId },
+      include: {
+        shop: {
+          select: {
+            id: true,
+            name: true,
+            logo: true,
+          },
+        },
+        payments: {
+          include: {
+            order: {
+              select: {
+                orderNumber: true,
+                buyer: {
+                  select: {
+                    name: true,
+                    email: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!payout) {
+      return { success: false, error: 'Payout not found' };
+    }
+
+    return {
+      success: true,
+      payout: {
+        id: payout.id,
+        shopId: payout.shopId,
+        shopName: payout.shop.name,
+        shopLogo: payout.shop.logo,
+        amount: payout.amount,
+        status: payout.status,
+        transactionCount: payout.transactionCount,
+        periodStart: payout.periodStart,
+        periodEnd: payout.periodEnd,
+        createdAt: payout.createdAt,
+        paidAt: payout.paidAt,
+        stripePayoutId: payout.stripePayoutId,
+        failureReason: payout.failureReason,
+        payments: payout.payments.map((payment) => ({
+          id: payment.id,
+          orderNumber: payment.order.orderNumber,
+          buyerName: payment.order.buyer.name || 'Unknown',
+          buyerEmail: payment.order.buyer.email,
+          amount: payment.amount,
+          platformFee: payment.platformFee,
+          nonprofitDonation: payment.nonprofitDonation,
+          sellerPayout: payment.sellerPayout,
+          createdAt: payment.createdAt,
+        })),
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching payout details:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch payout details',
+    };
+  }
+}
+
+/**
+ * Get seller-specific financial summary for drill-down
+ */
+export async function getSellerFinancialSummary(shopId: string) {
+  try {
+    const admin = await isAdmin();
+    if (!admin) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const [shop, balance, payoutCount, thisWeekPayments] = await Promise.all([
+      db.shop.findUnique({
+        where: { id: shopId },
+        select: {
+          id: true,
+          name: true,
+          logo: true,
+          user: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+        },
+      }),
+
+      db.sellerBalance.findUnique({
+        where: { shopId },
+      }),
+
+      db.sellerPayout.count({
+        where: { shopId },
+      }),
+
+      db.payment.aggregate({
+        where: {
+          shopId,
+          status: 'PAID',
+          createdAt: { gte: startOfMonth(new Date()) },
+        },
+        _sum: { sellerPayout: true },
+        _count: true,
+      }),
+    ]);
+
+    if (!shop) {
+      return { success: false, error: 'Shop not found' };
+    }
+
+    return {
+      success: true,
+      summary: {
+        shop: {
+          id: shop.id,
+          name: shop.name,
+          logo: shop.logo,
+          ownerName: shop.user.name,
+          ownerEmail: shop.user.email,
+        },
+        balance: {
+          availableBalance: balance?.availableBalance || 0,
+          pendingBalance: balance?.pendingBalance || 0,
+          totalEarned: balance?.totalEarned || 0,
+          totalPaidOut: balance?.totalPaidOut || 0,
+        },
+        stats: {
+          payoutCount,
+          thisMonthEarnings: thisWeekPayments._sum.sellerPayout || 0,
+          thisMonthOrders: thisWeekPayments._count || 0,
+        },
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching seller financial summary:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch seller summary',
+    };
+  }
+}
+
+/**
+ * Get full seller financial details for detailed modal view
+ */
+export async function getSellerFinancialDetails(shopId: string) {
+  try {
+    const admin = await isAdmin();
+    if (!admin) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const [summary, payouts, transactions] = await Promise.all([
+      getSellerFinancialSummary(shopId),
+
+      db.sellerPayout.findMany({
+        where: { shopId },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      }),
+
+      db.payment.findMany({
+        where: { shopId },
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+        include: {
+          order: {
+            select: {
+              orderNumber: true,
+              createdAt: true,
+              buyer: {
+                select: {
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+    ]);
+
+    if (!summary.success) {
+      return summary;
+    }
+
+    return {
+      success: true,
+      details: {
+        ...summary.summary,
+        payouts: payouts.map((p) => ({
+          id: p.id,
+          amount: p.amount,
+          status: p.status,
+          transactionCount: p.transactionCount,
+          periodStart: p.periodStart,
+          periodEnd: p.periodEnd,
+          createdAt: p.createdAt,
+          paidAt: p.paidAt,
+        })),
+        transactions: transactions.map((t) => ({
+          id: t.id,
+          orderNumber: t.order.orderNumber,
+          orderDate: t.order.createdAt,
+          buyerName: t.order.buyer.name || 'Unknown',
+          buyerEmail: t.order.buyer.email,
+          amount: t.amount,
+          platformFee: t.platformFee,
+          nonprofitDonation: t.nonprofitDonation,
+          sellerPayout: t.sellerPayout,
+          status: t.status,
+          payoutId: t.payoutId,
+          createdAt: t.createdAt,
+        })),
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching seller financial details:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch seller details',
+    };
+  }
+}
+
+/**
+ * Get enhanced transactions with filters for Transactions tab
+ */
+export async function getTransactionsWithFilters(filters?: {
+  shopId?: string;
+  status?: string;
+  dateRange?: { start: Date; end: Date };
+  limit?: number;
+}) {
+  try {
+    const admin = await isAdmin();
+    if (!admin) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const where: Prisma.PaymentWhereInput = {};
+
+    if (filters?.shopId) {
+      where.shopId = filters.shopId;
+    }
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+
+    if (filters?.dateRange) {
+      where.createdAt = {
+        gte: filters.dateRange.start,
+        lte: filters.dateRange.end,
+      };
+    }
+
+    const payments = await db.payment.findMany({
+      where,
+      take: filters?.limit || 100,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        order: {
+          select: {
+            orderNumber: true,
+            buyer: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+        shop: {
+          select: {
+            id: true,
+            name: true,
+            logo: true,
+          },
+        },
+        payout: {
+          select: {
+            id: true,
+            status: true,
+            paidAt: true,
+          },
+        },
+      },
+    });
+
+    return {
+      success: true,
+      transactions: payments.map((payment) => ({
+        id: payment.id,
+        orderNumber: payment.order.orderNumber,
+        shopId: payment.shopId,
+        shopName: payment.shop.name,
+        shopLogo: payment.shop.logo,
+        buyerName: payment.order.buyer.name || 'Unknown',
+        buyerEmail: payment.order.buyer.email,
+        amount: payment.amount,
+        platformFee: payment.platformFee,
+        nonprofitDonation: payment.nonprofitDonation,
+        sellerPayout: payment.sellerPayout,
+        status: payment.status,
+        createdAt: payment.createdAt,
+        payoutId: payment.payoutId,
+        payoutStatus: payment.payout?.status,
+        payoutPaidAt: payment.payout?.paidAt,
+      })),
+    };
+  } catch (error) {
+    console.error('Error fetching transactions:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch transactions',
+    };
+  }
+}
+
+/**
+ * Get all Stripe Connect accounts status
+ */
+export async function getAllStripeConnectAccounts() {
+  try {
+    const admin = await isAdmin();
+    if (!admin) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const accounts = await db.sellerConnectedAccount.findMany({
+      include: {
+        shop: {
+          select: {
+            id: true,
+            name: true,
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return {
+      success: true,
+      accounts: accounts.map((account) => ({
+        shopId: account.shopId,
+        shopName: account.shop.name,
+        ownerName: account.shop.user.name,
+        ownerEmail: account.shop.user.email,
+        stripeAccountId: account.stripeAccountId,
+        status: account.status,
+        payoutSchedule: account.payoutSchedule,
+        onboardingCompleted: account.onboardingCompleted,
+        chargesEnabled: account.chargesEnabled,
+        payoutsEnabled: account.payoutsEnabled,
+        createdAt: account.createdAt,
+        updatedAt: account.updatedAt,
+      })),
+    };
+  } catch (error) {
+    console.error('Error fetching Stripe Connect accounts:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch Stripe accounts',
     };
   }
 }

@@ -1,7 +1,7 @@
 # Evercraft Documentation Router
 
-**Last Updated:** October 17, 2025
-**Total Models:** 38 | **Total Routes:** 28 | **Status:** Session 17 Complete
+**Last Updated:** October 21, 2025
+**Total Models:** 38 | **Total Routes:** 28 | **Status:** Session 18 Complete
 
 > **DOCUMENTATION POLICY:**
 >
@@ -169,8 +169,8 @@ See [TECH_STACK.md](../reference/TECH_STACK.md) for full details and decision lo
 - **Database models:** 32
 - **Migrations:** 8
 - **Lines of code:**
-  - `/src/app/`: ~8,200 lines (Session 17: +782 finance UI)
-  - `/src/actions/`: ~6,230 lines (Session 17: +830 finance actions)
+  - `/src/app/`: ~9,900 lines (Session 17: +782 seller, Session 18: +1,624 admin financial)
+  - `/src/actions/`: ~7,100 lines (Session 17: +830 seller, Session 18: +672 admin financial)
   - `/src/components/`: ~2,660 lines
   - `/src/lib/`: ~730 lines (Session 17: +9 for Stripe optional)
 
@@ -188,10 +188,11 @@ See [TECH_STACK.md](../reference/TECH_STACK.md) for full details and decision lo
 - Order management and fulfillment
 - Reviews and ratings system
 - Seller finance system (balance, payouts, transactions, Stripe Connect) - Session 17
+- Admin financial dashboard (platform-wide balance, payouts, seller monitoring) - Session 18
 
 ### 🚧 In Progress (Phase 8)
 
-- Admin Panel (65% complete)
+- Admin Panel (85% complete)
   - Dashboard metrics ✅
   - User management ✅
   - Nonprofit management ✅

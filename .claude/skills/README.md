@@ -113,6 +113,32 @@ Skills are **model-invoked** capabilities - Claude automatically detects and use
 
 ---
 
+### 6. Admin Financial Queries
+
+**File:** `admin-finance-queries/SKILL.md` (Session 18)
+
+**Auto-activates when:**
+
+- Building admin financial dashboards
+- Monitoring platform-wide seller finances
+- Managing payouts and balances
+- Tracking Stripe Connect accounts
+- Creating admin-only financial reports
+
+**Provides:**
+
+- Admin authorization pattern (`isAdmin()` checks)
+- Platform-wide balance aggregation (SellerBalance)
+- Payout management queries (SellerPayout)
+- Seller financial drill-down patterns
+- Stripe Connect status monitoring
+- Enhanced transaction filtering
+- Payment-to-payout linkage patterns
+
+**Value:** Secure, consistent admin financial queries with proper authorization
+
+---
+
 ## How Skills Work
 
 ### Model-Invoked (Automatic)
@@ -219,7 +245,8 @@ If you can only maintain a few, prioritize:
 2. **variant-image-mapping** - Critical, causes production bugs
 3. **seller-authorization** - Security critical
 4. **revenue-calculations** - Financial accuracy critical
-5. **eco-queries** - Complex but lower priority
+5. **admin-finance-queries** - Admin security & financial accuracy critical (Session 18)
+6. **eco-queries** - Complex but lower priority
 
 ## Questions?
 
