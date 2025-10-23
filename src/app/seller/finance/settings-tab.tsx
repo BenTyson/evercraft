@@ -23,11 +23,17 @@ import { getSeller1099Data } from '@/actions/seller-finance';
 import { ExternalLink, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
 interface ConnectedAccountStatus {
-  connected: boolean;
+  success: boolean;
+  exists?: boolean;
+  connected?: boolean;
+  accountId?: string;
   onboardingCompleted?: boolean;
   chargesEnabled?: boolean;
   payoutsEnabled?: boolean;
   stripeNotConfigured?: boolean;
+  requirementsCurrentlyDue?: string[];
+  requirementsEventuallyDue?: string[];
+  error?: string;
 }
 
 interface Tax1099Data {
@@ -140,7 +146,7 @@ export default function SettingsTabContent() {
     }
   };
 
-  const handleUpdateSchedule = async (newSchedule: string) => {
+  const handleUpdateSchedule = async (newSchedule: 'daily' | 'weekly' | 'monthly') => {
     try {
       const result = await updatePayoutSchedule(newSchedule);
       if (result.success) {
@@ -267,14 +273,14 @@ export default function SettingsTabContent() {
                   View Stripe Dashboard
                 </Button>
 
-                {accountStatus.requirementsCurrentlyDue?.length > 0 && (
+                {(accountStatus.requirementsCurrentlyDue?.length ?? 0) > 0 && (
                   <Button onClick={handleStartOnboarding} disabled={actionLoading}>
                     Update Information
                   </Button>
                 )}
               </div>
 
-              {accountStatus.requirementsCurrentlyDue?.length > 0 && (
+              {(accountStatus.requirementsCurrentlyDue?.length ?? 0) > 0 && (
                 <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950">
                   <p className="text-sm font-medium text-yellow-900 dark:text-yellow-100">
                     Action required

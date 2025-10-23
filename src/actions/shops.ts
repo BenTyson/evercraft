@@ -265,6 +265,63 @@ export async function getShopProducts(
 }
 
 /**
+ * Get shop product categories (for filtering)
+ */
+export async function getShopCategories(shopId: string) {
+  try {
+    const categories = await db.product.groupBy({
+      by: ['categoryId'],
+      where: {
+        shopId,
+        status: 'ACTIVE',
+        categoryId: {
+          not: null,
+        },
+      },
+      _count: {
+        _all: true,
+      },
+    });
+
+    // Fetch category details
+    const categoryIds = categories
+      .map((c) => c.categoryId)
+      .filter((id): id is string => id !== null);
+
+    if (categoryIds.length === 0) {
+      return [];
+    }
+
+    const categoryDetails = await db.category.findMany({
+      where: {
+        id: {
+          in: categoryIds,
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+      },
+    });
+
+    // Merge counts with details
+    return categoryDetails.map((category) => {
+      const count = categories.find((c) => c.categoryId === category.id)?._count._all || 0;
+      return {
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+        productCount: count,
+      };
+    });
+  } catch (error) {
+    console.error('Error fetching shop categories:', error);
+    return [];
+  }
+}
+
+/**
  * Get shop reviews with pagination and filtering
  */
 export async function getShopReviews(

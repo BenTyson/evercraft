@@ -1,6 +1,6 @@
 # Design System
 
-**Last Updated:** October 7, 2025
+**Last Updated:** October 23, 2025
 
 ---
 
@@ -417,6 +417,50 @@ px-2.5 py-0.5 rounded-full text-xs font-medium
 - Use consistent sizes within a section
 - Align with text baseline
 
+### Filter System Components ✅
+
+**Filter Sidebar Pattern (Faire-inspired)**
+
+- **Updated:** Session 20 - UI cleanup to match Faire's clean aesthetic
+- **Layout:** Toggleable sidebar (default hidden), 264px width
+- **Container:** `bg-card rounded-lg border p-5`
+- **Spacing:** Compact `mb-5` between sections, `space-y-1.5` for filter items
+
+**Section Headers:**
+
+```css
+text-sm font-medium tracking-wide uppercase text-muted-foreground
+mb-2.5
+```
+
+**Filter Checkbox Items:**
+
+```css
+flex items-center gap-2.5 py-0.5
+hover:bg-muted/50 transition-colors rounded px-1 -mx-1
+```
+
+**Checkbox Styling:**
+
+```css
+size-4 rounded border-gray-300
+text-forest-dark focus:ring-forest-dark
+```
+
+**Key Principles:**
+
+- Uppercase section headers for clear visual hierarchy
+- Hover states on filter rows (not just checkboxes)
+- Tabular numbers for counts (`tabular-nums` class)
+- Consistent negative margin pattern for hover area (`-mx-1`)
+- Minimal, purposeful design without unnecessary decorations
+
+**Components:**
+
+- `EcoFilterPanel` - Eco attribute filters (Materials, Packaging, Carbon & Origin)
+- `HierarchicalCategoryFilter` - Expandable category tree
+- Individual certification/category checkboxes with counts
+
 ### Review System Components ✅
 
 **StarRating Component**
@@ -779,9 +823,17 @@ module.exports = {
 ### Inspiration
 
 - **Etsy** - Product discovery, checkout flow
-- **Faire** - Clean B2B aesthetic, seller dashboard
+- **Faire** - Clean B2B aesthetic, minimal UI, filter sidebar design (primary influence for Session 20 UI cleanup)
 - **Patagonia** - Eco-brand storytelling
 - **Reformation** - Sustainability transparency
+
+**Design Direction Notes (Session 20):**
+
+- Shifted towards Faire's cleaner, more purposeful aesthetic
+- Removed clutter from browse page and shop pages
+- Simplified filter UI with better spacing and typography
+- Moved search to browse page (removed from global navigation)
+- Emphasized whitespace and minimal design elements
 
 ### Testing Tools
 

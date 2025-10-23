@@ -9,7 +9,7 @@
 import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, Package, Truck, Shield, MessageCircle } from 'lucide-react';
+import { Star, MessageCircle } from 'lucide-react';
 import { EcoBadge } from '@/components/eco/eco-badge';
 import { VariantSelector, type SelectedVariantData } from '@/components/product/variant-selector';
 import { AddToCartButton } from './add-to-cart-button';
@@ -359,21 +359,7 @@ export function ProductInfoClient({ product, isFavorited }: ProductInfoClientPro
           <FavoriteButton productId={product.id} initialIsFavorited={isFavorited} />
         </div>
 
-        {/* Trust Badges */}
-        <div className="grid grid-cols-3 gap-4 border-t pt-6">
-          <div className="text-center">
-            <Shield className="text-eco-dark mx-auto mb-2 size-6" />
-            <p className="text-xs font-semibold">Verified Sustainable</p>
-          </div>
-          <div className="text-center">
-            <Truck className="text-eco-dark mx-auto mb-2 size-6" />
-            <p className="text-xs font-semibold">Free Shipping $50+</p>
-          </div>
-          <div className="text-center">
-            <Package className="text-eco-dark mx-auto mb-2 size-6" />
-            <p className="text-xs font-semibold">Eco Packaging</p>
-          </div>
-        </div>
+        {/* TODO: Add eco-profile based badges section here in future session */}
       </div>
     </div>
   );

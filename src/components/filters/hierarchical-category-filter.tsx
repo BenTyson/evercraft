@@ -67,7 +67,7 @@ export function HierarchicalCategoryFilter({
   }
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-0.5">
       {visibleCategories.map((category) => {
         const isExpanded = expandedCategories.has(category.id);
         const hasChildren = category.children.length > 0;
@@ -78,33 +78,33 @@ export function HierarchicalCategoryFilter({
         return (
           <div key={category.id}>
             {/* Parent Category */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
               {/* Expand/Collapse Button */}
               {hasChildren && childrenWithProducts.length > 0 ? (
                 <button
                   onClick={() => toggleExpanded(category.id)}
-                  className="text-muted-foreground hover:text-foreground flex size-5 shrink-0 items-center justify-center transition-colors"
+                  className="text-muted-foreground hover:text-foreground flex size-6 shrink-0 items-center justify-center transition-colors"
                   aria-label={isExpanded ? 'Collapse' : 'Expand'}
                 >
                   {isExpanded ? (
-                    <ChevronDown className="size-4" />
+                    <ChevronDown className="size-3.5" />
                   ) : (
-                    <ChevronRight className="size-4" />
+                    <ChevronRight className="size-3.5" />
                   )}
                 </button>
               ) : (
-                <div className="size-5 shrink-0" />
+                <div className="size-6 shrink-0" />
               )}
 
               {/* Category Checkbox */}
-              <label className="flex flex-1 cursor-pointer items-center gap-2 py-1">
+              <label className="hover:bg-muted/50 -mx-1 flex flex-1 cursor-pointer items-center gap-2.5 rounded px-1 py-0.5 transition-colors">
                 <input
                   type="checkbox"
                   checked={selectedCategories.includes(category.id)}
                   onChange={() => onToggleCategory(category.id)}
-                  className="accent-forest-dark size-4 shrink-0 rounded"
+                  className="text-forest-dark focus:ring-forest-dark size-4 shrink-0 rounded border-gray-300"
                 />
-                <span className="text-sm">{category.name}</span>
+                <span className="text-foreground text-sm">{category.name}</span>
                 <span className="text-muted-foreground ml-auto text-xs tabular-nums">
                   {totalCount}
                 </span>
@@ -113,16 +113,19 @@ export function HierarchicalCategoryFilter({
 
             {/* Subcategories */}
             {isExpanded && childrenWithProducts.length > 0 && (
-              <div className="mt-1 ml-5 space-y-1 border-l pl-3">
+              <div className="border-border mt-0.5 ml-6 space-y-0.5 border-l pl-2.5">
                 {childrenWithProducts.map((child) => (
-                  <label key={child.id} className="flex cursor-pointer items-center gap-2 py-1">
+                  <label
+                    key={child.id}
+                    className="hover:bg-muted/50 -mx-1 flex cursor-pointer items-center gap-2.5 rounded px-1 py-0.5 transition-colors"
+                  >
                     <input
                       type="checkbox"
                       checked={selectedCategories.includes(child.id)}
                       onChange={() => onToggleCategory(child.id)}
-                      className="accent-forest-dark size-4 shrink-0 rounded"
+                      className="text-forest-dark focus:ring-forest-dark size-4 shrink-0 rounded border-gray-300"
                     />
-                    <span className="text-sm">{child.name}</span>
+                    <span className="text-foreground text-sm">{child.name}</span>
                     <span className="text-muted-foreground ml-auto text-xs tabular-nums">
                       {child.productCount}
                     </span>

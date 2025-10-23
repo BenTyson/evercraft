@@ -1,3 +1,10 @@
+/**
+ * Shop Section Navigation
+ *
+ * Clean tab navigation for shop sections (like Faire's Collections/Bestsellers tabs).
+ * Minimal design with subtle active states.
+ */
+
 'use client';
 
 import Link from 'next/link';
@@ -20,69 +27,78 @@ interface ShopSectionNavProps {
   totalProducts: number;
 }
 
-export function ShopSectionNav({ shopSlug, sections, totalProducts }: ShopSectionNavProps) {
+export function ShopSectionNav({ shopSlug }: ShopSectionNavProps) {
   const searchParams = useSearchParams();
-  const currentSection = searchParams.get('section');
+  const currentTab = searchParams.get('tab');
 
-  // Don't render if no sections
-  if (sections.length === 0) {
-    return null;
-  }
+  // Determine which tab is active
+  const isAllProductsActive = !currentTab;
+  const isBestsellersActive = currentTab === 'bestsellers';
+  const isCollectionsActive = currentTab === 'collections';
+  const isAboutActive = currentTab === 'about';
 
   return (
-    <div className="border-b bg-white/50 backdrop-blur-sm dark:bg-neutral-900/50">
+    <div className="border-b bg-white">
       <div className="container mx-auto px-4">
-        <nav className="scrollbar-hide flex gap-1 overflow-x-auto" aria-label="Shop sections">
+        <nav
+          className="scrollbar-hide -mb-px flex gap-6 overflow-x-auto"
+          aria-label="Shop sections"
+        >
           {/* All Products Tab */}
           <Link
             href={`/shop/${shopSlug}`}
             className={cn(
-              'text-muted-foreground hover:text-foreground relative border-b-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors',
-              !currentSection
-                ? 'border-forest text-forest'
-                : 'hover:border-forest/30 border-transparent'
+              'group relative flex items-center gap-2 border-b-2 py-3 text-sm font-medium whitespace-nowrap transition-colors',
+              isAllProductsActive
+                ? 'border-foreground text-foreground'
+                : 'hover:text-foreground text-muted-foreground border-transparent'
             )}
-            aria-current={!currentSection ? 'page' : undefined}
+            aria-current={isAllProductsActive ? 'page' : undefined}
           >
-            All Products
-            <span
-              className={cn(
-                'ml-2 rounded-full px-2 py-0.5 text-xs',
-                !currentSection ? 'bg-forest/10 text-forest' : 'bg-muted text-muted-foreground'
-              )}
-            >
-              {totalProducts}
-            </span>
+            <span>All Products</span>
           </Link>
 
-          {/* Section Tabs */}
-          {sections.map((section) => {
-            const isActive = currentSection === section.slug;
-            return (
-              <Link
-                key={section.id}
-                href={`/shop/${shopSlug}?section=${section.slug}`}
-                className={cn(
-                  'text-muted-foreground hover:text-foreground relative border-b-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors',
-                  isActive
-                    ? 'border-forest text-forest'
-                    : 'hover:border-forest/30 border-transparent'
-                )}
-                aria-current={isActive ? 'page' : undefined}
-                title={section.description || section.name}
-              >
-                {section.name}
-                <span
-                  className={cn(
-                    'ml-2 rounded-full px-2 py-0.5 text-xs',
-                    isActive ? 'bg-forest/10 text-forest' : 'bg-muted text-muted-foreground'
-                  )}
-                >
-                  {section._count.products}
-                </span>
-              </Link>
-            );
-          })}
+          {/* Bestsellers Tab */}
+          <Link
+            href={`/shop/${shopSlug}?tab=bestsellers`}
+            className={cn(
+              'group relative flex items-center gap-2 border-b-2 py-3 text-sm font-medium whitespace-nowrap transition-colors',
+              isBestsellersActive
+                ? 'border-foreground text-foreground'
+                : 'hover:text-foreground text-muted-foreground border-transparent'
+            )}
+            aria-current={isBestsellersActive ? 'page' : undefined}
+          >
+            <span>Bestsellers</span>
+          </Link>
+
+          {/* Collections Tab */}
+          <Link
+            href={`/shop/${shopSlug}?tab=collections`}
+            className={cn(
+              'group relative flex items-center gap-2 border-b-2 py-3 text-sm font-medium whitespace-nowrap transition-colors',
+              isCollectionsActive
+                ? 'border-foreground text-foreground'
+                : 'hover:text-foreground text-muted-foreground border-transparent'
+            )}
+            aria-current={isCollectionsActive ? 'page' : undefined}
+          >
+            <span>Collections</span>
+          </Link>
+
+          {/* About Tab */}
+          <Link
+            href={`/shop/${shopSlug}?tab=about`}
+            className={cn(
+              'group relative flex items-center gap-2 border-b-2 py-3 text-sm font-medium whitespace-nowrap transition-colors',
+              isAboutActive
+                ? 'border-foreground text-foreground'
+                : 'hover:text-foreground text-muted-foreground border-transparent'
+            )}
+            aria-current={isAboutActive ? 'page' : undefined}
+          >
+            <span>About</span>
+          </Link>
         </nav>
       </div>
     </div>

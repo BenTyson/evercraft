@@ -16,12 +16,11 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Search, ShoppingCart, User, Menu, X, Leaf, Heart, MessageCircle } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Leaf, Heart, MessageCircle } from 'lucide-react';
 import { UserButton, useUser } from '@clerk/nextjs';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useCartStore } from '@/store/cart-store';
 
 interface SiteHeaderProps {
@@ -125,16 +124,6 @@ export function SiteHeader({ databaseRole, unreadMessageCount = 0 }: SiteHeaderP
           )}
         </nav>
 
-        {/* Desktop Search */}
-        <div className="relative hidden max-w-md flex-1 px-8 md:block">
-          <Search className="text-muted-foreground absolute top-1/2 left-11 size-4 -translate-y-1/2" />
-          <Input
-            type="search"
-            placeholder="Search eco-friendly products..."
-            className="w-full pl-9"
-          />
-        </div>
-
         {/* Desktop Actions */}
         <div className="hidden items-center gap-3 md:flex">
           {isLoaded && (
@@ -215,12 +204,6 @@ export function SiteHeader({ databaseRole, unreadMessageCount = 0 }: SiteHeaderP
       {isMobileMenuOpen && (
         <div className="border-t md:hidden">
           <div className="container mx-auto space-y-4 px-4 py-4">
-            {/* Mobile Search */}
-            <div className="relative">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-              <Input type="search" placeholder="Search products..." className="w-full pl-9" />
-            </div>
-
             {/* Mobile Navigation Links */}
             <nav className="flex flex-col space-y-3">
               <Link

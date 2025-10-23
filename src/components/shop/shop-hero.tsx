@@ -4,13 +4,15 @@
  * Two distinct layouts:
  * - WITHOUT banner: Clean horizontal header (intentional, complete)
  * - WITH banner: Full hero with overlaying logo (premium, visual)
+ *
+ * Simplified for Faire-inspired clean aesthetic.
  */
 
 'use client';
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShieldCheck, Calendar, MessageCircle } from 'lucide-react';
+import { ShieldCheck, MessageCircle, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@clerk/nextjs';
 
@@ -22,7 +24,6 @@ interface ShopHeroProps {
   isVerified: boolean;
   createdAt: Date;
   bio: string | null;
-  productCount: number;
   reviewCount: number;
   averageRating: number;
 }
@@ -35,7 +36,6 @@ export function ShopHero({
   isVerified,
   createdAt,
   bio,
-  productCount,
   reviewCount,
   averageRating,
 }: ShopHeroProps) {
@@ -51,65 +51,69 @@ export function ShopHero({
   if (!bannerImage) {
     // Clean horizontal header layout (no banner)
     return (
-      <div className="border-b bg-neutral-50/50">
-        <div className="container mx-auto px-4 py-8 md:py-12">
-          <div className="flex flex-col items-start gap-6 md:flex-row md:items-center">
+      <div className="border-b bg-white">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-start gap-4 md:items-center">
             {/* Logo */}
-            <div className="relative size-20 flex-shrink-0 overflow-hidden rounded-full border-2 border-white bg-white shadow-md md:size-24">
+            <div className="relative size-16 flex-shrink-0 overflow-hidden rounded-full border bg-white shadow-sm md:size-20">
               {logo ? (
-                <Image src={logo} alt={`${name} logo`} fill className="object-cover" sizes="96px" />
+                <Image src={logo} alt={`${name} logo`} fill className="object-cover" sizes="80px" />
               ) : (
-                <div className="bg-eco-light text-forest flex size-full items-center justify-center text-3xl font-bold">
+                <div className="bg-eco-light text-forest flex size-full items-center justify-center text-2xl font-bold">
                   {name.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
 
             {/* Shop Details */}
-            <div className="flex-1">
-              <div className="mb-2 flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-bold md:text-3xl">{name}</h1>
+            <div className="min-w-0 flex-1">
+              <div className="mb-1 flex flex-wrap items-center gap-2">
+                <h1 className="text-xl font-bold md:text-2xl">{name}</h1>
                 {isVerified && (
-                  <div className="bg-eco-light text-forest-dark flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold">
-                    <ShieldCheck className="size-4" />
-                    Verified
+                  <div className="bg-eco-light text-forest-dark flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium">
+                    <ShieldCheck className="size-3" />
+                    <span>Verified</span>
                   </div>
                 )}
               </div>
 
-              {/* Meta info */}
-              <div className="text-muted-foreground mb-2 flex flex-wrap items-center gap-2 text-sm md:gap-3">
-                <div className="flex items-center gap-1.5">
-                  <Calendar className="size-4" />
-                  <span>{memberSince}</span>
-                </div>
-                <span>·</span>
-                <span>{productCount} products</span>
-                {reviewCount > 0 && (
+              {/* Meta info - compact inline format */}
+              <div className="text-muted-foreground mb-2 flex flex-wrap items-center gap-2 text-sm">
+                {reviewCount > 0 ? (
                   <>
-                    <span>·</span>
-                    <span>
-                      ⭐ {averageRating.toFixed(1)} ({reviewCount} reviews)
+                    <span className="flex items-center gap-1">
+                      <span className="text-yellow-500">★</span>
+                      <span className="text-foreground font-medium">
+                        {averageRating.toFixed(1)}
+                      </span>
+                      <span>({reviewCount})</span>
                     </span>
+                    <span>·</span>
                   </>
-                )}
+                ) : null}
+                <span>{memberSince}</span>
               </div>
 
               {/* Bio */}
               {bio && (
-                <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">{bio}</p>
+                <p className="text-muted-foreground mb-3 max-w-2xl text-sm leading-relaxed">
+                  {bio}
+                </p>
               )}
+            </div>
 
-              {/* Contact Button */}
+            {/* Action Buttons */}
+            <div className="flex flex-shrink-0 items-center gap-2">
+              <Button variant="outline" size="sm">
+                <Heart className="mr-1.5 size-4" />
+                Follow
+              </Button>
               {showContactButton && (
-                <div className="mt-4">
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/messages/${userId}`}>
-                      <MessageCircle className="mr-2 size-4" />
-                      Contact Shop Owner
-                    </Link>
-                  </Button>
-                </div>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href={`/messages/${userId}`}>
+                    <MessageCircle className="size-4" />
+                  </Link>
+                </Button>
               )}
             </div>
           </div>
@@ -120,7 +124,7 @@ export function ShopHero({
 
   // Full hero layout with banner image
   return (
-    <div className="relative">
+    <div>
       {/* Banner Image */}
       <div className="relative h-48 overflow-hidden md:h-64">
         <Image
@@ -131,78 +135,72 @@ export function ShopHero({
           priority
           sizes="100vw"
         />
-        {/* Overlay gradient for better text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/60" />
       </div>
 
-      {/* Shop Info */}
-      <div className="relative container mx-auto px-4">
-        <div className="-mt-16 md:-mt-20">
-          <div className="flex flex-col items-start gap-4 md:flex-row md:items-end">
+      {/* Shop Info - Below Banner */}
+      <div className="border-b bg-white">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-start gap-4 md:items-center">
             {/* Logo */}
-            <div className="relative size-32 overflow-hidden rounded-full border-4 border-white bg-white shadow-lg md:size-40">
+            <div className="relative size-16 flex-shrink-0 overflow-hidden rounded-full border bg-white shadow-sm md:size-20">
               {logo ? (
-                <Image
-                  src={logo}
-                  alt={`${name} logo`}
-                  fill
-                  className="object-cover"
-                  sizes="160px"
-                />
+                <Image src={logo} alt={`${name} logo`} fill className="object-cover" sizes="80px" />
               ) : (
-                <div className="bg-eco-light text-forest flex size-full items-center justify-center text-4xl font-bold md:text-5xl">
+                <div className="bg-eco-light text-forest flex size-full items-center justify-center text-2xl font-bold">
                   {name.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
 
             {/* Shop Details */}
-            <div className="flex-1 pb-6">
-              <div className="mb-2 flex flex-wrap items-center gap-2">
-                <h1 className="text-3xl font-bold md:text-4xl">{name}</h1>
+            <div className="min-w-0 flex-1">
+              <div className="mb-1 flex flex-wrap items-center gap-2">
+                <h1 className="text-xl font-bold md:text-2xl">{name}</h1>
                 {isVerified && (
-                  <div className="bg-eco-light text-forest-dark flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold">
-                    <ShieldCheck className="size-4" />
-                    Verified
+                  <div className="bg-eco-light text-forest-dark flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium">
+                    <ShieldCheck className="size-3" />
+                    <span>Verified</span>
                   </div>
                 )}
               </div>
 
-              {/* Meta info */}
-              <div className="text-muted-foreground mb-3 flex flex-wrap items-center gap-3 text-sm md:gap-4 md:text-base">
-                <div className="flex items-center gap-1.5">
-                  <Calendar className="size-4" />
-                  <span>{memberSince}</span>
-                </div>
-                <span>·</span>
-                <span>{productCount} products</span>
-                {reviewCount > 0 && (
+              {/* Meta info - compact inline format */}
+              <div className="text-muted-foreground mb-2 flex flex-wrap items-center gap-2 text-sm">
+                {reviewCount > 0 ? (
                   <>
-                    <span>·</span>
-                    <span>
-                      ⭐ {averageRating.toFixed(1)} ({reviewCount} reviews)
+                    <span className="flex items-center gap-1">
+                      <span className="text-yellow-500">★</span>
+                      <span className="text-foreground font-medium">
+                        {averageRating.toFixed(1)}
+                      </span>
+                      <span>({reviewCount})</span>
                     </span>
+                    <span>·</span>
                   </>
-                )}
+                ) : null}
+                <span>{memberSince}</span>
               </div>
 
               {/* Bio */}
               {bio && (
-                <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed md:text-base">
+                <p className="text-muted-foreground mb-3 max-w-2xl text-sm leading-relaxed">
                   {bio}
                 </p>
               )}
+            </div>
 
-              {/* Contact Button */}
+            {/* Action Buttons */}
+            <div className="flex flex-shrink-0 items-center gap-2">
+              <Button variant="outline" size="sm">
+                <Heart className="mr-1.5 size-4" />
+                Follow
+              </Button>
               {showContactButton && (
-                <div className="mt-4">
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/messages/${userId}`}>
-                      <MessageCircle className="mr-2 size-4" />
-                      Contact Shop Owner
-                    </Link>
-                  </Button>
-                </div>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href={`/messages/${userId}`}>
+                    <MessageCircle className="size-4" />
+                  </Link>
+                </Button>
               )}
             </div>
           </div>

@@ -2,7 +2,7 @@
 
 Complete reference for buyer-facing routes, components, and flows.
 
-**Last Updated:** October 17, 2025
+**Last Updated:** October 23, 2025
 
 ---
 
@@ -27,7 +27,7 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
 | -------------------- | ------------------------------------- | ----- | ----------------------------------------------------- |
 | `/`                  | `/src/app/page.tsx`                   | 203   | Homepage with hero, featured products, impact stats   |
 | `/home`              | `/src/app/home/page.tsx`              | 331   | Alternative homepage layout                           |
-| `/browse`            | `/src/app/browse/page.tsx`            | 436   | Product catalog with 13 eco-filters, sorting, search  |
+| `/browse`            | `/src/app/browse/page.tsx`            | 632   | Product catalog with 13 eco-filters, sorting, search  |
 | `/products/[id]`     | `/src/app/products/[id]/page.tsx`     | 444   | Product detail with eco-profile, reviews, variants    |
 | `/shop/[slug]`       | `/src/app/shop/[slug]/page.tsx`       | 268   | Shop storefront (products, story, reviews, nonprofit) |
 | `/categories`        | `/src/app/categories/page.tsx`        | 104   | Category browsing with visual grid layout             |
@@ -37,10 +37,11 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
 **Browse Page Features:**
 
 - 13 eco-filters (see [Eco Impact V2](../features/eco-impact-v2.md#browse-filters))
-- Minimum eco-completeness filter (0-100%)
-- Sort options (relevance, price, newest, eco-score)
-- Search with pagination
-- Grid view with product cards
+- Horizontal category bar with expandable subcategories
+- Toggleable sidebar filters (default hidden, Faire-inspired aesthetic)
+- Sort options (featured, price, rating, newest)
+- Large search bar with descriptive placeholder
+- Grid view with product cards (browse variant - minimal, clean design)
 
 **Product Detail Page Features:**
 
@@ -148,17 +149,41 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
 
 ## Components
 
+### Navigation Components
+
+**SiteHeader**
+
+- **Purpose:** Main site navigation
+- **File:** `/src/components/layout/site-header.tsx` (333 lines)
+- **Features:**
+  - Sticky positioning on scroll
+  - Logo and primary navigation links
+  - Cart icon with item count badge
+  - Messages icon with unread count badge
+  - Favorites icon (authenticated users)
+  - User account menu / Sign-in button
+  - Mobile hamburger menu with full navigation
+  - Role-based navigation (Seller Dashboard, Admin links)
+  - **Removed:** Desktop search bar (Session 20 - search moved to browse page)
+  - **Removed:** Mobile search bar (Session 20 - search moved to browse page)
+
 ### Product Discovery Components
 
 **Product Card**
 
 - **Purpose:** Product display in grids
+- **File:** `/src/components/eco/product-card.tsx` (303 lines)
+- **Variants:** `default`, `shop`, `browse`
 - **Features:**
-  - Primary image (hover shows second image)
-  - Title, price, eco-badge
-  - Seller name (linked)
-  - Favorite icon (heart)
-  - Quick view button
+  - Primary image with lazy loading
+  - Title, price, compare-at price
+  - Eco-badges (conditionally shown based on variant)
+  - Seller name with contact button (conditionally shown)
+  - Heart favorite icon (overlaid on image top-right)
+  - Quick Add button (only on default variant)
+  - Product ratings (only on default variant)
+  - Variant display: "From $X" for products with variants
+  - Clean, Faire-inspired aesthetic
 
 **Product Grid**
 
@@ -170,13 +195,21 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
 
 **Filter Sidebar**
 
-- **Purpose:** Product filtering
+- **Purpose:** Product filtering on browse page
+- **File:** `/src/components/eco/eco-filter-panel.tsx` (163 lines)
+- **File:** `/src/components/filters/hierarchical-category-filter.tsx` (139 lines)
+- **UI Pattern:** Toggleable sidebar (default hidden), Faire-inspired clean aesthetic
 - **Features:**
-  - 13 eco-filters (see [Eco Impact](../features/eco-impact-v2.md))
-  - Price range slider
-  - Category/subcategory (hierarchical)
-  - On sale checkbox
-  - In stock only checkbox
+  - 13 eco-filters organized by groups (Materials, Packaging, Carbon & Origin)
+  - Hierarchical category filter with expandable subcategories
+  - Certifications filter with product counts
+  - Uppercase section headers with muted color
+  - Hover states on checkboxes for better UX
+  - Compact spacing and consistent styling
+  - Clear all button
+  - Active filter chips with remove option
+  - **Removed:** Minimum eco-completeness slider (Session 20)
+  - **Removed:** Price range slider (not implemented)
 
 **Sort Dropdown**
 
@@ -435,9 +468,9 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
 **Features:**
 
 - ✅ 13 eco-filters: organic, recycled, vegan, biodegradable, fairTrade, plasticFree, recyclable, compostable, minimal, carbonNeutral, local, madeToOrder, renewableEnergy
-- ✅ Minimum eco-completeness filter (0-100%)
 - ✅ Includes eco-profile data in queries
 - ✅ Includes shop eco-profile tier and completeness
+- ✅ Sort options: featured, price-low, price-high, rating, newest
 
 **See:** [eco-impact-v2.md#browse-filters](../features/eco-impact-v2.md#browse-filters)
 

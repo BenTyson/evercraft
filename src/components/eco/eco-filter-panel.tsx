@@ -14,12 +14,8 @@
 'use client';
 
 import * as React from 'react';
-import { X, SlidersHorizontal } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { Badge } from '@/components/ui/badge';
 
 export interface EcoFilters {
   // Materials
@@ -91,15 +87,8 @@ export interface EcoFilterPanelProps extends Omit<React.ComponentProps<'div'>, '
   showClearAll?: boolean;
 }
 
-function EcoFilterPanel({
-  filters,
-  onFilterChange,
-  resultCount,
-  showClearAll = true,
-  className,
-  ...props
-}: EcoFilterPanelProps) {
-  const [isExpanded, setIsExpanded] = React.useState(true);
+function EcoFilterPanel({ filters, onFilterChange, className, ...props }: EcoFilterPanelProps) {
+  const isExpanded = true;
 
   // Group filters by category
   const groupedFilters = FILTER_OPTIONS.reduce(
@@ -113,9 +102,6 @@ function EcoFilterPanel({
     {} as Record<string, FilterOption[]>
   );
 
-  // Count active filters
-  const activeCount = Object.values(filters).filter((v) => v === true).length;
-
   // Toggle a filter
   const toggleFilter = (key: keyof EcoFilters) => {
     onFilterChange({
@@ -124,51 +110,28 @@ function EcoFilterPanel({
     });
   };
 
-  // Clear all filters
-  const clearAll = () => {
-    onFilterChange({});
-  };
-
-  // Get active filter labels
-  const activeFilters = FILTER_OPTIONS.filter((opt) => filters[opt.key] === true);
-
   return (
-    <div className={cn('space-y-6', className)} {...props}>
-      {/* Completeness slider */}
-      {isExpanded && (
-        <div className="space-y-2">
-          <label className="text-sm font-medium">
-            Min. Eco-Info: {filters.minCompleteness || 0}%
-          </label>
-          <Slider
-            value={[filters.minCompleteness || 0]}
-            onValueChange={(value) => onFilterChange({ ...filters, minCompleteness: value[0] })}
-            min={0}
-            max={100}
-            step={10}
-            className="w-full"
-          />
-          <p className="text-muted-foreground text-xs">
-            Show products with at least {filters.minCompleteness || 0}% eco-info complete
-          </p>
-        </div>
-      )}
-
+    <div className={cn('space-y-5', className)} {...props}>
       {/* Filter groups */}
       {isExpanded &&
         Object.entries(groupedFilters).map(([group, options]) => (
           <div key={group}>
-            <h4 className="mb-3 text-sm font-semibold">{group}</h4>
-            <div className="space-y-2">
+            <h4 className="text-muted-foreground mb-2.5 text-sm font-medium tracking-wide uppercase">
+              {group}
+            </h4>
+            <div className="space-y-1.5">
               {options.map((option) => (
-                <label key={option.key} className="flex cursor-pointer items-center gap-2">
+                <label
+                  key={option.key}
+                  className="hover:bg-muted/50 -mx-1 flex cursor-pointer items-center gap-2.5 rounded px-1 py-0.5 transition-colors"
+                >
                   <input
                     type="checkbox"
                     checked={filters[option.key] === true}
                     onChange={() => toggleFilter(option.key)}
-                    className="accent-forest-dark size-4 rounded"
+                    className="text-forest-dark focus:ring-forest-dark size-4 rounded border-gray-300"
                   />
-                  <span className="text-sm">{option.label}</span>
+                  <span className="text-foreground text-sm">{option.label}</span>
                 </label>
               ))}
             </div>

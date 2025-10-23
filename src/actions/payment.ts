@@ -9,6 +9,9 @@ import { calculateCartShipping } from '@/lib/shipping';
 import { Prisma } from '@/generated/prisma';
 import { syncUserToDatabase } from '@/lib/auth';
 
+// Platform fee rate (6.5%)
+const platformFeeRate = 0.065;
+
 interface CartItem {
   id: string;
   productId: string;

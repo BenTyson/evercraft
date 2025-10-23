@@ -80,6 +80,13 @@ export interface ProductCardProps extends Omit<React.ComponentProps<'div'>, 'chi
    */
   isFavorited?: boolean;
   /**
+   * Display variant:
+   * - "default": shows all elements
+   * - "shop": hides seller info, rating, and quick add (on shop pages)
+   * - "browse": hides eco badges, quick add, and ratings; shows seller name only
+   */
+  variant?: 'default' | 'shop' | 'browse';
+  /**
    * Callbacks
    */
   onFavoriteClick?: () => void;
@@ -95,6 +102,7 @@ function ProductCard({
   rating,
   reviewCount = 0,
   isFavorited = false,
+  variant = 'default',
   onFavoriteClick,
   onQuickAddClick,
   onProductClick,
@@ -131,34 +139,53 @@ function ProductCard({
       {...props}
     >
       {/* Product Image */}
-      <button
-        type="button"
-        className="focus:ring-forest-dark relative aspect-[4/3] w-full cursor-pointer overflow-hidden bg-neutral-100 focus:ring-2 focus:ring-offset-2 focus:outline-none dark:bg-neutral-800"
-        onClick={onProductClick}
-        aria-label={`View ${product.title}`}
-      >
-        <Image
-          src={product.image}
-          alt={product.imageAlt || product.title}
-          fill
-          className={cn(
-            'object-cover transition-all duration-500 group-hover:scale-105',
-            imageLoaded ? 'opacity-100' : 'opacity-0'
-          )}
-          onLoad={() => setImageLoaded(true)}
-          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-        />
+      <div className="relative">
+        <button
+          type="button"
+          className="focus:ring-forest-dark relative aspect-[4/3] w-full cursor-pointer overflow-hidden bg-neutral-100 focus:ring-2 focus:ring-offset-2 focus:outline-none dark:bg-neutral-800"
+          onClick={onProductClick}
+          aria-label={`View ${product.title}`}
+        >
+          <Image
+            src={product.image}
+            alt={product.imageAlt || product.title}
+            fill
+            className={cn(
+              'object-cover transition-all duration-500 group-hover:scale-105',
+              imageLoaded ? 'opacity-100' : 'opacity-0'
+            )}
+            onLoad={() => setImageLoaded(true)}
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+          />
 
-        {/* Loading skeleton */}
-        {!imageLoaded && (
-          <div className="absolute inset-0 animate-pulse bg-neutral-200 dark:bg-neutral-700" />
-        )}
-      </button>
+          {/* Loading skeleton */}
+          {!imageLoaded && (
+            <div className="absolute inset-0 animate-pulse bg-neutral-200 dark:bg-neutral-700" />
+          )}
+        </button>
+
+        {/* Favorite Button - Overlaid on image */}
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className={cn(
+            'absolute top-2 right-2 z-10 bg-white/90 shadow-sm backdrop-blur-sm transition-colors hover:bg-white',
+            isFavorited && 'text-pink-600 hover:bg-pink-50 hover:text-pink-700'
+          )}
+          onClick={(e) => {
+            e.stopPropagation();
+            onFavoriteClick?.();
+          }}
+          aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+        >
+          <Heart className={cn('size-4', isFavorited && 'fill-current')} />
+        </Button>
+      </div>
 
       {/* Product Info */}
       <div className="flex flex-col gap-3 px-3 pb-3">
-        {/* Eco Certifications */}
-        {certifications.length > 0 && (
+        {/* Eco Certifications - Hide on browse variant */}
+        {variant !== 'browse' && certifications.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {certifications.slice(0, 3).map((cert) => (
               <EcoBadge key={cert} variant={cert} size="sm" showIcon={false} />
@@ -174,40 +201,42 @@ function ProductCard({
           {product.title}
         </h3>
 
-        {/* Seller & Nonprofit */}
-        <div className="flex flex-col gap-1 text-sm">
-          <div className="text-muted-foreground flex items-center gap-1.5">
-            <span>by </span>
-            <a
-              href={`/shop/${seller.slug}`}
-              className="hover:text-foreground font-medium hover:underline"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {seller.name}
-            </a>
-            {showContactButton && (
-              <Link
-                href={`/messages/${seller.userId}`}
-                className="text-[#1B4332] opacity-0 transition-opacity group-hover:opacity-100 hover:text-[#2D6A4F]"
+        {/* Seller & Nonprofit - Show on default variant only */}
+        {variant === 'default' && (
+          <div className="flex flex-col gap-1 text-sm">
+            <div className="text-muted-foreground flex items-center gap-1.5">
+              <span>by </span>
+              <a
+                href={`/shop/${seller.slug}`}
+                className="hover:text-foreground font-medium hover:underline"
                 onClick={(e) => e.stopPropagation()}
-                title="Contact Seller"
               >
-                <MessageCircle className="size-3.5" />
-              </Link>
+                {seller.name}
+              </a>
+              {showContactButton && (
+                <Link
+                  href={`/messages/${seller.userId}`}
+                  className="text-[#1B4332] opacity-0 transition-opacity group-hover:opacity-100 hover:text-[#2D6A4F]"
+                  onClick={(e) => e.stopPropagation()}
+                  title="Contact Seller"
+                >
+                  <MessageCircle className="size-3.5" />
+                </Link>
+              )}
+            </div>
+            {nonprofit && (
+              <div className="text-eco-dark flex items-center gap-1.5 text-xs">
+                <Leaf className="size-3" />
+                <span>
+                  Supporting:{' '}
+                  <span className="font-semibold">{nonprofit.shortName || nonprofit.name}</span>
+                </span>
+              </div>
             )}
           </div>
-          {nonprofit && (
-            <div className="text-eco-dark flex items-center gap-1.5 text-xs">
-              <Leaf className="size-3" />
-              <span>
-                Supporting:{' '}
-                <span className="font-semibold">{nonprofit.shortName || nonprofit.name}</span>
-              </span>
-            </div>
-          )}
-        </div>
+        )}
 
-        {/* Price & Rating Row */}
+        {/* Price & Rating/Shop Row */}
         <div className="flex items-center justify-between gap-2">
           {/* Price */}
           <div className="flex items-baseline gap-2">
@@ -222,8 +251,21 @@ function ProductCard({
             )}
           </div>
 
-          {/* Rating */}
-          {rating !== undefined && (
+          {/* Browse variant: Show seller name on the right */}
+          {variant === 'browse' && (
+            <div className="text-muted-foreground text-xs">
+              <a
+                href={`/shop/${seller.slug}`}
+                className="hover:text-foreground hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {seller.name}
+              </a>
+            </div>
+          )}
+
+          {/* Rating - Show on default variant only */}
+          {variant === 'default' && rating !== undefined && (
             <div className="flex items-center gap-1 text-xs">
               <Star className="size-3.5 fill-yellow-400 text-yellow-400" />
               <span className="font-semibold">{rating.toFixed(1)}</span>
@@ -232,30 +274,12 @@ function ProductCard({
           )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2">
-          {/* Favorite Button */}
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className={cn(
-              'transition-colors',
-              isFavorited && 'text-pink-600 hover:bg-pink-50 hover:text-pink-700'
-            )}
-            onClick={(e) => {
-              e.stopPropagation();
-              onFavoriteClick?.();
-            }}
-            aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
-          >
-            <Heart className={cn('size-4', isFavorited && 'fill-current')} />
-          </Button>
-
-          {/* Quick Add Button */}
+        {/* Quick Add Button - Only on default variant (hidden on shop and browse) */}
+        {variant === 'default' && (
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground flex-1 gap-1.5 hover:text-white"
+            className="text-muted-foreground gap-1.5 hover:text-white"
             onClick={(e) => {
               e.stopPropagation();
               onQuickAddClick?.();
@@ -264,7 +288,7 @@ function ProductCard({
             <Plus className="size-4" />
             <span>Quick Add</span>
           </Button>
-        </div>
+        )}
       </div>
 
       {/* Hover Effect Overlay */}

@@ -29,7 +29,9 @@ export default async function FinancePage() {
       </div>
 
       <FinanceTabs
-        overview={overviewResult.success ? overviewResult.overview : null}
+        overview={
+          overviewResult.success && overviewResult.overview ? overviewResult.overview : null
+        }
         payouts={payoutsResult.success && payoutsResult.payouts ? payoutsResult.payouts : []}
         transactions={
           transactionsResult.success && transactionsResult.transactions

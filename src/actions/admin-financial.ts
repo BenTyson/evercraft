@@ -3,7 +3,6 @@
 import { db } from '@/lib/db';
 import { isAdmin } from '@/lib/auth';
 import { startOfMonth, subMonths, eachMonthOfInterval, format } from 'date-fns';
-import { Prisma } from '@prisma/client';
 
 /**
  * Get comprehensive financial overview
@@ -708,7 +707,8 @@ export async function getAllPayouts(
       return { success: false, error: 'Unauthorized' };
     }
 
-    const where: Prisma.SellerPayoutWhereInput = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: any = {};
 
     if (filters?.status) {
       where.status = filters.status;
@@ -1034,7 +1034,8 @@ export async function getTransactionsWithFilters(filters?: {
       return { success: false, error: 'Unauthorized' };
     }
 
-    const where: Prisma.PaymentWhereInput = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: any = {};
 
     if (filters?.shopId) {
       where.shopId = filters.shopId;

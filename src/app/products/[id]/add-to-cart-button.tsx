@@ -60,6 +60,7 @@ export function AddToCartButton({
 
   return (
     <Button
+      variant="outline"
       onClick={handleAddToCart}
       disabled={isAdding || disabled || requiresVariantSelection}
       className="flex-1"

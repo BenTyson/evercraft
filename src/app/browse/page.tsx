@@ -19,6 +19,7 @@ import { EcoFilterPanel } from '@/components/eco/eco-filter-panel';
 import { HierarchicalCategoryFilter } from '@/components/filters/hierarchical-category-filter';
 import { getProducts, getCategoriesHierarchical, getCertifications } from '@/actions/products';
 import { toggleFavorite as toggleFavoriteAction, getFavorites } from '@/actions/favorites';
+import { cn } from '@/lib/utils';
 
 type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'newest';
 
@@ -109,6 +110,8 @@ export default function BrowsePage() {
   const [sortBy, setSortBy] = useState<SortOption>('featured');
   const [favorited, setFavorited] = useState<Record<string, boolean>>({});
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const [isDesktopFiltersOpen, setIsDesktopFiltersOpen] = useState(false);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [isPending, startTransition] = useTransition();
@@ -200,7 +203,7 @@ export default function BrowsePage() {
         setFavorited((prev) => ({ ...prev, [productId]: previousState }));
         alert(result.error || 'Failed to update favorite');
       }
-    } catch (error) {
+    } catch {
       // Revert on error
       setFavorited((prev) => ({ ...prev, [productId]: previousState }));
       alert('Failed to update favorite');
@@ -233,22 +236,6 @@ export default function BrowsePage() {
   const activeFilterCount =
     selectedCategories.length + selectedCertifications.length + activeEcoFilterCount;
 
-  // Convert certification names to badge variants
-  const getCertificationVariant = (name: string) => {
-    const lowerName = name.toLowerCase().replace(/\s+/g, '-');
-    const variants = [
-      'plastic-free',
-      'carbon-neutral',
-      'fair-trade',
-      'b-corp',
-      'vegan',
-      'organic',
-      'recycled',
-      'zero-waste',
-    ] as const;
-    return variants.find((v) => lowerName.includes(v)) || 'organic';
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen">
@@ -276,90 +263,182 @@ export default function BrowsePage() {
               <Search className="text-muted-foreground absolute top-1/2 left-4 size-5 -translate-y-1/2" />
               <Input
                 type="search"
-                placeholder="Search eco-friendly products, brands, or categories..."
+                placeholder="Search sustainable products from verified eco-conscious sellers"
                 className="h-14 pr-4 pl-12 text-base shadow-sm"
               />
             </div>
-
-            {/* Quick Filters or Stats */}
-            <p className="text-muted-foreground mt-3 text-center text-sm">
-              {totalCount} sustainable products from verified eco-conscious sellers
-            </p>
           </div>
         </div>
 
-        <div className="flex gap-8">
-          {/* Desktop Filters Sidebar */}
-          <aside className="hidden w-64 shrink-0 lg:block">
-            <div className="bg-card sticky top-20 rounded-lg border p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Filters</h2>
-                {activeFilterCount > 0 && (
-                  <Button variant="ghost" size="sm" onClick={clearFilters}>
-                    Clear
-                  </Button>
-                )}
-              </div>
+        {/* Horizontal Category Bar */}
+        {categories.length > 0 && (
+          <div className="mb-6">
+            <div className="scrollbar-hide -mb-px flex gap-2 overflow-x-auto pb-2">
+              {categories.map((category) => (
+                <div key={category.id} className="relative">
+                  <button
+                    onClick={() => {
+                      if (expandedCategory === category.id) {
+                        setExpandedCategory(null);
+                      } else {
+                        setExpandedCategory(category.id);
+                      }
+                    }}
+                    className={cn(
+                      'rounded-full border px-4 py-2 text-sm whitespace-nowrap transition-colors',
+                      selectedCategories.includes(category.id)
+                        ? 'border-foreground bg-foreground text-background'
+                        : 'hover:bg-muted border-border'
+                    )}
+                  >
+                    {category.name}
+                  </button>
 
-              {/* Categories */}
-              <div className="mb-6">
-                <h3 className="mb-3 text-sm font-semibold tracking-wide uppercase">Categories</h3>
-                <HierarchicalCategoryFilter
-                  categories={categories}
-                  selectedCategories={selectedCategories}
-                  onToggleCategory={toggleCategory}
+                  {/* Subcategories Dropdown */}
+                  {expandedCategory === category.id && category.children.length > 0 && (
+                    <div className="bg-background absolute top-full left-0 z-10 mt-2 min-w-[200px] rounded-lg border p-2 shadow-lg">
+                      {category.children.map((child) => (
+                        <button
+                          key={child.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleCategory(child.id);
+                          }}
+                          className={cn(
+                            'hover:bg-muted flex w-full items-center justify-between rounded px-3 py-2 text-left text-sm transition-colors',
+                            selectedCategories.includes(child.id) && 'bg-muted font-medium'
+                          )}
+                        >
+                          <span>{child.name}</span>
+                          <span className="text-muted-foreground text-xs">
+                            {child.productCount}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-8">
+          {/* Desktop Filters Sidebar - Toggleable */}
+          {isDesktopFiltersOpen && (
+            <aside className="hidden w-64 shrink-0 lg:block">
+              <div className="bg-card sticky top-20 rounded-lg border p-5">
+                <div className="mb-5 flex items-center justify-between">
+                  <h2 className="text-base font-semibold">Filters</h2>
+                  <div className="flex items-center gap-1">
+                    {activeFilterCount > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearFilters}
+                        className="h-8 px-2 text-xs"
+                      >
+                        Clear all
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsDesktopFiltersOpen(false)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <X className="size-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Categories */}
+                <div className="mb-5">
+                  <h3 className="text-muted-foreground mb-2.5 text-sm font-medium tracking-wide uppercase">
+                    Categories
+                  </h3>
+                  <HierarchicalCategoryFilter
+                    categories={categories}
+                    selectedCategories={selectedCategories}
+                    onToggleCategory={toggleCategory}
+                  />
+                </div>
+
+                {/* Certifications */}
+                <div className="mb-5">
+                  <h3 className="text-muted-foreground mb-2.5 text-sm font-medium tracking-wide uppercase">
+                    Certifications
+                  </h3>
+                  <div className="space-y-1.5">
+                    {certifications.map((cert) => (
+                      <label
+                        key={cert.id}
+                        className="hover:bg-muted/50 -mx-1 flex cursor-pointer items-center gap-2.5 rounded px-1 py-0.5 transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedCertifications.includes(cert.id)}
+                          onChange={() => toggleCertification(cert.id)}
+                          className="text-forest-dark focus:ring-forest-dark size-4 rounded border-gray-300"
+                        />
+                        <span className="text-foreground text-sm">{cert.name}</span>
+                        <span className="text-muted-foreground ml-auto text-xs tabular-nums">
+                          {cert.count}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Eco Attributes */}
+                <EcoFilterPanel
+                  filters={ecoFilters}
+                  onFilterChange={setEcoFilters}
+                  resultCount={totalCount}
+                  showClearAll={false}
                 />
               </div>
-
-              {/* Certifications */}
-              <div className="mb-6">
-                <h3 className="mb-3 text-sm font-semibold tracking-wide uppercase">
-                  Certifications
-                </h3>
-                <div className="space-y-2">
-                  {certifications.map((cert) => (
-                    <label key={cert.id} className="flex cursor-pointer items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedCertifications.includes(cert.id)}
-                        onChange={() => toggleCertification(cert.id)}
-                        className="accent-forest-dark size-4 rounded"
-                      />
-                      <span className="text-sm">{cert.name}</span>
-                      <span className="text-muted-foreground ml-auto text-xs">{cert.count}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Eco Attributes */}
-              <EcoFilterPanel
-                filters={ecoFilters}
-                onFilterChange={setEcoFilters}
-                resultCount={totalCount}
-                showClearAll={false}
-              />
-            </div>
-          </aside>
+            </aside>
+          )}
 
           {/* Main Content */}
           <main className="flex-1">
             {/* Toolbar */}
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              {/* Mobile Filter Toggle */}
-              <Button
-                variant="outline"
-                className="lg:hidden"
-                onClick={() => setIsMobileFiltersOpen(true)}
-              >
-                <SlidersHorizontal className="mr-2 size-4" />
-                Filters
-                {activeFilterCount > 0 && (
-                  <span className="bg-forest-dark ml-2 rounded-full px-2 py-0.5 text-xs text-white">
-                    {activeFilterCount}
-                  </span>
+              {/* Filter Toggle Buttons */}
+              <div className="flex items-center gap-2">
+                {/* Mobile Filter Toggle */}
+                <Button
+                  variant="outline"
+                  className="lg:hidden"
+                  onClick={() => setIsMobileFiltersOpen(true)}
+                >
+                  <SlidersHorizontal className="mr-2 size-4" />
+                  Filters
+                  {activeFilterCount > 0 && (
+                    <span className="bg-forest-dark ml-2 rounded-full px-2 py-0.5 text-xs text-white">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </Button>
+
+                {/* Desktop Filter Toggle - Show when filters are closed */}
+                {!isDesktopFiltersOpen && (
+                  <Button
+                    variant="outline"
+                    className="hidden lg:flex"
+                    onClick={() => setIsDesktopFiltersOpen(true)}
+                  >
+                    <SlidersHorizontal className="mr-2 size-4" />
+                    Show Filters
+                    {activeFilterCount > 0 && (
+                      <span className="bg-forest-dark ml-2 rounded-full px-2 py-0.5 text-xs text-white">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </Button>
                 )}
-              </Button>
+              </div>
 
               {/* Results Count */}
               <p className="text-muted-foreground text-sm">
@@ -427,6 +506,7 @@ export default function BrowsePage() {
               {products.map((product) => (
                 <ProductCard
                   key={product.id}
+                  variant="browse"
                   product={{
                     id: product.id,
                     title: product.title,
@@ -441,21 +521,9 @@ export default function BrowsePage() {
                     name: product.shop.name,
                     slug: product.shop.slug || product.shop.id,
                   }}
-                  certifications={product.certifications
-                    .slice(0, 3)
-                    .map((c) => getCertificationVariant(c.name))}
-                  rating={product.sustainabilityScore?.totalScore || 0}
-                  reviewCount={0}
+                  certifications={[]}
                   isFavorited={favorited[product.id]}
                   onFavoriteClick={() => toggleFavorite(product.id)}
-                  onQuickAddClick={() => {
-                    // For variant products, navigate to product page to select options
-                    if (product.hasVariants) {
-                      router.push(`/products/${product.id}`);
-                    } else {
-                      alert('Added to cart!');
-                    }
-                  }}
                   onProductClick={() => router.push(`/products/${product.id}`)}
                 />
               ))}
@@ -486,17 +554,19 @@ export default function BrowsePage() {
           />
 
           {/* Filters Panel */}
-          <div className="bg-background absolute inset-y-0 right-0 w-full max-w-sm overflow-y-auto p-6">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Filters</h2>
+          <div className="bg-background absolute inset-y-0 right-0 w-full max-w-sm overflow-y-auto p-5">
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Filters</h2>
               <Button variant="ghost" size="icon" onClick={() => setIsMobileFiltersOpen(false)}>
                 <X className="size-5" />
               </Button>
             </div>
 
             {/* Categories */}
-            <div className="mb-6">
-              <h3 className="mb-3 text-sm font-semibold tracking-wide uppercase">Categories</h3>
+            <div className="mb-5">
+              <h3 className="text-muted-foreground mb-2.5 text-sm font-medium tracking-wide uppercase">
+                Categories
+              </h3>
               <HierarchicalCategoryFilter
                 categories={categories}
                 selectedCategories={selectedCategories}
@@ -505,26 +575,33 @@ export default function BrowsePage() {
             </div>
 
             {/* Certifications */}
-            <div className="mb-6">
-              <h3 className="mb-3 text-sm font-semibold tracking-wide uppercase">Certifications</h3>
-              <div className="space-y-2">
+            <div className="mb-5">
+              <h3 className="text-muted-foreground mb-2.5 text-sm font-medium tracking-wide uppercase">
+                Certifications
+              </h3>
+              <div className="space-y-1.5">
                 {certifications.map((cert) => (
-                  <label key={cert.id} className="flex cursor-pointer items-center gap-2">
+                  <label
+                    key={cert.id}
+                    className="hover:bg-muted/50 -mx-1 flex cursor-pointer items-center gap-2.5 rounded px-1 py-0.5 transition-colors"
+                  >
                     <input
                       type="checkbox"
                       checked={selectedCertifications.includes(cert.id)}
                       onChange={() => toggleCertification(cert.id)}
-                      className="accent-forest-dark size-4 rounded"
+                      className="text-forest-dark focus:ring-forest-dark size-4 rounded border-gray-300"
                     />
-                    <span className="text-sm">{cert.name}</span>
-                    <span className="text-muted-foreground ml-auto text-xs">{cert.count}</span>
+                    <span className="text-foreground text-sm">{cert.name}</span>
+                    <span className="text-muted-foreground ml-auto text-xs tabular-nums">
+                      {cert.count}
+                    </span>
                   </label>
                 ))}
               </div>
             </div>
 
             {/* Eco Attributes */}
-            <div className="mb-6">
+            <div className="mb-5">
               <EcoFilterPanel
                 filters={ecoFilters}
                 onFilterChange={setEcoFilters}
