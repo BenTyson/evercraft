@@ -7,7 +7,7 @@
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Package, ShoppingBag, Truck, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Package, ShoppingBag, Truck, CheckCircle, MessageCircle } from 'lucide-react';
 import { auth } from '@clerk/nextjs/server';
 import { SiteHeaderWrapper } from '@/components/layout/site-header-wrapper';
 import { Button } from '@/components/ui/button';
@@ -132,43 +132,60 @@ export default async function OrderDetailPage({ params }: PageProps) {
               <h2 className="mb-4 text-xl font-bold">Order Items</h2>
               <div className="space-y-4">
                 {order.items.map((item) => (
-                  <div key={item.id} className="flex gap-4 border-b pb-4 last:border-0 last:pb-0">
-                    <div className="bg-muted relative size-24 flex-shrink-0 overflow-hidden rounded">
-                      {item.product.images[0]?.url ? (
-                        <Image
-                          src={item.product.images[0].url}
-                          alt={item.product.images[0].altText || item.product.title}
-                          fill
-                          className="object-cover"
-                          sizes="96px"
-                        />
-                      ) : (
-                        <div className="flex size-full items-center justify-center">
-                          <ShoppingBag className="text-muted-foreground size-10" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-1 flex-col justify-between">
-                      <div>
-                        <Link
-                          href={`/products/${item.product.id}`}
-                          className="hover:text-forest-dark font-semibold transition-colors"
-                        >
-                          {item.product.title}
-                        </Link>
-                        {item.variant && (
-                          <p className="text-muted-foreground text-sm font-medium">
-                            {item.variant.name}
-                          </p>
+                  <div key={item.id} className="border-b pb-4 last:border-0 last:pb-0">
+                    <div className="flex gap-4">
+                      <div className="bg-muted relative size-24 flex-shrink-0 overflow-hidden rounded">
+                        {item.product.images[0]?.url ? (
+                          <Image
+                            src={item.product.images[0].url}
+                            alt={item.product.images[0].altText || item.product.title}
+                            fill
+                            className="object-cover"
+                            sizes="96px"
+                          />
+                        ) : (
+                          <div className="flex size-full items-center justify-center">
+                            <ShoppingBag className="text-muted-foreground size-10" />
+                          </div>
                         )}
-                        <p className="text-muted-foreground text-sm">Quantity: {item.quantity}</p>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">
-                          ${(item.subtotal / item.quantity).toFixed(2)} each
-                        </span>
-                        <span className="font-semibold">${item.subtotal.toFixed(2)}</span>
+                      <div className="flex flex-1 flex-col justify-between">
+                        <div>
+                          <Link
+                            href={`/products/${item.product.id}`}
+                            className="hover:text-forest-dark font-semibold transition-colors"
+                          >
+                            {item.product.title}
+                          </Link>
+                          {item.variant && (
+                            <p className="text-muted-foreground text-sm font-medium">
+                              {item.variant.name}
+                            </p>
+                          )}
+                          <Link
+                            href={`/shop/${item.shop.slug}`}
+                            className="text-muted-foreground hover:text-forest-dark text-sm transition-colors"
+                          >
+                            Sold by {item.shop.name}
+                          </Link>
+                          <p className="text-muted-foreground text-sm">Quantity: {item.quantity}</p>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm">
+                            ${(item.subtotal / item.quantity).toFixed(2)} each
+                          </span>
+                          <span className="font-semibold">${item.subtotal.toFixed(2)}</span>
+                        </div>
                       </div>
+                    </div>
+                    {/* Message Seller Button */}
+                    <div className="mt-3">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/messages/${item.shop.userId}?orderId=${order.id}`}>
+                          <MessageCircle className="mr-2 size-4" />
+                          Message Seller
+                        </Link>
+                      </Button>
                     </div>
                   </div>
                 ))}

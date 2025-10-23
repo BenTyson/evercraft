@@ -16,8 +16,10 @@
 'use client';
 
 import * as React from 'react';
-import { Heart, Plus, Star, Leaf } from 'lucide-react';
+import { Heart, Plus, Star, Leaf, MessageCircle } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { useUser } from '@clerk/nextjs';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -43,6 +45,7 @@ export interface ProductCardProps extends Omit<React.ComponentProps<'div'>, 'chi
   seller: {
     name: string;
     slug: string;
+    userId?: string; // Optional for backward compatibility
   };
   /**
    * Nonprofit information (optional)
@@ -100,6 +103,10 @@ function ProductCard({
 }: ProductCardProps) {
   const [imageLoaded, setImageLoaded] = React.useState(false);
   const [isHovered, setIsHovered] = React.useState(false);
+  const { isSignedIn, isLoaded, user } = useUser();
+
+  // Show contact button if user is logged in, seller has userId, and user is not the shop owner
+  const showContactButton = isLoaded && isSignedIn && seller.userId && user?.id !== seller.userId;
 
   const formattedPrice = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -169,8 +176,8 @@ function ProductCard({
 
         {/* Seller & Nonprofit */}
         <div className="flex flex-col gap-1 text-sm">
-          <p className="text-muted-foreground">
-            by{' '}
+          <div className="text-muted-foreground flex items-center gap-1.5">
+            <span>by </span>
             <a
               href={`/shop/${seller.slug}`}
               className="hover:text-foreground font-medium hover:underline"
@@ -178,7 +185,17 @@ function ProductCard({
             >
               {seller.name}
             </a>
-          </p>
+            {showContactButton && (
+              <Link
+                href={`/messages/${seller.userId}`}
+                className="text-[#1B4332] opacity-0 transition-opacity group-hover:opacity-100 hover:text-[#2D6A4F]"
+                onClick={(e) => e.stopPropagation()}
+                title="Contact Seller"
+              >
+                <MessageCircle className="size-3.5" />
+              </Link>
+            )}
+          </div>
           {nonprofit && (
             <div className="text-eco-dark flex items-center gap-1.5 text-xs">
               <Leaf className="size-3" />

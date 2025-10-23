@@ -16,7 +16,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Search, ShoppingCart, User, Menu, X, Leaf, Heart } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, Leaf, Heart, MessageCircle } from 'lucide-react';
 import { UserButton, useUser } from '@clerk/nextjs';
 
 import { cn } from '@/lib/utils';
@@ -30,9 +30,13 @@ interface SiteHeaderProps {
    * If provided, this takes precedence over Clerk publicMetadata
    */
   databaseRole?: string;
+  /**
+   * Unread message count from database (server-side)
+   */
+  unreadMessageCount?: number;
 }
 
-export function SiteHeader({ databaseRole }: SiteHeaderProps = {}) {
+export function SiteHeader({ databaseRole, unreadMessageCount = 0 }: SiteHeaderProps = {}) {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
@@ -44,6 +48,9 @@ export function SiteHeader({ databaseRole }: SiteHeaderProps = {}) {
   const userRole = databaseRole || clerkRole;
   const isAdmin = userRole === 'admin';
   const isSeller = userRole === 'seller' || userRole === 'admin'; // Admin has seller access
+
+  // Determine messages link based on role
+  const messagesLink = isSeller ? '/seller/messages' : '/messages';
 
   React.useEffect(() => {
     setIsMounted(true);
@@ -159,12 +166,25 @@ export function SiteHeader({ databaseRole }: SiteHeaderProps = {}) {
             </>
           )}
           {isSignedIn && (
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/favorites">
-                <Heart className="size-5" />
-                <span className="sr-only">Favorites</span>
-              </Link>
-            </Button>
+            <>
+              <Button variant="ghost" size="icon" asChild>
+                <Link href="/favorites">
+                  <Heart className="size-5" />
+                  <span className="sr-only">Favorites</span>
+                </Link>
+              </Button>
+              <Button variant="ghost" size="icon" asChild className="relative">
+                <Link href={messagesLink}>
+                  <MessageCircle className="size-5" />
+                  {isMounted && unreadMessageCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-[#52B788] text-[10px] font-bold text-white">
+                      {unreadMessageCount}
+                    </span>
+                  )}
+                  <span className="sr-only">Messages ({unreadMessageCount} unread)</span>
+                </Link>
+              </Button>
+            </>
           )}
           <Button variant="ghost" size="icon" asChild className="relative">
             <Link href="/cart">
@@ -279,6 +299,21 @@ export function SiteHeader({ databaseRole }: SiteHeaderProps = {}) {
                   >
                     <ShoppingCart className="size-5" />
                     My Orders
+                  </Link>
+                  <Link
+                    href={messagesLink}
+                    className="text-foreground hover:text-forest-dark flex items-center justify-between gap-2 text-base font-medium transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <MessageCircle className="size-5" />
+                      Messages
+                    </div>
+                    {unreadMessageCount > 0 && (
+                      <span className="flex size-5 items-center justify-center rounded-full bg-[#52B788] text-[10px] font-bold text-white">
+                        {unreadMessageCount}
+                      </span>
+                    )}
                   </Link>
                   <Link
                     href="/favorites"

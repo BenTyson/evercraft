@@ -1,7 +1,7 @@
 # Evercraft Documentation Router
 
-**Last Updated:** October 21, 2025
-**Total Models:** 38 | **Total Routes:** 28 | **Status:** Session 18 Complete
+**Last Updated:** October 22, 2025
+**Total Models:** 38 | **Total Routes:** 30 | **Status:** Session 19 Complete
 
 > **DOCUMENTATION POLICY:**
 >
@@ -189,6 +189,7 @@ See [TECH_STACK.md](../reference/TECH_STACK.md) for full details and decision lo
 - Reviews and ratings system
 - Seller finance system (balance, payouts, transactions, Stripe Connect) - Session 17
 - Admin financial dashboard (platform-wide balance, payouts, seller monitoring) - Session 18
+- Buyer-seller messaging (text + images, order context, unread counts) - Session 19
 
 ### 🚧 In Progress (Phase 8)
 

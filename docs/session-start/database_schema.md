@@ -46,7 +46,7 @@ This document outlines the database schema for Evercraft, an eco-focused marketp
      ├──> Addresses
      ├──> Favorites
      ├──> Collections
-     └──> Messages
+     └──> Conversations ───> Messages
 
 ┌───────────┐
 │ Nonprofits│<──── Shops (selected_nonprofit_id)
@@ -76,20 +76,22 @@ model User {
   updatedAt         DateTime @updatedAt
 
   // Relations
-  shop              Shop?
-  orders            Order[]
-  addresses         Address[]
-  favorites         Favorite[]
-  collections       Collection[]
-  reviews           Review[]
-  sellerReviews     SellerReview[]
-  messagesSent      Message[]  @relation("MessagesSent")
-  messagesReceived  Message[]  @relation("MessagesReceived")
-  applications      SellerApplication[]
-  supportTickets    SupportTicket[]
-  analyticsEvents   AnalyticsEvent[]
-  notificationPrefs NotificationPreference?
-  searchHistory     SearchHistory[]
+  shop                        Shop?
+  orders                      Order[]
+  addresses                   Address[]
+  favorites                   Favorite[]
+  collections                 Collection[]
+  reviews                     Review[]
+  sellerReviews               SellerReview[]
+  sentMessages                Message[]       @relation("Message_fromUserIdToUser")
+  receivedMessages            Message[]       @relation("Message_toUserIdToUser")
+  conversationsAsParticipant1 Conversation[]  @relation("Conversation_participant1IdToUser")
+  conversationsAsParticipant2 Conversation[]  @relation("Conversation_participant2IdToUser")
+  applications                SellerApplication[]
+  supportTickets              SupportTicket[]
+  analyticsEvents             AnalyticsEvent[]
+  notificationPrefs           NotificationPreference?
+  searchHistory               SearchHistory[]
 }
 
 enum Role {
@@ -765,27 +767,88 @@ model SellerReview {
 
 ---
 
+### Conversations
+
+Groups messages between two users with unread counts and preview.
+
+```prisma
+model Conversation {
+  id                       String    @id @default(cuid())
+  participant1Id           String
+  participant2Id           String
+  lastMessageAt            DateTime  @default(now())
+  lastMessagePreview       String?
+  participant1UnreadCount  Int       @default(0)
+  participant2UnreadCount  Int       @default(0)
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+
+  // Relations
+  participant1             User      @relation("Conversation_participant1IdToUser", fields: [participant1Id], references: [id])
+  participant2             User      @relation("Conversation_participant2IdToUser", fields: [participant2Id], references: [id])
+  messages                 Message[]
+
+  @@unique([participant1Id, participant2Id])
+  @@index([participant1Id])
+  @@index([participant2Id])
+  @@index([lastMessageAt])
+}
+```
+
+**Key Fields:**
+
+- `participant1Id`, `participant2Id` - Two users in conversation (unique constraint prevents duplicates)
+- `lastMessageAt` - Timestamp for inbox sorting
+- `lastMessagePreview` - First 100 chars or "📷 Sent N images"
+- `participant1UnreadCount`, `participant2UnreadCount` - Per-user unread counts (optimized for badge queries)
+
+---
+
 ### Messages
 
-Buyer-seller messaging.
+Buyer-seller messaging with text and image support.
 
 ```prisma
 model Message {
-  id          String   @id @default(cuid())
-  fromUserId  String
-  toUserId    String
-  orderId     String?  // Optional: message about specific order
-  subject     String?
-  body        String
-  attachments String[] // Array of file URLs
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id                            String        @id @default(cuid())
+  conversationId                String
+  fromUserId                    String
+  toUserId                      String
+  orderId                       String?       // Optional: message about specific order
+  subject                       String?
+  body                          String
+  attachments                   String[]      // Image URLs from UploadThing (max 3 per message)
+  isRead                        Boolean       @default(false)
+  createdAt                     DateTime      @default(now())
 
   // Relations
-  from        User     @relation("MessagesSent", fields: [fromUserId], references: [id])
-  to          User     @relation("MessagesReceived", fields: [toUserId], references: [id])
+  conversation                  Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  User_Message_fromUserIdToUser User          @relation("Message_fromUserIdToUser", fields: [fromUserId], references: [id])
+  User_Message_toUserIdToUser   User          @relation("Message_toUserIdToUser", fields: [toUserId], references: [id])
+
+  @@index([conversationId])
+  @@index([createdAt])
+  @@index([fromUserId])
+  @@index([isRead])
+  @@index([toUserId])
+  @@index([orderId])
 }
 ```
+
+**Key Fields:**
+
+- `conversationId` - Links to parent conversation (cascades on delete)
+- `body` - Text message (up to 2000 chars, can be empty if images present)
+- `attachments` - Array of image URLs (up to 3, 4MB each via UploadThing)
+- `orderId` - Optional order context linking
+- `isRead` - Read status (used with conversation unread counts)
+
+**Image Messaging:**
+
+- Supports sending images without text
+- Preview shows in MessageComposer before sending
+- Grid layout: 1 image (4:3), 2 images (side-by-side), 3 images (first full + two below)
+- Click to open lightbox viewer with keyboard navigation
 
 ---
 

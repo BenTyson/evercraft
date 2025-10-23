@@ -65,6 +65,29 @@ Sellers can manage products, orders, analytics, marketing, and shop settings thr
 | `/seller/marketing` | `/src/app/seller/marketing/page.tsx` | 300   | Promotion management and marketing tools                    |
 | `/seller/settings`  | `/src/app/seller/settings/page.tsx`  | 45    | Shop settings with 6-tab navigation                         |
 
+### Messaging
+
+| Route                       | File                                         | Lines | Description                           |
+| --------------------------- | -------------------------------------------- | ----- | ------------------------------------- |
+| `/seller/messages`          | `/src/app/seller/messages/page.tsx`          | ~150  | Seller inbox with buyer conversations |
+| `/seller/messages/[userId]` | `/src/app/seller/messages/[userId]/page.tsx` | ~100  | Thread with specific buyer            |
+
+**Messaging Features:**
+
+- Conversation-based inbox (grouped by participants)
+- Text messages (up to 2000 characters)
+- Image attachments (up to 3 per message, 4MB each)
+- Order context linking
+- Unread count badge in header
+- Real-time read status updates
+- Lightbox image viewer
+
+**Components:** Uses shared messaging components from `/src/components/messages/` (ConversationsList, ConversationThread, MessageBubble, MessageComposer, ImageLightbox)
+
+**Actions:** Uses shared `/src/actions/messages.ts` (same as buyer messaging)
+
+**See:** [Buyer Experience - Messaging](./buyer-experience.md#messaging-auth-required) for full component and action documentation
+
 ---
 
 ## Components

@@ -150,23 +150,47 @@ model Favorite {
   @@index([userId])
 }
 
+model Conversation {
+  id                       String    @id @default(cuid())
+  participant1Id           String
+  participant2Id           String
+  lastMessageAt            DateTime  @default(now())
+  lastMessagePreview       String?
+  participant1UnreadCount  Int       @default(0)
+  participant2UnreadCount  Int       @default(0)
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  participant1             User      @relation("Conversation_participant1IdToUser", fields: [participant1Id], references: [id])
+  participant2             User      @relation("Conversation_participant2IdToUser", fields: [participant2Id], references: [id])
+  messages                 Message[]
+
+  @@unique([participant1Id, participant2Id])
+  @@index([participant1Id])
+  @@index([participant2Id])
+  @@index([lastMessageAt])
+}
+
 model Message {
-  id                            String   @id @default(cuid())
+  id                            String        @id @default(cuid())
+  conversationId                String
   fromUserId                    String
   toUserId                      String
   orderId                       String?
   subject                       String?
   body                          String
   attachments                   String[]
-  isRead                        Boolean  @default(false)
-  createdAt                     DateTime @default(now())
-  User_Message_fromUserIdToUser User     @relation("Message_fromUserIdToUser", fields: [fromUserId], references: [id])
-  User_Message_toUserIdToUser   User     @relation("Message_toUserIdToUser", fields: [toUserId], references: [id])
+  isRead                        Boolean       @default(false)
+  createdAt                     DateTime      @default(now())
+  conversation                  Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  User_Message_fromUserIdToUser User          @relation("Message_fromUserIdToUser", fields: [fromUserId], references: [id])
+  User_Message_toUserIdToUser   User          @relation("Message_toUserIdToUser", fields: [toUserId], references: [id])
 
+  @@index([conversationId])
   @@index([createdAt])
   @@index([fromUserId])
   @@index([isRead])
   @@index([toUserId])
+  @@index([orderId])
 }
 
 model Nonprofit {
@@ -705,6 +729,8 @@ model User {
   favorites                        Favorite[]
   sentMessages                     Message[]               @relation("Message_fromUserIdToUser")
   receivedMessages                 Message[]               @relation("Message_toUserIdToUser")
+  conversationsAsParticipant1      Conversation[]          @relation("Conversation_participant1IdToUser")
+  conversationsAsParticipant2      Conversation[]          @relation("Conversation_participant2IdToUser")
   notificationPreference           NotificationPreference?
   orders                           Order[]
   reviews                          Review[]

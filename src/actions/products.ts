@@ -326,6 +326,7 @@ export async function getProductById(id: string) {
         shop: {
           select: {
             id: true,
+            userId: true,
             name: true,
             slug: true,
             bio: true,

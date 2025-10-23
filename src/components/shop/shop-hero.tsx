@@ -6,10 +6,16 @@
  * - WITH banner: Full hero with overlaying logo (premium, visual)
  */
 
+'use client';
+
 import Image from 'next/image';
-import { ShieldCheck, Calendar } from 'lucide-react';
+import Link from 'next/link';
+import { ShieldCheck, Calendar, MessageCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useUser } from '@clerk/nextjs';
 
 interface ShopHeroProps {
+  userId: string;
   name: string;
   logo: string | null;
   bannerImage: string | null;
@@ -22,6 +28,7 @@ interface ShopHeroProps {
 }
 
 export function ShopHero({
+  userId,
   name,
   logo,
   bannerImage,
@@ -32,9 +39,13 @@ export function ShopHero({
   reviewCount,
   averageRating,
 }: ShopHeroProps) {
+  const { isSignedIn, isLoaded, user } = useUser();
   const shopAge = new Date().getFullYear() - new Date(createdAt).getFullYear();
   const memberSince =
     shopAge > 0 ? `Member since ${new Date(createdAt).getFullYear()}` : 'New member';
+
+  // Show contact button if user is logged in and not the shop owner
+  const showContactButton = isLoaded && isSignedIn && user?.id !== userId;
 
   // Render different layouts based on banner presence
   if (!bannerImage) {
@@ -87,6 +98,18 @@ export function ShopHero({
               {/* Bio */}
               {bio && (
                 <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">{bio}</p>
+              )}
+
+              {/* Contact Button */}
+              {showContactButton && (
+                <div className="mt-4">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/messages/${userId}`}>
+                      <MessageCircle className="mr-2 size-4" />
+                      Contact Shop Owner
+                    </Link>
+                  </Button>
+                </div>
               )}
             </div>
           </div>
@@ -168,6 +191,18 @@ export function ShopHero({
                 <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed md:text-base">
                   {bio}
                 </p>
+              )}
+
+              {/* Contact Button */}
+              {showContactButton && (
+                <div className="mt-4">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/messages/${userId}`}>
+                      <MessageCircle className="mr-2 size-4" />
+                      Contact Shop Owner
+                    </Link>
+                  </Button>
+                </div>
               )}
             </div>
           </div>

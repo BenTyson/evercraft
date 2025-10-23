@@ -97,7 +97,7 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
 - Download invoice (PDF)
 - Request cancellation (before shipped)
 - Leave review (after delivery)
-- Contact seller
+- Contact seller (via messaging system)
 
 **Reviews Features:**
 
@@ -119,6 +119,30 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
 | ------------------------- | ------------------------------------------ | ------------- |
 | `/sign-in/[[...sign-in]]` | `/src/app/sign-in/[[...sign-in]]/page.tsx` | Clerk sign-in |
 | `/sign-up/[[...sign-up]]` | `/src/app/sign-up/[[...sign-up]]/page.tsx` | Clerk sign-up |
+
+### Messaging (Auth Required)
+
+| Route                | File                                  | Lines | Description                    |
+| -------------------- | ------------------------------------- | ----- | ------------------------------ |
+| `/messages`          | `/src/app/messages/page.tsx`          | 152   | Buyer inbox with conversations |
+| `/messages/[userId]` | `/src/app/messages/[userId]/page.tsx` | 113   | Thread with seller             |
+
+**Messaging Features:**
+
+- Conversation-based inbox (grouped by participants)
+- Text messages (up to 2000 characters)
+- Image attachments (up to 3 per message, 4MB each)
+- Order context linking
+- Unread count badge in header
+- Real-time read status updates
+- Lightbox image viewer
+
+**Entry Points:**
+
+- Product detail pages: Contact button next to seller info
+- Shop pages: Contact Shop Owner button in hero
+- Product cards: MessageCircle icon on hover
+- Order detail pages: Message Seller button per order item
 
 ---
 
@@ -324,6 +348,75 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
   - Helpful vote button
   - Pagination
 
+### Messaging Components
+
+**ConversationsList**
+
+- **File:** `/src/components/messages/conversations-list.tsx`
+- **Purpose:** Inbox view with all conversations
+- **Features:**
+  - List of conversations sorted by last message
+  - Unread count badge per conversation
+  - Last message preview (text or image indicator)
+  - Avatar and participant name
+  - Timestamp display
+
+**ConversationThread**
+
+- **File:** `/src/components/messages/conversation-thread.tsx`
+- **Purpose:** Message thread display with auto-scroll
+- **Features:**
+  - Messages grouped by date
+  - Auto-scroll to bottom on new message
+  - Empty state for new conversations
+  - Sticky header with scroll behavior
+
+**MessageBubble**
+
+- **File:** `/src/components/messages/message-bubble.tsx`
+- **Purpose:** Individual message display
+- **Features:**
+  - Images above text (best practice layout)
+  - Grid layout: 1 image (4:3), 2 images (side-by-side), 3 images (first full + two below)
+  - Forest green (#1B4332) for sent messages
+  - Neutral gray (#F1F3F5) for received messages
+  - Click images to open lightbox
+  - Order link badge (if order context)
+  - Timestamp display
+
+**MessageComposer**
+
+- **File:** `/src/components/messages/message-composer.tsx`
+- **Purpose:** Send messages with text and/or images
+- **Features:**
+  - Textarea with auto-resize
+  - Image upload button (UploadThing)
+  - Image preview thumbnails before sending
+  - Remove images before sending
+  - Character count (max 2000)
+  - Send button (Enter or Shift+Enter)
+  - Supports image-only messages
+
+**ImageLightbox**
+
+- **File:** `/src/components/messages/image-lightbox.tsx`
+- **Purpose:** Full-screen image viewer
+- **Features:**
+  - Click to view full-size images
+  - Navigate between images (arrows, keyboard)
+  - Close on ESC or overlay click
+  - Image counter (1 of 3)
+  - Portal/modal implementation
+
+**MarkReadHandler**
+
+- **File:** `/src/components/messages/mark-read-handler.tsx`
+- **Purpose:** Client-side read marking
+- **Features:**
+  - Marks conversation as read on mount
+  - Refreshes router to update unread counts
+  - No visual render (returns null)
+
 ---
 
 ## Server Actions
@@ -463,6 +556,48 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
 - ✅ Filtering (all, verified only)
 - ✅ Sorting (recent, highest rated, most helpful)
 
+### Messaging Actions
+
+**File:** `/src/actions/messages.ts` (465 lines)
+
+| Function                       | Purpose                                        |
+| ------------------------------ | ---------------------------------------------- |
+| `getConversations()`           | User's conversations with unread counts        |
+| `getConversation(otherUserId)` | Get or create thread with another user         |
+| `sendMessage(input)`           | Send text and/or images (creates conversation) |
+| `markConversationAsRead(id)`   | Mark all messages in conversation as read      |
+| `getUnreadCount()`             | Total unread messages for header badge         |
+| `getOrderMessages(orderId)`    | Get messages related to specific order         |
+
+**Input Structure:**
+
+```typescript
+sendMessage({
+  toUserId: string,
+  body: string,              // Can be empty if attachments present
+  orderId?: string,          // Optional order context
+  subject?: string,
+  attachments?: string[]     // Image URLs from UploadThing
+})
+```
+
+**Features:**
+
+- ✅ Conversation-based grouping (optimizes inbox queries)
+- ✅ Unread count tracking per participant (stored in Conversation model)
+- ✅ Image attachments (up to 3, 4MB each via UploadThing messageImage route)
+- ✅ Image-only messages supported (body can be empty string)
+- ✅ Order context linking for buyer-seller communication
+- ✅ Smart previews ("📷 Sent 2 images" if no text)
+- ✅ Client-side read marking (avoids SSR revalidation issues)
+
+**Implementation Notes:**
+
+- Uses two-model approach (Conversation + Message) for performance
+- Unread counts increment on send, reset on markConversationAsRead
+- MarkReadHandler client component handles read marking after page load
+- Supports sending from multiple entry points (product pages, shop pages, orders)
+
 ---
 
 ## State Management
@@ -594,6 +729,16 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
 **Relations:** User, Product
 **See:** [database_schema.md#favorites](../session-start/database_schema.md#favorites)
 
+### Conversation
+
+**Relations:** User (participant1, participant2), Message
+**See:** [database_schema.md#conversations](../session-start/database_schema.md#conversations)
+
+### Message
+
+**Relations:** Conversation, User (from, to)
+**See:** [database_schema.md#messages](../session-start/database_schema.md#messages)
+
 ---
 
 ## Common Patterns & Gotchas
@@ -663,6 +808,7 @@ const itemsByShop = order.items.reduce(
 - Favorites/wishlist
 - Category browsing
 - Shop storefronts with sections
+- Buyer-seller messaging (text + images)
 
 ### 📋 Not Yet Implemented
 
@@ -670,7 +816,6 @@ const itemsByShop = order.items.reduce(
 - Wishlists (multiple lists)
 - Referral program
 - Social sharing
-- Buyer-seller messaging
 - Product recommendations (AI-powered)
 - Saved searches
 - Price drop notifications

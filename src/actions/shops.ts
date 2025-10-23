@@ -21,7 +21,22 @@ export async function getShopBySlug(slug: string) {
           { id: slug }, // Fallback to ID if slug doesn't match
         ],
       },
-      include: {
+      select: {
+        id: true,
+        userId: true,
+        slug: true,
+        name: true,
+        bio: true,
+        story: true,
+        bannerImage: true,
+        logo: true,
+        colors: true,
+        isVerified: true,
+        verificationStatus: true,
+        nonprofitId: true,
+        donationPercentage: true,
+        createdAt: true,
+        updatedAt: true,
         user: {
           select: {
             id: true,

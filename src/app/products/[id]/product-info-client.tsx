@@ -9,11 +9,13 @@
 import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, Package, Truck, Shield } from 'lucide-react';
+import { Star, Package, Truck, Shield, MessageCircle } from 'lucide-react';
 import { EcoBadge } from '@/components/eco/eco-badge';
 import { VariantSelector, type SelectedVariantData } from '@/components/product/variant-selector';
 import { AddToCartButton } from './add-to-cart-button';
 import { FavoriteButton } from './favorite-button';
+import { Button } from '@/components/ui/button';
+import { useUser } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
 import type { VariantOptionsData } from '@/types/variants';
 
@@ -62,6 +64,7 @@ interface ProductInfoClientProps {
     certifications: Certification[];
     shop: {
       id: string;
+      userId: string;
       name: string;
       slug?: string | null;
       logo?: string | null;
@@ -72,6 +75,7 @@ interface ProductInfoClientProps {
 }
 
 export function ProductInfoClient({ product, isFavorited }: ProductInfoClientProps) {
+  const { isSignedIn, isLoaded, user } = useUser();
   const [selectedVariant, setSelectedVariant] = useState<SelectedVariantData | null>(null);
   const [currentImageUrl, setCurrentImageUrl] = useState(
     product.images[0]?.url || '/placeholder.png'
@@ -255,29 +259,41 @@ export function ProductInfoClient({ product, isFavorited }: ProductInfoClientPro
 
         {/* Seller Info */}
         <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            {product.shop.logo && (
-              <div className="relative size-12 overflow-hidden rounded-full">
-                <Image
-                  src={product.shop.logo}
-                  alt={product.shop.name}
-                  fill
-                  className="object-cover"
-                  sizes="48px"
-                />
-              </div>
-            )}
-            <div>
-              <Link
-                href={`/shop/${product.shop.slug || product.shop.id}`}
-                className="font-semibold hover:underline"
-              >
-                {product.shop.name}
-              </Link>
-              <div className="flex items-center gap-1.5 text-sm">
-                <span className="text-muted-foreground">{shopJoinedText}</span>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              {product.shop.logo && (
+                <div className="relative size-12 overflow-hidden rounded-full">
+                  <Image
+                    src={product.shop.logo}
+                    alt={product.shop.name}
+                    fill
+                    className="object-cover"
+                    sizes="48px"
+                  />
+                </div>
+              )}
+              <div>
+                <Link
+                  href={`/shop/${product.shop.slug || product.shop.id}`}
+                  className="font-semibold hover:underline"
+                >
+                  {product.shop.name}
+                </Link>
+                <div className="flex items-center gap-1.5 text-sm">
+                  <span className="text-muted-foreground">{shopJoinedText}</span>
+                </div>
               </div>
             </div>
+
+            {/* Contact Seller Button */}
+            {isLoaded && isSignedIn && user?.id !== product.shop.userId && (
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/messages/${product.shop.userId}`}>
+                  <MessageCircle className="mr-2 size-4" />
+                  Contact
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
 

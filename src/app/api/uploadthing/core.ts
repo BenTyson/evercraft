@@ -51,6 +51,22 @@ export const ourFileRouter = {
 
       return { uploadedBy: metadata.userId, url: file.url };
     }),
+
+  // Message image uploader
+  messageImage: f({ image: { maxFileSize: '4MB', maxFileCount: 3 } })
+    .middleware(async () => {
+      const { userId } = await auth();
+
+      if (!userId) throw new Error('Unauthorized');
+
+      return { userId };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      console.log('Message image uploaded for userId:', metadata.userId);
+      console.log('file url', file.url);
+
+      return { uploadedBy: metadata.userId, url: file.url };
+    }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

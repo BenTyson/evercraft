@@ -46,6 +46,8 @@ npm run dev
 
 ## Features Implemented
 
+### Product Images
+
 ✅ Product image upload (up to 4 images per product)
 ✅ Drag-and-drop file upload
 ✅ Image preview before upload
@@ -54,9 +56,31 @@ npm run dev
 ✅ Max file size: 4MB per image
 ✅ Supported formats: JPG, PNG, WebP, GIF
 
+### Message Images (Session 19)
+
+✅ Message image attachments (up to 3 images per message)
+✅ Image preview before sending
+✅ Image-only messages supported
+✅ Lightbox viewer for full-size viewing
+✅ Max file size: 4MB per image
+✅ Grid layout (1 image: 4:3, 2 images: side-by-side, 3 images: first full + two below)
+
+## UploadThing Routes
+
+The following upload routes are configured in `/src/app/api/uploadthing/core.ts`:
+
+| Route          | Max Files | Max Size | Purpose                |
+| -------------- | --------- | -------- | ---------------------- |
+| `productImage` | 4         | 4MB each | Product catalog images |
+| `shopLogo`     | 1         | 2MB      | Shop branding logo     |
+| `shopBanner`   | 1         | 4MB      | Shop header banner     |
+| `messageImage` | 3         | 4MB each | Message attachments    |
+
+All routes require authentication via Clerk.
+
 ## Usage
 
-### For Sellers
+### Product Images (For Sellers)
 
 1. Go to **Seller Dashboard** → **Products** → **Add Product**
 2. Scroll to the **Product Images** section
@@ -64,6 +88,17 @@ npm run dev
 4. Upload up to 4 images
 5. The first image will automatically be the primary image
 6. Remove images by clicking the X button
+
+### Message Images (For Buyers & Sellers)
+
+1. Go to **Messages** inbox
+2. Open a conversation or start a new one
+3. Click the **image icon** in the message composer
+4. Select up to 3 images (4MB each)
+5. Preview thumbnails appear above the text area
+6. Remove images by clicking the X button on thumbnails
+7. Send images with or without text
+8. Click received images to view in full-screen lightbox
 
 ### Image Guidelines
 

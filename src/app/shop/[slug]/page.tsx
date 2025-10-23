@@ -122,6 +122,7 @@ export default async function ShopPage({ params, searchParams }: PageProps) {
 
       {/* Hero Section */}
       <ShopHero
+        userId={shop.userId}
         name={shop.name}
         logo={shop.logo}
         bannerImage={shop.bannerImage}

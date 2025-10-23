@@ -129,6 +129,7 @@ export async function getOrderById(orderId: string) {
                 name: true,
                 slug: true,
                 logo: true,
+                userId: true,
               },
             },
           },
