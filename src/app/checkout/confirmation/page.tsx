@@ -13,24 +13,27 @@ import { CheckCircle, Loader2, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SiteHeader } from '@/components/layout/site-header';
 import { useCheckoutStore } from '@/store/checkout-store';
+import { useCartStore } from '@/store/cart-store';
 
 function ConfirmationContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { shippingAddress, clearCheckout } = useCheckoutStore();
+  const { clearCart } = useCartStore();
   const [isLoading, setIsLoading] = useState(true);
   const paymentIntentId = searchParams.get('payment_intent');
 
   useEffect(() => {
-    // Clear checkout data after successful order
+    // Clear checkout data and cart after successful order
     if (paymentIntentId) {
       clearCheckout();
+      clearCart();
       setIsLoading(false);
     } else {
       // No payment intent, redirect to home
       router.push('/');
     }
-  }, [paymentIntentId, clearCheckout, router]);
+  }, [paymentIntentId, clearCheckout, clearCart, router]);
 
   if (isLoading) {
     return (

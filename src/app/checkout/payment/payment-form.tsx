@@ -53,9 +53,7 @@ export function PaymentForm() {
         });
 
         if (result.success) {
-          // Clear cart
-          clearCart();
-          // Redirect to confirmation
+          // Redirect to confirmation (cart will be cleared there)
           router.push(`/checkout/confirmation?payment_intent=${paymentIntent.id}`);
         } else {
           setErrorMessage(result.error || 'Failed to create order');

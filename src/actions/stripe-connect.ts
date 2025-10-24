@@ -66,7 +66,7 @@ export async function createConnectAccount() {
       return { success: false, error: 'Shop not found' };
     }
 
-    // Create Stripe Express account
+    // Create Stripe Express account with 7-day payout delay for dispute protection
     const account = await stripe.accounts.create({
       type: 'express',
       country: 'US',
@@ -79,6 +79,14 @@ export async function createConnectAccount() {
       business_profile: {
         name: shop.name,
         product_description: 'Sustainable and ethical products',
+      },
+      settings: {
+        payouts: {
+          schedule: {
+            interval: 'daily',
+            delay_days: 7, // 7-day hold for chargeback/dispute protection
+          },
+        },
       },
     });
 
@@ -245,11 +253,38 @@ export async function createLoginLink() {
 
 /**
  * Update payout schedule preference
+ * Note: Always maintains 7-day delay for dispute protection
  */
 export async function updatePayoutSchedule(schedule: 'daily' | 'weekly' | 'monthly') {
   try {
+    if (!isStripeConfigured || !stripe) {
+      return { success: false, error: 'Stripe is not configured on this server' };
+    }
+
     const shopId = await getSellerShopId();
 
+    const connectedAccount = await db.sellerConnectedAccount.findUnique({
+      where: { shopId },
+    });
+
+    if (!connectedAccount) {
+      return { success: false, error: 'Connected account not found' };
+    }
+
+    // Update Stripe account payout schedule (maintaining 7-day delay)
+    await stripe.accounts.update(connectedAccount.stripeAccountId, {
+      settings: {
+        payouts: {
+          schedule: {
+            interval: schedule,
+            delay_days: 7, // Always maintain 7-day dispute protection
+            ...(schedule === 'weekly' && { weekly_anchor: 'monday' }),
+          },
+        },
+      },
+    });
+
+    // Update database
     await db.sellerConnectedAccount.update({
       where: { shopId },
       data: { payoutSchedule: schedule },

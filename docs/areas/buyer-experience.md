@@ -2,7 +2,7 @@
 
 Complete reference for buyer-facing routes, components, and flows.
 
-**Last Updated:** October 23, 2025
+**Last Updated:** October 24, 2025 (Session 21: Checkout Confirmation Fix)
 
 ---
 
@@ -60,8 +60,8 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
 | ------------------------ | ----------------------------------------- | ----- | -------------------------------- |
 | `/cart`                  | `/src/app/cart/page.tsx`                  | 207   | Shopping cart management         |
 | `/checkout`              | `/src/app/checkout/page.tsx`              | 367   | Checkout flow (shipping address) |
-| `/checkout/payment`      | `/src/app/checkout/payment/page.tsx`      | 207   | Payment processing with Stripe   |
-| `/checkout/confirmation` | `/src/app/checkout/confirmation/page.tsx` | 161   | Order confirmation page          |
+| `/checkout/payment`      | `/src/app/checkout/payment/page.tsx`      | 100   | Payment processing with Stripe   |
+| `/checkout/confirmation` | `/src/app/checkout/confirmation/page.tsx` | 165   | Order confirmation page          |
 
 **Cart Features:**
 
@@ -81,6 +81,15 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
 - Order review step
 - Nonprofit donation display
 - Place order with loading state
+
+**Confirmation Page Features (Session 21):**
+
+- Order success message with confirmation details
+- What happens next timeline (email, seller processing, shipping)
+- Nonprofit impact section
+- Shipping address display
+- Cart clearing on successful order (prevents redirect to empty cart)
+- Links to orders page and continue shopping
 
 ### Buyer Dashboard (Auth Required)
 
@@ -300,12 +309,14 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
 
 **Payment Form**
 
+- **File:** `/src/app/checkout/payment/payment-form.tsx` (100 lines)
 - **Purpose:** Stripe payment input
 - **Features:**
   - Stripe Elements (secure card input)
   - Apple Pay / Google Pay
   - Save card for future checkbox
   - Loading states
+  - Redirects to confirmation page on success (Session 21: cart clearing moved to confirmation page)
 
 **Order Review**
 
@@ -705,10 +716,13 @@ sendMessage({
    - Place order
 
 4. **Confirmation** (`/checkout/confirmation`)
-   - View order number
-   - See order summary
-   - Impact metrics (nonprofit donation, eco-score)
+   - View order number and success message
+   - See timeline of what happens next
+   - Impact metrics (nonprofit donation highlighted)
+   - Shipping address confirmation
    - Email receipt sent
+   - Cart automatically cleared (Session 21: prevents redirect to empty cart)
+   - Links to view orders or continue shopping
 
 ### Post-Purchase Flow
 

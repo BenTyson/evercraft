@@ -2,7 +2,7 @@
 
 Complete reference for seller-related routes, components, and server actions.
 
-**Last Updated:** October 17, 2025
+**Last Updated:** October 24, 2025 (Session 21: Automated Stripe Transfers)
 
 ---
 
@@ -527,7 +527,7 @@ await db.productVariant.createMany({
 
 **Stripe Connect Actions**
 
-**File:** `/src/actions/stripe-connect.ts` (380 lines) ⭐ Session 17
+**File:** `/src/actions/stripe-connect.ts` (327 lines) ⭐ Session 17, Session 21 (7-day delay)
 
 | Function                                      | Purpose                                  |
 | --------------------------------------------- | ---------------------------------------- |
@@ -540,16 +540,22 @@ await db.productVariant.createMany({
 
 **Features:**
 
-- ✅ Stripe Connect Express account setup
+- ✅ Stripe Connect Express account setup with 7-day payout delay for dispute protection
 - ✅ Onboarding flow with redirect URLs
 - ✅ Account status verification (charges/payouts enabled)
-- ✅ Payout schedule management
+- ✅ Payout schedule management (daily/weekly/monthly with maintained 7-day delay)
 - ✅ Handles Stripe not configured scenario
 - ✅ Shop ownership verification on all mutations
 
+**Session 21 Updates (Automated Transfers):**
+
+- ✅ All Connect accounts configured with 7-day payout delay on creation
+- ✅ Payout schedule updates maintain 7-day delay for chargeback protection
+- ✅ Integration with automated transfer system in payment.ts
+
 **Payment Processing Updates**
 
-**File:** `/src/actions/payment.ts` (enhanced in Session 17)
+**File:** `/src/actions/payment.ts` (537 lines, enhanced in Session 17, Session 21)
 
 **Session 17 Enhancements:**
 
@@ -563,13 +569,50 @@ await db.productVariant.createMany({
   - Nonprofit donation: Seller's committed %
   - Seller payout: `subtotal - platformFee - donation`
 
+**Session 21 Enhancements (Automated Transfers):**
+
+- ✅ Automatic Stripe Transfers to seller Connect accounts on each purchase
+- ✅ Real-time Connect account status syncing before transfer
+- ✅ Configurable automatic transfers via `ENABLE_AUTO_TRANSFERS` environment variable
+- ✅ Graceful handling of transfer failures (order completes, transfer can be done manually)
+- ✅ Comprehensive logging for transfer status monitoring
+- ✅ Test mode support (auto-transfers disabled by default due to Stripe balance limitations)
+
+**Transfer Flow:**
+
+```typescript
+// On each purchase with ENABLE_AUTO_TRANSFERS=true
+1. Payment Intent succeeds → Funds in platform account
+2. Order created with Payment records per shop
+3. For each shop:
+   - Sync Connect account status from Stripe
+   - If payoutsEnabled OR chargesEnabled:
+     - Create Stripe Transfer to seller's Connect account
+     - Funds held 7 days before payout
+   - If account not ready: Log warning, transfer skipped
+   - If transfer fails: Log error, continue without failing order
+4. SellerBalance updated regardless of transfer status
+```
+
 **Critical Pattern - Multi-shop Orders:**
 
 ```typescript
-// One order with items from 2 shops creates 2 Payment records
+// One order with items from 2 shops creates 2 Payment records + 2 Stripe Transfers
 Order #12345
 ├── Payment (Shop A) - $50 subtotal, $3.25 platform fee, $1 donation, $45.75 payout
+│   └── Stripe Transfer: $45.75 → Shop A's Connect account (held 7 days)
 └── Payment (Shop B) - $30 subtotal, $1.95 platform fee, $0.60 donation, $27.45 payout
+    └── Stripe Transfer: $27.45 → Shop B's Connect account (held 7 days)
+```
+
+**Environment Configuration:**
+
+```env
+# Disable in test mode (default) - transfers fail due to Stripe test balance limitations
+# ENABLE_AUTO_TRANSFERS=true
+
+# Enable in production - real payments fund platform balance for transfers
+ENABLE_AUTO_TRANSFERS=true
 ```
 
 ### Eco-Profile Actions

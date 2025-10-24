@@ -12,6 +12,9 @@ import { syncUserToDatabase } from '@/lib/auth';
 // Platform fee rate (6.5%)
 const platformFeeRate = 0.065;
 
+// Enable automatic transfers (false in test mode to avoid balance issues)
+const ENABLE_AUTO_TRANSFERS = process.env.ENABLE_AUTO_TRANSFERS === 'true';
+
 interface CartItem {
   id: string;
   productId: string;
@@ -275,7 +278,7 @@ export async function createOrder(input: CreateOrderInput) {
 
       let totalNonprofitDonation = 0;
 
-      // Create Payment records for each shop
+      // Create Payment records for each shop and transfer funds
       for (const [shopId, shopData] of itemsByShop.entries()) {
         // Calculate shop-specific values
         const shopSubtotal = shopData.subtotal;
@@ -284,6 +287,68 @@ export async function createOrder(input: CreateOrderInput) {
         const shopPayout = shopSubtotal - shopPlatformFee - shopDonation;
 
         totalNonprofitDonation += shopDonation;
+
+        // Get seller's Stripe Connect account (if exists and configured)
+        const sellerAccount = await tx.sellerConnectedAccount.findUnique({
+          where: { shopId },
+          select: {
+            stripeAccountId: true,
+            payoutsEnabled: true,
+            chargesEnabled: true,
+          },
+        });
+
+        // Create Stripe Transfer if seller has connected account
+        if (ENABLE_AUTO_TRANSFERS && isStripeConfigured && stripe && sellerAccount) {
+          try {
+            // Sync account status from Stripe before transfer
+            const stripeAccount = await stripe.accounts.retrieve(sellerAccount.stripeAccountId);
+            const accountReady = stripeAccount.payouts_enabled || stripeAccount.charges_enabled;
+
+            // Update database with latest status
+            await tx.sellerConnectedAccount.update({
+              where: { shopId },
+              data: {
+                chargesEnabled: stripeAccount.charges_enabled || false,
+                payoutsEnabled: stripeAccount.payouts_enabled || false,
+                onboardingCompleted: stripeAccount.details_submitted || false,
+              },
+            });
+
+            if (accountReady) {
+              // Create transfer to seller's Connect account
+              const transfer = await stripe.transfers.create({
+                amount: Math.round(shopPayout * 100), // Convert to cents
+                currency: 'usd',
+                destination: sellerAccount.stripeAccountId,
+                description: `Payout for order ${orderNumber}`,
+                metadata: {
+                  orderId: newOrder.id,
+                  orderNumber: orderNumber,
+                  shopId: shopId,
+                },
+              });
+              console.log(
+                `✅ Transfer created for shop ${shopId}: ${transfer.id} ($${shopPayout.toFixed(2)})`
+              );
+            } else {
+              console.log(
+                `⚠️ Skipping transfer for shop ${shopId}: Account not ready for payouts yet`
+              );
+            }
+          } catch (transferError) {
+            console.error(`❌ Failed to create transfer for shop ${shopId}:`, transferError);
+            // Continue without failing the order - transfer can be done manually later
+          }
+        } else if (!ENABLE_AUTO_TRANSFERS) {
+          console.log(
+            `ℹ️ Auto-transfers disabled - transfer for shop ${shopId} will need to be done manually ($${shopPayout.toFixed(2)})`
+          );
+        } else if (!sellerAccount) {
+          console.log(
+            `⚠️ No Connect account found for shop ${shopId} - seller needs to connect bank account`
+          );
+        }
 
         // Create Payment record
         await tx.payment.create({
