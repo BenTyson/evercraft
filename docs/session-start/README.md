@@ -24,6 +24,7 @@
 - Organizing products → [Shop Sections](../features/shop-sections.md)
 - Managing eco-profiles → [Eco Impact V2](../features/eco-impact-v2.md)
 - Finance/payouts → See seller-dashboard.md#finance-management (Session 17)
+- Nonprofit commitments → [Nonprofit Donations](../features/nonprofit-donations.md#flow-1-seller-committed-donations) (impact reports)
 - Analytics/marketing → See seller-dashboard.md sections
 
 ### Working on Admin Panel?
@@ -35,6 +36,7 @@
 - Reviewing applications → [Smart Gate](../features/smart-gate.md) (auto-scoring system)
 - Financial analytics → See admin-dashboard.md#financial-management
 - User/nonprofit management → See admin-dashboard.md sections
+- Managing nonprofit donations → [Nonprofit Donations](../features/nonprofit-donations.md) (three-flow system, payouts)
 
 ### Working on Buyer Experience?
 

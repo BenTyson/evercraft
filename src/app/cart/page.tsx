@@ -27,10 +27,8 @@ export default function CartPage() {
   });
 
   const subtotal = getTotalPrice();
-  const donationPercentage = 5; // 5% goes to nonprofit
-  const donationAmount = subtotal * (donationPercentage / 100);
   const shipping = shippingResult.shippingCost;
-  const total = subtotal + donationAmount + shipping;
+  const total = subtotal + shipping;
   const shippingMessage = getShippingEstimateMessage(shippingResult);
 
   if (items.length === 0) {
@@ -167,20 +165,6 @@ export default function CartPage() {
                     {shippingMessage}
                   </div>
                 )}
-
-                <div className="border-border border-t pt-3">
-                  <div className="bg-eco-light/20 mb-3 rounded-lg p-3">
-                    <div className="mb-1 flex items-center justify-between">
-                      <span className="text-eco-dark text-sm font-semibold">
-                        Nonprofit Donation (5%)
-                      </span>
-                      <span className="text-eco-dark font-bold">${donationAmount.toFixed(2)}</span>
-                    </div>
-                    <p className="text-muted-foreground text-xs">
-                      Your purchase supports environmental nonprofits
-                    </p>
-                  </div>
-                </div>
 
                 <div className="border-border border-t pt-3">
                   <div className="flex justify-between text-lg">

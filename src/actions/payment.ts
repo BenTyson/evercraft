@@ -288,6 +288,14 @@ export async function createOrder(input: CreateOrderInput) {
 
         totalNonprofitDonation += shopDonation;
 
+        // Get shop's nonprofit selection for donation tracking
+        const shop = await tx.shop.findUnique({
+          where: { id: shopId },
+          select: {
+            nonprofitId: true,
+          },
+        });
+
         // Get seller's Stripe Connect account (if exists and configured)
         const sellerAccount = await tx.sellerConnectedAccount.findUnique({
           where: { shopId },
@@ -363,6 +371,20 @@ export async function createOrder(input: CreateOrderInput) {
             status: 'PAID',
           },
         });
+
+        // Create Donation record if shop has selected a nonprofit and donation > 0
+        if (shop?.nonprofitId && shopDonation > 0) {
+          await tx.donation.create({
+            data: {
+              orderId: newOrder.id,
+              nonprofitId: shop.nonprofitId,
+              shopId: shopId,
+              amount: shopDonation,
+              donorType: 'SELLER_CONTRIBUTION',
+              status: 'PENDING',
+            },
+          });
+        }
 
         // Update or create SellerBalance
         const existingBalance = await tx.sellerBalance.findUnique({

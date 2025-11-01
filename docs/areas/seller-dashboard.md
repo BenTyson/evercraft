@@ -2,7 +2,7 @@
 
 Complete reference for seller-related routes, components, and server actions.
 
-**Last Updated:** October 24, 2025 (Session 21: Automated Stripe Transfers)
+**Last Updated:** October 29, 2025 (Session 21: Automated Stripe Transfers & Nonprofit Impact Dashboard)
 
 ---
 
@@ -15,7 +15,17 @@ Sellers can manage products, orders, analytics, marketing, and shop settings thr
 - [Product Variants](../features/product-variants.md) - Variant system implementation details
 - [Shop Sections](../features/shop-sections.md) - Product organization system
 - [Eco Impact V2](../features/eco-impact-v2.md) - Shop eco-profiles
+- [Nonprofit Donations](../features/nonprofit-donations.md) - Three-flow donation system and impact tracking
 - [Database Schema](../session-start/database_schema.md) - Shop/Product/OrderItem models
+
+**Seller Navigation (Session 21):**
+
+The seller dashboard sidebar includes:
+
+- Dashboard, Products, Sections, Orders
+- **Finance** - Stripe Connect payouts and transactions
+- **Impact** - Nonprofit contribution tracking and reports ⭐ NEW
+- Analytics, Settings
 
 ---
 
@@ -51,11 +61,12 @@ Sellers can manage products, orders, analytics, marketing, and shop settings thr
 | ---------------- | --------------------------------- | -------------------------------------------- |
 | `/seller/orders` | `/src/app/seller/orders/page.tsx` | Seller order management with shipping labels |
 
-### Finance Management
+### Finance & Impact Management
 
-| Route             | File                               | Lines | Description                                                               |
-| ----------------- | ---------------------------------- | ----- | ------------------------------------------------------------------------- |
-| `/seller/finance` | `/src/app/seller/finance/page.tsx` | 45    | Finance dashboard with 4 tabs (Overview, Payouts, Transactions, Settings) |
+| Route             | File                               | Lines | Description                                                                                                                 |
+| ----------------- | ---------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------- |
+| `/seller/finance` | `/src/app/seller/finance/page.tsx` | 45    | Finance dashboard with 4 tabs (Overview, Payouts, Transactions, Settings)                                                   |
+| `/seller/impact`  | `/src/app/seller/impact/page.tsx`  | 35    | Impact dashboard with nonprofit contributions (see [Nonprofit Donations](../features/nonprofit-donations.md)) ⭐ Session 21 |
 
 ### Analytics & Tools
 
@@ -233,7 +244,7 @@ Sellers can manage products, orders, analytics, marketing, and shop settings thr
 - **File:** `/src/app/seller/marketing/promotion-form-wrapper.tsx` (20 lines)
 - **Purpose:** Modal wrapper component
 
-### Finance Components
+### Finance & Impact Components
 
 **Finance Tabs** ⭐
 
@@ -242,6 +253,24 @@ Sellers can manage products, orders, analytics, marketing, and shop settings thr
 - **Tabs:** Overview, Payouts, Transactions, Settings
 - **Pattern:** Client component managing tab state, receives data from server page
 - **Session 17:** Complete finance system implementation
+
+**Impact Dashboard** ⭐ Session 21
+
+- **File:** `/src/app/seller/impact/impact-dashboard.tsx` (420 lines)
+- **Purpose:** Comprehensive nonprofit impact tracking and reporting
+- **Features:**
+  - Current nonprofit configuration card with logo, mission, and donation percentage
+  - Summary stats: Total Contributed, Paid to Nonprofits, Pending Payout
+  - Monthly contribution bar chart (last 12 months)
+  - Nonprofit breakdown (if seller changed nonprofits over time)
+  - Recent donations table with order numbers and status badges
+  - CSV export functionality for marketing purposes
+  - Impact statement clarifying tax implications (platform as facilitator model)
+- **Data:**
+  - All donations with `donorType: SELLER_CONTRIBUTION`
+  - Grouped by nonprofit, month, and status (PAID/PENDING)
+  - Export includes: Date, Order #, Nonprofit, EIN, Amount, Status
+- **See:** [Nonprofit Donations](../features/nonprofit-donations.md) for compliance details
 
 **Overview Tab**
 
@@ -614,6 +643,31 @@ Order #12345
 # Enable in production - real payments fund platform balance for transfers
 ENABLE_AUTO_TRANSFERS=true
 ```
+
+### Impact Tracking Actions ⭐ Session 21
+
+**File:** `/src/actions/seller-impact.ts` (256 lines)
+
+| Function               | Purpose                                         |
+| ---------------------- | ----------------------------------------------- |
+| `getSellerImpact()`    | Comprehensive donation statistics and breakdown |
+| `exportSellerImpact()` | CSV export of donation history for marketing    |
+
+**Features:**
+
+- ✅ Returns comprehensive impact data:
+  - Current nonprofit configuration (name, logo, mission, donation %)
+  - Total/paid/pending donation amounts and counts
+  - Nonprofit breakdown (if seller changed nonprofits over time)
+  - Monthly contribution trends (last 12 months)
+  - Recent donations (last 10) with order details
+- ✅ CSV export includes:
+  - Date, Order Number, Nonprofit, EIN, Amount, Status
+  - Filename: `{shop-name}-impact-report-{date}.csv`
+- ✅ Filters donations by `donorType: SELLER_CONTRIBUTION`
+- ✅ Shop ownership verification on all queries
+
+**See:** [Nonprofit Donations](../features/nonprofit-donations.md) for platform as facilitator model
 
 ### Eco-Profile Actions
 

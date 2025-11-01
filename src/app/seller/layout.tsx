@@ -15,6 +15,7 @@ import {
   ShoppingBag,
   LayoutList,
   DollarSign,
+  Heart,
 } from 'lucide-react';
 import { SiteHeaderWrapper } from '@/components/layout/site-header-wrapper';
 import { cn } from '@/lib/utils';
@@ -26,6 +27,7 @@ const navigation = [
   { name: 'Sections', href: '/seller/sections', icon: LayoutList },
   { name: 'Orders', href: '/seller/orders', icon: ShoppingBag },
   { name: 'Finance', href: '/seller/finance', icon: DollarSign },
+  { name: 'Impact', href: '/seller/impact', icon: Heart },
   { name: 'Analytics', href: '/seller/analytics', icon: BarChart3 },
   { name: 'Settings', href: '/seller/settings', icon: Settings },
 ];

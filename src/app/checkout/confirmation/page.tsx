@@ -102,16 +102,6 @@ function ConfirmationContent() {
           </div>
         </div>
 
-        {/* Nonprofit Impact */}
-        <div className="bg-eco-light/20 border-eco-light mb-8 rounded-lg border p-6">
-          <Package className="text-eco-dark mx-auto mb-3 size-8" />
-          <h3 className="text-eco-dark mb-2 text-lg font-bold">Making an Impact</h3>
-          <p className="text-muted-foreground text-sm">
-            Your 5% donation will support environmental nonprofits working to protect our planet.
-            Thank you for being part of the solution!
-          </p>
-        </div>
-
         {/* Shipping Address */}
         {shippingAddress && (
           <div className="bg-card mb-8 rounded-lg border p-6 text-left">

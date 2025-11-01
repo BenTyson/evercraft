@@ -100,10 +100,8 @@ export default function CheckoutPage() {
   }
 
   const subtotal = getTotalPrice();
-  const donationPercentage = 5;
-  const donationAmount = subtotal * (donationPercentage / 100);
   const shipping = shippingResult.shippingCost;
-  const total = subtotal + donationAmount + shipping;
+  const total = subtotal + shipping;
   const shippingMessage = getShippingEstimateMessage(shippingResult);
 
   // Redirect to cart if empty
@@ -464,16 +462,6 @@ export default function CheckoutPage() {
                     {shippingMessage}
                   </div>
                 )}
-
-                <div className="bg-eco-light/20 rounded-lg p-3">
-                  <div className="mb-1 flex items-center justify-between text-sm">
-                    <span className="text-eco-dark font-semibold">Nonprofit Donation (5%)</span>
-                    <span className="text-eco-dark font-bold">${donationAmount.toFixed(2)}</span>
-                  </div>
-                  <p className="text-muted-foreground text-xs">
-                    Supporting environmental nonprofits
-                  </p>
-                </div>
 
                 <div className="border-t pt-3">
                   <div className="flex justify-between text-lg">

@@ -142,6 +142,7 @@ model Shop {
   payouts             SellerPayout[]  // Session 17: Payout history
   balance             SellerBalance?  // Session 17: Real-time balance
   tax1099Data         Seller1099Data[]  // Session 17: 1099-K tracking
+  donations           Donation[]  // Session 21: Donations from this seller's sales
 }
 
 enum VerificationStatus {
@@ -385,6 +386,7 @@ model Order {
   buyer             User        @relation(fields: [buyerId], references: [id])
   items             OrderItem[]
   payments          Payment[]
+  donations         Donation[]
 }
 
 enum OrderStatus {
@@ -682,6 +684,7 @@ model Nonprofit {
   shops             Shop[]
   orderItems        OrderItem[]
   donations         Donation[]
+  payouts           NonprofitPayout[]
 }
 ```
 
@@ -689,21 +692,34 @@ model Nonprofit {
 
 ### Donations
 
-Donation tracking.
+Donation tracking for three-flow system (seller contributions, buyer donations, platform revenue).
 
 ```prisma
 model Donation {
-  id          String          @id @default(cuid())
+  id          String           @id @default(cuid())
   orderId     String
   nonprofitId String
-  shopId      String?
+  shopId      String?          // Seller who's sales generated this (SELLER_CONTRIBUTION)
+  buyerId     String?          // Buyer who donated directly (BUYER_DIRECT)
   amount      Float
-  status      DonationStatus  @default(PENDING)
-  payoutId    String?
-  createdAt   DateTime        @default(now())
+  donorType   DonorType        @default(SELLER_CONTRIBUTION)
+  status      DonationStatus   @default(PENDING)
+  payoutId    String?          // Links to NonprofitPayout when paid
+  createdAt   DateTime         @default(now())
 
   // Relations
-  nonprofit   Nonprofit       @relation(fields: [nonprofitId], references: [id])
+  nonprofit   Nonprofit        @relation(fields: [nonprofitId], references: [id])
+  order       Order            @relation(fields: [orderId], references: [id])
+  shop        Shop?            @relation(fields: [shopId], references: [id])
+  payout      NonprofitPayout? @relation(fields: [payoutId], references: [id])
+
+  @@index([createdAt])
+  @@index([nonprofitId])
+  @@index([orderId])
+  @@index([status])
+  @@index([donorType])
+  @@index([shopId])
+  @@index([buyerId])
 }
 
 enum DonationStatus {
@@ -711,7 +727,68 @@ enum DonationStatus {
   PAID
   FAILED
 }
+
+enum DonorType {
+  SELLER_CONTRIBUTION  // Seller commits % of sales to nonprofit
+  BUYER_DIRECT         // Buyer adds optional donation at checkout (V2)
+  PLATFORM_REVENUE     // Platform donates from platform fees (V3)
+}
 ```
+
+**Features:**
+
+- **Three donation flows**: SELLER_CONTRIBUTION (V1 implemented), BUYER_DIRECT (V2 planned), PLATFORM_REVENUE (V3 future)
+- **Platform as facilitator**: Platform consolidates and distributes donations, receives tax receipts
+- **Seller impact reports**: Sellers get marketing-ready reports, not tax deductions
+- **Payout tracking**: Links to NonprofitPayout when distributed
+
+**See:** [Nonprofit Donations Documentation](../features/nonprofit-donations.md)
+
+---
+
+### NonprofitPayout
+
+Batch payout records for nonprofit distributions (quarterly or monthly).
+
+```prisma
+model NonprofitPayout {
+  id               String    @id @default(cuid())
+  nonprofitId      String
+  amount           Float
+  status           String    @default("pending")  // pending/paid/failed
+  periodStart      DateTime
+  periodEnd        DateTime
+  donationCount    Int
+  stripeTransferId String?   @unique
+  method           String    @default("manual")   // manual/stripe/check
+  notes            String?
+  createdAt        DateTime  @default(now())
+  paidAt           DateTime?
+
+  // Relations
+  nonprofit        Nonprofit  @relation(fields: [nonprofitId], references: [id])
+  donations        Donation[]
+
+  @@index([nonprofitId])
+  @@index([status])
+  @@index([periodEnd])
+}
+```
+
+**Features:**
+
+- **Batch distributions**: Groups multiple donations for quarterly/monthly payouts
+- **Status tracking**: pending → paid/failed lifecycle
+- **Method flexibility**: Manual entry, Stripe transfers, or check tracking
+- **Donation linkage**: All included donations reference this payout via payoutId
+
+**Admin Actions:**
+
+- `getPendingDonations()` - View donations ready for distribution
+- `createNonprofitPayout()` - Mark donations as paid, create payout record
+- `getNonprofitPayouts()` - Payout history
+
+**See:** [Nonprofit Donations Documentation](../features/nonprofit-donations.md)
 
 ---
 
@@ -1060,6 +1137,7 @@ model ShopSectionProduct {
 - **PaymentPayoutItem** - Junction table linking payments to payouts ✅ FULLY IMPLEMENTED (Session 17)
 - **SellerBalance** - Real-time balance tracking ✅ FULLY IMPLEMENTED (Session 17)
 - **Seller1099Data** - 1099-K tax form data tracking ✅ FULLY IMPLEMENTED (Session 17)
+- **NonprofitPayout** - Batch nonprofit payout tracking ✅ FULLY IMPLEMENTED (Session 21)
 - **TaxRecord** - Tax compliance tracking (architecture-ready, not fully implemented)
 - **Addresses** - User shipping/billing addresses ✅ FULLY IMPLEMENTED (Session 14)
 - **NotificationPreferences** - User notification settings ✅ FULLY IMPLEMENTED (Session 14)
@@ -1371,4 +1449,23 @@ All models include appropriate indexes for:
 - Updated `Shop` model with new finance relations:
   - Added `payments`, `connectedAccount`, `payouts`, `balance`, `tax1099Data` relations
 
-**Status:** ✅ Complete - All 38 models operational (includes Seller Finance System - Session 17)
+**Migration #9: `nonprofit_donation_system` (October 29, 2025) - Session 21**
+
+- Enhanced `Donation` model for three-flow system:
+  - Added `donorType` field (DonorType enum: SELLER_CONTRIBUTION, BUYER_DIRECT, PLATFORM_REVENUE)
+  - Added `buyerId` field for buyer direct donations (V2)
+  - Added `order` relation (foreign key to Order)
+  - Added `shop` relation (foreign key to Shop)
+  - Added `payout` relation (foreign key to NonprofitPayout)
+  - Added indexes on donorType, shopId, buyerId for query performance
+- Created `NonprofitPayout` model for batch payout tracking:
+  - Fields: nonprofitId, amount, status, periodStart, periodEnd, donationCount, stripeTransferId, method, notes, paidAt
+  - Relations to Nonprofit (parent) and Donation[] (all included donations)
+  - Indexes on nonprofitId, status, periodEnd
+- Created `DonorType` enum with three flows
+- Updated `Order` model with `donations` relation
+- Updated `Shop` model with `donations` relation
+- Updated `Nonprofit` model with `payouts` relation
+- Implemented "Platform as Facilitator" model (platform receives tax receipts, sellers get impact reports)
+
+**Status:** ✅ Complete - All 39 models operational (includes Seller Finance System - Session 17, Nonprofit Donation System - Session 21)

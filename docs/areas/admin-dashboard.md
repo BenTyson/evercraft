@@ -2,7 +2,7 @@
 
 Complete reference for admin-related routes, components, and server actions.
 
-**Last Updated:** October 21, 2025 (Session 18: Financial Dashboard Modernization)
+**Last Updated:** October 29, 2025 (Session 21: Nonprofit Donation System & Payout Management)
 
 ---
 
@@ -30,12 +30,15 @@ Administrators manage users, sellers, nonprofits, products, and platform analyti
 
 ### Management Pages
 
-| Route                 | File                                   | Lines | Description                                                              |
-| --------------------- | -------------------------------------- | ----- | ------------------------------------------------------------------------ |
-| `/admin/users`        | `/src/app/admin/users/page.tsx`        | 30    | User management with role updates                                        |
-| `/admin/nonprofits`   | `/src/app/admin/nonprofits/page.tsx`   | 32    | Nonprofit CRUD and verification                                          |
-| `/admin/applications` | `/src/app/admin/applications/page.tsx` | 33    | Review seller applications (see [Smart Gate](../features/smart-gate.md)) |
-| `/admin/products`     | `/src/app/admin/products/page.tsx`     | 33    | Product moderation                                                       |
+| Route                         | File                                           | Lines | Description                                                                                |
+| ----------------------------- | ---------------------------------------------- | ----- | ------------------------------------------------------------------------------------------ |
+| `/admin/users`                | `/src/app/admin/users/page.tsx`                | 30    | User management with role updates                                                          |
+| `/admin/nonprofits`           | `/src/app/admin/nonprofits/page.tsx`           | 32    | Nonprofit CRUD and verification                                                            |
+| `/admin/nonprofits/payouts`   | `/src/app/admin/nonprofits/payouts/page.tsx`   | 33    | Nonprofit payout dashboard (see [Nonprofit Donations](../features/nonprofit-donations.md)) |
+| `/admin/nonprofits/new`       | `/src/app/admin/nonprofits/new/page.tsx`       | 20    | Create nonprofit form                                                                      |
+| `/admin/nonprofits/[id]/edit` | `/src/app/admin/nonprofits/[id]/edit/page.tsx` | 25    | Edit nonprofit form                                                                        |
+| `/admin/applications`         | `/src/app/admin/applications/page.tsx`         | 33    | Review seller applications (see [Smart Gate](../features/smart-gate.md))                   |
+| `/admin/products`             | `/src/app/admin/products/page.tsx`             | 33    | Product moderation                                                                         |
 
 ### Analytics & Financial Pages
 
@@ -88,6 +91,34 @@ Administrators manage users, sellers, nonprofits, products, and platform analyti
   - Smart deletion (blocks if donations exist)
   - Shop count (nonprofits being supported)
   - Create/edit/delete nonprofit
+
+**Nonprofit Form**
+
+- **File:** `/src/app/admin/nonprofits/nonprofit-form.tsx` (200 lines)
+- **Purpose:** Shared create/edit form component
+- **Features:**
+  - EIN validation (XX-XXXXXXX format)
+  - Required fields: name, EIN, mission
+  - Optional: description, website, logo
+  - Verification checkbox
+
+**Nonprofit Payout Dashboard** ⭐ Session 21
+
+- **File:** `/src/app/admin/nonprofits/payouts/payouts-dashboard.tsx` (400 lines)
+- **Purpose:** Manage nonprofit donation distributions
+- **Features:**
+  - Pending donations grouped by nonprofit with totals
+  - Expandable details showing individual donations by order
+  - "Mark as Paid" button creates NonprofitPayout records
+  - Payout history table with status filtering
+  - Period-based tracking (quarterly/monthly distributions)
+  - Manual/Stripe/check payment method tracking
+  - Loading and error states
+- **Actions:**
+  - `getPendingDonations()` - Get donations ready for distribution
+  - `createNonprofitPayout()` - Mark donations as paid
+  - `getNonprofitPayouts()` - View payout history
+- **See:** [Nonprofit Donations](../features/nonprofit-donations.md) for full donation flow documentation
 
 ### Application Management Components
 
@@ -246,17 +277,20 @@ Administrators manage users, sellers, nonprofits, products, and platform analyti
 
 ### Nonprofit Management Actions
 
-**File:** `/src/actions/admin-nonprofits.ts` (479 lines)
+**File:** `/src/actions/admin-nonprofits.ts` (700+ lines) ⭐ Session 21 Enhanced
 
-| Function                        | Purpose                                         |
-| ------------------------------- | ----------------------------------------------- |
-| `getAllNonprofits()`            | Get nonprofits with search, filters, sorting    |
-| `getNonprofitById()`            | Get detailed nonprofit info with donation stats |
-| `createNonprofit()`             | Create new nonprofit with EIN validation        |
-| `updateNonprofit()`             | Update nonprofit details                        |
-| `deleteNonprofit()`             | Delete nonprofit (blocks if donations exist)    |
-| `toggleNonprofitVerification()` | Verify/unverify nonprofit status                |
-| `getNonprofitStats()`           | Platform-wide nonprofit statistics              |
+| Function                        | Purpose                                             |
+| ------------------------------- | --------------------------------------------------- |
+| `getAllNonprofits()`            | Get nonprofits with search, filters, sorting        |
+| `getNonprofitById()`            | Get detailed nonprofit info with donation stats     |
+| `createNonprofit()`             | Create new nonprofit with EIN validation            |
+| `updateNonprofit()`             | Update nonprofit details                            |
+| `deleteNonprofit()`             | Delete nonprofit (blocks if donations exist)        |
+| `toggleNonprofitVerification()` | Verify/unverify nonprofit status                    |
+| `getNonprofitStats()`           | Platform-wide nonprofit statistics                  |
+| `getPendingDonations()`         | Get donations ready for distribution ⭐ NEW         |
+| `createNonprofitPayout()`       | Mark donations as paid, create payout record ⭐ NEW |
+| `getNonprofitPayouts()`         | Get payout history with filtering ⭐ NEW            |
 
 **Features:**
 
@@ -266,6 +300,12 @@ Administrators manage users, sellers, nonprofits, products, and platform analyti
 - ✅ Donation tracking and aggregation
 - ✅ Smart deletion (prevents if donations exist)
 - ✅ Shops supporting count
+- ✅ **Payout management** (Session 21):
+  - Pending donations grouped by nonprofit
+  - Mark donations as paid with batch payout creation
+  - Payout history with period tracking
+  - Status filtering (paid, pending, failed)
+  - Links donations to payouts for audit trail
 
 ### Product Moderation Actions
 
@@ -444,6 +484,22 @@ Administrators manage users, sellers, nonprofits, products, and platform analyti
 3. Verify nonprofit (toggle verification status)
 4. View donation stats and shops supporting
 5. Delete if no donations exist
+
+### Distributing Nonprofit Donations ⭐ Session 21
+
+1. Navigate to `/admin/nonprofits/payouts`
+2. Review pending donations grouped by nonprofit
+3. Expand nonprofit to see individual donation details
+4. Click "Mark as Paid" to:
+   - Select payment method (manual/Stripe/check)
+   - Enter period dates and optional notes
+   - Create NonprofitPayout record
+   - Update all donations to PAID status
+   - Link donations to payout for audit trail
+5. View payout history with status filtering
+6. Track total distributed, pending amounts per nonprofit
+
+**See:** [Nonprofit Donations](../features/nonprofit-donations.md) for compliance and tax information
 
 ### Moderating Products
 

@@ -121,20 +121,28 @@ model CollectionProduct {
 }
 
 model Donation {
-  id          String         @id @default(cuid())
+  id          String           @id @default(cuid())
   orderId     String
   nonprofitId String
-  shopId      String?
+  shopId      String?          // Seller who's sales generated this (SELLER_CONTRIBUTION)
+  buyerId     String?          // Buyer who donated directly (BUYER_DIRECT)
   amount      Float
-  status      DonationStatus @default(PENDING)
-  payoutId    String?
-  createdAt   DateTime       @default(now())
-  nonprofit   Nonprofit      @relation(fields: [nonprofitId], references: [id])
+  donorType   DonorType        @default(SELLER_CONTRIBUTION)  // Which flow generated this
+  status      DonationStatus   @default(PENDING)
+  payoutId    String?          // Links to NonprofitPayout when paid
+  createdAt   DateTime         @default(now())
+  nonprofit   Nonprofit        @relation(fields: [nonprofitId], references: [id])
+  order       Order            @relation(fields: [orderId], references: [id])
+  shop        Shop?            @relation(fields: [shopId], references: [id])
+  payout      NonprofitPayout? @relation(fields: [payoutId], references: [id])
 
   @@index([createdAt])
   @@index([nonprofitId])
   @@index([orderId])
   @@index([status])
+  @@index([donorType])
+  @@index([shopId])
+  @@index([buyerId])
 }
 
 model Favorite {
@@ -194,9 +202,9 @@ model Message {
 }
 
 model Nonprofit {
-  id              String      @id @default(cuid())
+  id              String              @id @default(cuid())
   name            String
-  ein             String      @unique
+  ein             String              @unique
   mission         String
   description     String?
   category        String[]
@@ -204,16 +212,39 @@ model Nonprofit {
   images          String[]
   website         String?
   socialLinks     Json?
-  isVerified      Boolean     @default(false)
-  stripeAccountId String?     @unique
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  isVerified      Boolean             @default(false)
+  stripeAccountId String?             @unique
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
   donations       Donation[]
   orderItems      OrderItem[]
   shops           Shop[]
+  payouts         NonprofitPayout[]   // Payout history
 
   @@index([ein])
   @@index([isVerified])
+}
+
+model NonprofitPayout {
+  id               String    @id @default(cuid())
+  nonprofitId      String
+  amount           Float     // Total payout amount
+  status           String    @default("pending")  // pending | processing | paid | failed
+  periodStart      DateTime  // Donations from this date...
+  periodEnd        DateTime  // ...to this date
+  donationCount    Int       // Number of donations included
+  stripeTransferId String?   @unique  // Stripe Transfer ID (when automated)
+  method           String    @default("manual")  // manual | stripe_connect
+  notes            String?   // Admin notes
+  createdAt        DateTime  @default(now())
+  paidAt           DateTime?
+
+  nonprofit        Nonprofit  @relation(fields: [nonprofitId], references: [id])
+  donations        Donation[]
+
+  @@index([nonprofitId])
+  @@index([status])
+  @@index([periodEnd])
 }
 
 model NotificationPreference {
@@ -253,6 +284,7 @@ model Order {
   buyer                User          @relation(fields: [buyerId], references: [id])
   items                OrderItem[]
   payments             Payment[]
+  donations            Donation[]
   taxRecords           TaxRecord[]
 
   @@index([buyerId])
@@ -549,6 +581,7 @@ model Shop {
   balance            SellerBalance?
   taxData            Seller1099Data[]
   payments           Payment[]
+  donations          Donation[]               // Donations from this seller's sales
 
   @@index([isVerified])
   @@index([nonprofitId])
@@ -858,6 +891,12 @@ enum DonationStatus {
   PENDING
   PAID
   FAILED
+}
+
+enum DonorType {
+  SELLER_CONTRIBUTION  // Seller commits % of sales to nonprofit
+  BUYER_DIRECT         // Buyer adds optional donation at checkout
+  PLATFORM_REVENUE     // Platform donates from platform fees
 }
 
 enum OrderStatus {

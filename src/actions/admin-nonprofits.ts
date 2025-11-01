@@ -476,3 +476,241 @@ export async function getNonprofitStats() {
     };
   }
 }
+
+/**
+ * Get pending donations grouped by nonprofit for payout dashboard
+ */
+export async function getPendingDonations() {
+  try {
+    const admin = await isAdmin();
+
+    if (!admin) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    // Get all pending donations with nonprofit info
+    const pendingDonations = await db.donation.findMany({
+      where: { status: 'PENDING' },
+      include: {
+        nonprofit: {
+          select: {
+            id: true,
+            name: true,
+            logo: true,
+            ein: true,
+          },
+        },
+        shop: {
+          select: {
+            name: true,
+          },
+        },
+        order: {
+          select: {
+            orderNumber: true,
+            createdAt: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Group by nonprofit
+    const groupedByNonprofit = pendingDonations.reduce(
+      (acc, donation) => {
+        const nonprofitId = donation.nonprofitId;
+        if (!acc[nonprofitId]) {
+          acc[nonprofitId] = {
+            nonprofit: donation.nonprofit,
+            totalAmount: 0,
+            donationCount: 0,
+            donations: [],
+          };
+        }
+        acc[nonprofitId].totalAmount += donation.amount;
+        acc[nonprofitId].donationCount += 1;
+        acc[nonprofitId].donations.push(donation);
+        return acc;
+      },
+      {} as Record<
+        string,
+        {
+          nonprofit: {
+            id: string;
+            name: string;
+            logo: string | null;
+            ein: string;
+          };
+          totalAmount: number;
+          donationCount: number;
+          donations: typeof pendingDonations;
+        }
+      >
+    );
+
+    const nonprofitSummaries = Object.values(groupedByNonprofit).map((group) => ({
+      nonprofit: group.nonprofit,
+      totalAmount: group.totalAmount,
+      donationCount: group.donationCount,
+      oldestDonation: group.donations[group.donations.length - 1]?.createdAt,
+      donations: group.donations,
+    }));
+
+    return {
+      success: true,
+      nonprofits: nonprofitSummaries,
+    };
+  } catch (error) {
+    console.error('Error fetching pending donations:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch pending donations',
+    };
+  }
+}
+
+/**
+ * Create a nonprofit payout and mark donations as paid
+ */
+export async function createNonprofitPayout(input: {
+  nonprofitId: string;
+  donationIds: string[];
+  periodStart: Date;
+  periodEnd: Date;
+  method: string;
+  notes?: string;
+}) {
+  try {
+    const admin = await isAdmin();
+
+    if (!admin) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    // Validate all donations belong to the nonprofit and are pending
+    const donations = await db.donation.findMany({
+      where: {
+        id: { in: input.donationIds },
+        nonprofitId: input.nonprofitId,
+        status: 'PENDING',
+      },
+    });
+
+    if (donations.length !== input.donationIds.length) {
+      return {
+        success: false,
+        error: 'Some donations are invalid or already paid',
+      };
+    }
+
+    const totalAmount = donations.reduce((sum, d) => sum + d.amount, 0);
+
+    // Create payout and update donations in transaction
+    const payout = await db.$transaction(async (tx) => {
+      // Create payout record
+      const newPayout = await tx.nonprofitPayout.create({
+        data: {
+          nonprofitId: input.nonprofitId,
+          amount: totalAmount,
+          status: 'paid',
+          periodStart: input.periodStart,
+          periodEnd: input.periodEnd,
+          donationCount: donations.length,
+          method: input.method,
+          notes: input.notes,
+          paidAt: new Date(),
+        },
+      });
+
+      // Update all donations to paid status
+      await tx.donation.updateMany({
+        where: {
+          id: { in: input.donationIds },
+        },
+        data: {
+          status: 'PAID',
+          payoutId: newPayout.id,
+        },
+      });
+
+      return newPayout;
+    });
+
+    return {
+      success: true,
+      payout,
+      message: `Successfully created payout for $${totalAmount.toFixed(2)}`,
+    };
+  } catch (error) {
+    console.error('Error creating nonprofit payout:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create payout',
+    };
+  }
+}
+
+/**
+ * Get nonprofit payout history
+ */
+export async function getNonprofitPayouts(filters?: {
+  nonprofitId?: string;
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}) {
+  try {
+    const admin = await isAdmin();
+
+    if (!admin) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const { nonprofitId, status, page = 1, pageSize = 50 } = filters || {};
+
+    type WhereClause = {
+      nonprofitId?: string;
+      status?: string;
+    };
+
+    const where: WhereClause = {};
+    if (nonprofitId) where.nonprofitId = nonprofitId;
+    if (status) where.status = status;
+
+    const [payouts, totalCount] = await Promise.all([
+      db.nonprofitPayout.findMany({
+        where,
+        include: {
+          nonprofit: {
+            select: {
+              name: true,
+              logo: true,
+              ein: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      db.nonprofitPayout.count({ where }),
+    ]);
+
+    return {
+      success: true,
+      payouts,
+      pagination: {
+        page,
+        pageSize,
+        totalCount,
+        totalPages: Math.ceil(totalCount / pageSize),
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching nonprofit payouts:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch payouts',
+    };
+  }
+}

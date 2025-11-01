@@ -24,6 +24,7 @@ interface ShopHeroProps {
   isVerified: boolean;
   createdAt: Date;
   bio: string | null;
+  productCount: number;
   reviewCount: number;
   averageRating: number;
 }
@@ -36,6 +37,7 @@ export function ShopHero({
   isVerified,
   createdAt,
   bio,
+  productCount,
   reviewCount,
   averageRating,
 }: ShopHeroProps) {

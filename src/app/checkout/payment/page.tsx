@@ -30,10 +30,8 @@ export default function PaymentPage() {
   const [error, setError] = useState<string | null>(null);
 
   const subtotal = getTotalPrice();
-  const donationPercentage = 5;
-  const donationAmount = subtotal * (donationPercentage / 100);
   const shipping = subtotal >= 50 ? 0 : 5.99;
-  const total = subtotal + donationAmount + shipping;
+  const total = subtotal + shipping;
 
   // Redirect if cart is empty or no shipping address
   useEffect(() => {
@@ -97,13 +95,17 @@ export default function PaymentPage() {
               {error ? (
                 <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
                   <p className="text-sm text-red-800">{error}</p>
-                  <Button variant="outline" className="mt-4" onClick={() => router.push('/checkout')}>
+                  <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={() => router.push('/checkout')}
+                  >
                     Return to Checkout
                   </Button>
                 </div>
               ) : !clientSecret ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="size-8 animate-spin text-muted-foreground" />
+                  <Loader2 className="text-muted-foreground size-8 animate-spin" />
                 </div>
               ) : (
                 <Elements stripe={stripePromise} options={{ clientSecret }}>
@@ -114,7 +116,7 @@ export default function PaymentPage() {
 
             {/* Shipping Address Summary */}
             <div className="bg-card mt-6 rounded-lg border p-6">
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide">Shipping To</h3>
+              <h3 className="mb-3 text-sm font-semibold tracking-wide uppercase">Shipping To</h3>
               <div className="text-sm">
                 <p className="font-medium">
                   {shippingAddress.firstName} {shippingAddress.lastName}
@@ -155,7 +157,7 @@ export default function PaymentPage() {
                       )}
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium line-clamp-2">{item.title}</p>
+                      <p className="line-clamp-2 text-sm font-medium">{item.title}</p>
                       <p className="text-muted-foreground text-xs">Qty: {item.quantity}</p>
                       <p className="text-sm font-semibold">
                         ${(item.price * item.quantity).toFixed(2)}
@@ -181,14 +183,6 @@ export default function PaymentPage() {
                       `$${shipping.toFixed(2)}`
                     )}
                   </span>
-                </div>
-
-                <div className="bg-eco-light/20 rounded-lg p-3">
-                  <div className="mb-1 flex items-center justify-between text-sm">
-                    <span className="text-eco-dark font-semibold">Nonprofit Donation (5%)</span>
-                    <span className="text-eco-dark font-bold">${donationAmount.toFixed(2)}</span>
-                  </div>
-                  <p className="text-muted-foreground text-xs">Supporting environmental nonprofits</p>
                 </div>
 
                 <div className="border-t pt-3">
