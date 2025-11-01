@@ -101,6 +101,16 @@ This documentation is organized for optimal AI agent onboarding and reference wi
 
 ---
 
+## 🤖 Working with Claude Code
+
+**Session Guidelines:**
+
+- Start sessions by reading `session-start/README.md`
+- Trust your judgment on implementation details
+- Ask questions only when genuinely ambiguous
+
+---
+
 ## 🚀 Quick Start Prompts
 
 ### Standard Session (Any Area)
