@@ -27,6 +27,7 @@ export async function sendOrderConfirmationEmail({
   orderTotal,
   items,
   shippingAddress,
+  buyerDonation,
 }: {
   to: string;
   orderNumber: string;
@@ -45,6 +46,10 @@ export async function sendOrderConfirmationEmail({
     state: string;
     postalCode: string;
     country: string;
+  };
+  buyerDonation?: {
+    nonprofitName: string;
+    amount: number;
   };
 }) {
   if (!resend) {
@@ -116,11 +121,27 @@ ${shippingAddress.country}
       <div style="white-space: pre-wrap; color: #666;">${shippingInfo}</div>
     </div>
 
-    <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 20px 0;">
-      <p style="margin: 0; font-size: 14px; color: #2D5016;">
-        🌱 <strong>Impact Note:</strong> 5% of your order supports environmental nonprofits working to create a sustainable future.
+    ${
+      buyerDonation
+        ? `
+    <div style="background: #e8f5e9; border-left: 4px solid #4A7C2C; padding: 20px; border-radius: 8px; margin: 20px 0;">
+      <h3 style="margin-top: 0; color: #2D5016; font-size: 16px;">💚 Thank You for Your Donation!</h3>
+      <p style="margin: 10px 0; color: #2D5016;">
+        Your donation of <strong>${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(buyerDonation.amount)}</strong> to <strong>${buyerDonation.nonprofitName}</strong> will make a real difference.
+      </p>
+      <p style="margin: 10px 0 0 0; font-size: 13px; color: #4A7C2C;">
+        Evercraft will facilitate your donation and provide documentation for your tax records. You can view your donation history at any time in your account under <a href="${process.env.NEXT_PUBLIC_APP_URL}/account/impact" style="color: #2D5016; text-decoration: underline;">My Impact</a>.
       </p>
     </div>
+    `
+        : `
+    <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 20px 0;">
+      <p style="margin: 0; font-size: 14px; color: #2D5016;">
+        🌱 <strong>Impact Note:</strong> Many sellers on Evercraft contribute a percentage of their sales to environmental nonprofits working to create a sustainable future.
+      </p>
+    </div>
+    `
+    }
 
     <p style="color: #666; font-size: 14px;">
       We'll send you another email when your order ships. You can track your order status anytime in your account.

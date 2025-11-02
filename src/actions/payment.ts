@@ -28,9 +28,16 @@ interface CartItem {
   shopName: string;
 }
 
+interface BuyerDonation {
+  nonprofitId: string;
+  nonprofitName: string;
+  amount: number;
+}
+
 interface CreatePaymentIntentInput {
   items: CartItem[];
   shippingAddress: ShippingAddress;
+  buyerDonation?: BuyerDonation;
 }
 
 export async function createPaymentIntent(input: CreatePaymentIntentInput) {
@@ -60,12 +67,15 @@ export async function createPaymentIntent(input: CreatePaymentIntentInput) {
     });
     const shipping = shippingResult.shippingCost;
 
-    // Stripe processing fee (2.9% + $0.30) - passed to buyer
-    const stripeProcessingFee = (subtotal + shipping) * 0.029 + 0.3;
+    // Buyer donation (optional)
+    const buyerDonation = input.buyerDonation?.amount || 0;
 
-    // Total includes subtotal, shipping, and processing fee
-    // Platform fee (6.5%) and nonprofit donation come from seller portion
-    const total = subtotal + shipping + stripeProcessingFee;
+    // Stripe processing fee (2.9% + $0.30) - passed to buyer
+    const stripeProcessingFee = (subtotal + shipping + buyerDonation) * 0.029 + 0.3;
+
+    // Total includes subtotal, shipping, buyer donation, and processing fee
+    // Platform fee (6.5%) and seller nonprofit donations come from seller portion
+    const total = subtotal + shipping + buyerDonation + stripeProcessingFee;
 
     // Create Stripe payment intent
     const paymentIntent = await stripe.paymentIntents.create({
@@ -79,6 +89,8 @@ export async function createPaymentIntent(input: CreatePaymentIntentInput) {
         subtotal: subtotal.toFixed(2),
         shipping: shipping.toFixed(2),
         processingFee: stripeProcessingFee.toFixed(2),
+        buyerDonation: buyerDonation.toFixed(2),
+        buyerDonationNonprofitId: input.buyerDonation?.nonprofitId || '',
       },
     });
 
@@ -99,6 +111,7 @@ interface CreateOrderInput {
   paymentIntentId: string;
   items: CartItem[];
   shippingAddress: ShippingAddress;
+  buyerDonation?: BuyerDonation;
 }
 
 export async function createOrder(input: CreateOrderInput) {
@@ -525,6 +538,20 @@ export async function createOrder(input: CreateOrderInput) {
         }
       }
 
+      // Create buyer donation record if buyer made an optional donation
+      if (input.buyerDonation && input.buyerDonation.amount > 0) {
+        await tx.donation.create({
+          data: {
+            orderId: newOrder.id,
+            nonprofitId: input.buyerDonation.nonprofitId,
+            buyerId: userId,
+            amount: input.buyerDonation.amount,
+            donorType: 'BUYER_DIRECT',
+            status: 'PENDING',
+          },
+        });
+      }
+
       return newOrder;
     });
 
@@ -548,6 +575,7 @@ export async function createOrder(input: CreateOrderInput) {
           // Type mismatch between ShippingAddress formats - cast for email function
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           shippingAddress: input.shippingAddress as any,
+          buyerDonation: input.buyerDonation,
         });
       }
     } catch (emailError) {

@@ -19,19 +19,21 @@ import { useCartStore } from '@/store/cart-store';
 import { useCheckoutStore } from '@/store/checkout-store';
 import { createPaymentIntent } from '@/actions/payment';
 import { PaymentForm } from './payment-form';
+import { DonationSelector } from '@/components/checkout/donation-selector';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 export default function PaymentPage() {
   const router = useRouter();
   const { items, getTotalPrice, getTotalItems } = useCartStore();
-  const { shippingAddress } = useCheckoutStore();
+  const { shippingAddress, buyerDonation } = useCheckoutStore();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const subtotal = getTotalPrice();
   const shipping = subtotal >= 50 ? 0 : 5.99;
-  const total = subtotal + shipping;
+  const donationAmount = buyerDonation?.amount || 0;
+  const total = subtotal + shipping + donationAmount;
 
   // Redirect if cart is empty or no shipping address
   useEffect(() => {
@@ -51,6 +53,7 @@ export default function PaymentPage() {
         const result = await createPaymentIntent({
           items,
           shippingAddress,
+          buyerDonation: buyerDonation || undefined,
         });
 
         if (result.success && result.clientSecret) {
@@ -64,7 +67,7 @@ export default function PaymentPage() {
     };
 
     initializePayment();
-  }, [items, shippingAddress, router]);
+  }, [items, shippingAddress, buyerDonation, router]);
 
   if (items.length === 0 || !shippingAddress) {
     return null; // Will redirect
@@ -185,6 +188,17 @@ export default function PaymentPage() {
                   </span>
                 </div>
 
+                {donationAmount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-eco-dark font-medium">
+                      Donation to {buyerDonation?.nonprofitName}
+                    </span>
+                    <span className="text-eco-dark font-semibold">
+                      ${donationAmount.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
                 <div className="border-t pt-3">
                   <div className="flex justify-between text-lg">
                     <span className="font-bold">Total</span>
@@ -192,6 +206,9 @@ export default function PaymentPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Donation Selector */}
+              <DonationSelector orderSubtotal={subtotal} />
             </div>
           </div>
         </div>

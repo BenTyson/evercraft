@@ -18,7 +18,7 @@ import { useCartStore } from '@/store/cart-store';
 function ConfirmationContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { shippingAddress, clearCheckout } = useCheckoutStore();
+  const { shippingAddress, buyerDonation, clearCheckout } = useCheckoutStore();
   const { clearCart } = useCartStore();
   const [isLoading, setIsLoading] = useState(true);
   const paymentIntentId = searchParams.get('payment_intent');
@@ -58,6 +58,22 @@ function ConfirmationContent() {
         <p className="text-muted-foreground mb-8 text-lg">
           Thank you for your purchase. Your order has been received and is being processed.
         </p>
+
+        {/* Donation Thank You */}
+        {buyerDonation && (
+          <div className="bg-eco-light/10 border-eco-dark/20 mb-8 rounded-lg border p-6">
+            <div className="mb-2 flex items-center justify-center gap-2">
+              <CheckCircle className="text-eco-dark size-5" />
+              <h2 className="text-eco-dark text-xl font-bold">Thank You for Your Generosity!</h2>
+            </div>
+            <p className="text-eco-dark/80 text-sm">
+              Your ${buyerDonation.amount.toFixed(2)} donation to{' '}
+              <span className="font-semibold">{buyerDonation.nonprofitName}</span> will make a real
+              difference. Evercraft will facilitate this donation and provide documentation for your
+              records.
+            </p>
+          </div>
+        )}
 
         {/* Order Details Card */}
         <div className="bg-card mb-8 rounded-lg border p-6 text-left">

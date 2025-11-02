@@ -1,7 +1,7 @@
 # Nonprofit Donations System
 
-**Last Updated:** October 27, 2025
-**Status:** 🚧 In Development (Session 22)
+**Last Updated:** November 1, 2025
+**Status:** ✅ Production Ready (Session 22)
 
 > **COMPLIANCE MODEL:**
 >
@@ -77,18 +77,20 @@ Donation {
 
 ---
 
-### Flow 2: Buyer-Optional Donations 🚧 (V2 - Planned)
+### Flow 2: Buyer-Optional Donations ✅ (V2 Implementation)
 
 **How it works:**
 
 1. At checkout, buyer sees optional donation widget
-2. Buyer selects nonprofit from dropdown and enters amount (or picks preset: $5, $10, $25)
-3. Donation added to order total
-4. Buyer charged for products + shipping + their optional donation
-5. Platform holds donation funds separately
-6. Donation tracked in database with `donorType: BUYER_DIRECT`
-7. Platform sends consolidated buyer donations to nonprofits
-8. Buyer receives donation confirmation for tax records
+2. Buyer selects nonprofit from dropdown (verified nonprofits only)
+3. Buyer enters custom amount OR selects preset: $1, $5, $10, $25, or "Round up"
+4. Donation added to order total
+5. Buyer charged for products + shipping + their optional donation
+6. Platform holds donation funds separately
+7. Donation tracked in database with `donorType: BUYER_DIRECT`
+8. Platform sends consolidated buyer donations to nonprofits
+9. Buyer receives donation confirmation email with tax record information
+10. Buyers can track donation history at `/account/impact`
 
 **Schema (additions):**
 
@@ -263,21 +265,147 @@ model NonprofitPayout {
 
 ---
 
+## Payment Flow (Flow 2 - Buyer Direct Donations)
+
+### Checkout Process
+
+**Component:** `/src/components/checkout/donation-selector.tsx`
+
+**Features:**
+
+- Dropdown to select from verified nonprofits
+- Preset amounts: $1, $5, $10, $25
+- Custom amount input
+- "Round up to nearest dollar" option (when applicable)
+- Shows 100% goes directly to nonprofit
+- Displays nonprofit logo and mission
+
+**State Management:** `/src/store/checkout-store.ts`
+
+```typescript
+interface BuyerDonation {
+  nonprofitId: string;
+  nonprofitName: string;
+  amount: number;
+}
+
+// Persisted in checkout store alongside shipping address
+```
+
+### Order Creation Process
+
+**File:** `/src/actions/payment.ts` - `createPaymentIntent()` and `createOrder()`
+
+**Steps:**
+
+1. **Add donation to payment intent:**
+
+   ```typescript
+   const buyerDonation = input.buyerDonation?.amount || 0;
+   const stripeProcessingFee = (subtotal + shipping + buyerDonation) * 0.029 + 0.3;
+   const total = subtotal + shipping + buyerDonation + stripeProcessingFee;
+   ```
+
+2. **Create BUYER_DIRECT Donation record:**
+
+   ```typescript
+   if (input.buyerDonation && input.buyerDonation.amount > 0) {
+     await tx.donation.create({
+       data: {
+         orderId: newOrder.id,
+         nonprofitId: input.buyerDonation.nonprofitId,
+         buyerId: userId,
+         amount: input.buyerDonation.amount,
+         donorType: 'BUYER_DIRECT',
+         status: 'PENDING',
+       },
+     });
+   }
+   ```
+
+3. **Send confirmation email with donation details:**
+
+   ```typescript
+   await sendOrderConfirmationEmail({
+     // ... order details
+     buyerDonation: input.buyerDonation,
+   });
+   ```
+
+### Buyer Impact Dashboard
+
+**Route:** `/account/impact`
+
+**Features:**
+
+- Total donated, distributed, and pending amounts
+- Monthly donation trends
+- Breakdown by nonprofit
+- Complete donation history table
+- Tax deduction information
+
+**Query:**
+
+```typescript
+const donations = await db.donation.findMany({
+  where: {
+    buyerId: userId,
+    donorType: 'BUYER_DIRECT',
+  },
+  include: {
+    nonprofit: true,
+    order: { select: { orderNumber: true, createdAt: true } },
+  },
+});
+```
+
+---
+
 ## Admin Payout Process
 
 ### Viewing Pending Donations
 
 **Route:** `/admin/nonprofits/payouts`
 
+**Dashboard Features:**
+
+- Groups donations by nonprofit
+- Shows donor type breakdown (Seller/Buyer/Platform)
+- Color-coded badges in detail tables
+- Total pending amount and donation count
+- Oldest donation date for each nonprofit
+
 **Query:**
 
 ```typescript
-const pendingByNonprofit = await db.donation.groupBy({
-  by: ['nonprofitId'],
+const pendingDonations = await db.donation.findMany({
   where: { status: 'PENDING' },
-  _sum: { amount: true },
-  _count: true,
+  include: {
+    nonprofit: true,
+    shop: true,
+    order: true,
+  },
 });
+
+// Group by nonprofit and track donor types
+const grouped = pendingDonations.reduce((acc, donation) => {
+  if (!acc[donation.nonprofitId]) {
+    acc[donation.nonprofitId] = {
+      sellerContributionAmount: 0,
+      buyerDirectAmount: 0,
+      platformRevenueAmount: 0,
+      // ...
+    };
+  }
+
+  if (donation.donorType === 'SELLER_CONTRIBUTION') {
+    acc[donation.nonprofitId].sellerContributionAmount += donation.amount;
+  } else if (donation.donorType === 'BUYER_DIRECT') {
+    acc[donation.nonprofitId].buyerDirectAmount += donation.amount;
+  }
+  // ...
+  return acc;
+}, {});
 ```
 
 ### Marking as Paid (Manual V1)
@@ -411,6 +539,8 @@ const summary = donations.reduce((acc, d) => {
 
 ### ✅ Completed (Session 22)
 
+**Flow 1 - Seller Contributions:**
+
 - [x] Database schema design
 - [x] Flow 1 calculation logic (payment.ts)
 - [x] Donation record creation (bug fixed)
@@ -418,18 +548,23 @@ const summary = donations.reduce((acc, d) => {
 - [x] Admin payout dashboard
 - [x] Seller impact reports
 
-### 🚧 In Progress
+**Flow 2 - Buyer Direct Donations:**
 
-- [ ] Nonprofit payout tracking refinements
-- [ ] Email notifications for payouts
+- [x] Checkout donation selector component
+- [x] Payment flow with buyer donation tracking
+- [x] BUYER_DIRECT donation records
+- [x] Buyer impact dashboard at /account/impact
+- [x] Admin donor type breakdown in payout dashboard
+- [x] Order confirmation with donation thank you
+- [x] Email confirmation with donation details
 
 ### 📋 Planned (Future Sessions)
 
-- [ ] Flow 2: Buyer-optional donations
 - [ ] Flow 3: Platform revenue donations
 - [ ] Stripe Connect for nonprofits (automated payouts)
-- [ ] Impact metrics aggregation
+- [ ] Impact metrics aggregation (trees planted, etc.)
 - [ ] Nonprofit portal (view their earnings)
+- [ ] Email notifications for completed payouts
 
 ---
 

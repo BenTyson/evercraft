@@ -16,7 +16,7 @@ export function PaymentForm() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { items, clearCart } = useCartStore();
-  const { shippingAddress } = useCheckoutStore();
+  const { shippingAddress, buyerDonation } = useCheckoutStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +50,7 @@ export function PaymentForm() {
           paymentIntentId: paymentIntent.id,
           items,
           shippingAddress,
+          buyerDonation: buyerDonation || undefined,
         });
 
         if (result.success) {

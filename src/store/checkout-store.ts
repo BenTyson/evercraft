@@ -14,9 +14,17 @@ export interface ShippingAddress {
   country: string;
 }
 
+export interface BuyerDonation {
+  nonprofitId: string;
+  nonprofitName: string;
+  amount: number;
+}
+
 interface CheckoutStore {
   shippingAddress: ShippingAddress | null;
+  buyerDonation: BuyerDonation | null;
   setShippingAddress: (address: ShippingAddress) => void;
+  setBuyerDonation: (donation: BuyerDonation | null) => void;
   clearCheckout: () => void;
 }
 
@@ -24,8 +32,10 @@ export const useCheckoutStore = create<CheckoutStore>()(
   persist(
     (set) => ({
       shippingAddress: null,
+      buyerDonation: null,
       setShippingAddress: (address) => set({ shippingAddress: address }),
-      clearCheckout: () => set({ shippingAddress: null }),
+      setBuyerDonation: (donation) => set({ buyerDonation: donation }),
+      clearCheckout: () => set({ shippingAddress: null, buyerDonation: null }),
     }),
     {
       name: 'evercraft-checkout',

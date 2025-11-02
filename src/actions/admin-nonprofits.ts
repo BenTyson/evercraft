@@ -491,7 +491,12 @@ export async function getPendingDonations() {
     // Get all pending donations with nonprofit info
     const pendingDonations = await db.donation.findMany({
       where: { status: 'PENDING' },
-      include: {
+      select: {
+        id: true,
+        amount: true,
+        createdAt: true,
+        donorType: true,
+        nonprofitId: true,
         nonprofit: {
           select: {
             id: true,
@@ -524,11 +529,30 @@ export async function getPendingDonations() {
             nonprofit: donation.nonprofit,
             totalAmount: 0,
             donationCount: 0,
+            sellerContributionAmount: 0,
+            sellerContributionCount: 0,
+            buyerDirectAmount: 0,
+            buyerDirectCount: 0,
+            platformRevenueAmount: 0,
+            platformRevenueCount: 0,
             donations: [],
           };
         }
         acc[nonprofitId].totalAmount += donation.amount;
         acc[nonprofitId].donationCount += 1;
+
+        // Track by donor type
+        if (donation.donorType === 'SELLER_CONTRIBUTION') {
+          acc[nonprofitId].sellerContributionAmount += donation.amount;
+          acc[nonprofitId].sellerContributionCount += 1;
+        } else if (donation.donorType === 'BUYER_DIRECT') {
+          acc[nonprofitId].buyerDirectAmount += donation.amount;
+          acc[nonprofitId].buyerDirectCount += 1;
+        } else if (donation.donorType === 'PLATFORM_REVENUE') {
+          acc[nonprofitId].platformRevenueAmount += donation.amount;
+          acc[nonprofitId].platformRevenueCount += 1;
+        }
+
         acc[nonprofitId].donations.push(donation);
         return acc;
       },
@@ -543,6 +567,12 @@ export async function getPendingDonations() {
           };
           totalAmount: number;
           donationCount: number;
+          sellerContributionAmount: number;
+          sellerContributionCount: number;
+          buyerDirectAmount: number;
+          buyerDirectCount: number;
+          platformRevenueAmount: number;
+          platformRevenueCount: number;
           donations: typeof pendingDonations;
         }
       >
@@ -552,6 +582,12 @@ export async function getPendingDonations() {
       nonprofit: group.nonprofit,
       totalAmount: group.totalAmount,
       donationCount: group.donationCount,
+      sellerContributionAmount: group.sellerContributionAmount,
+      sellerContributionCount: group.sellerContributionCount,
+      buyerDirectAmount: group.buyerDirectAmount,
+      buyerDirectCount: group.buyerDirectCount,
+      platformRevenueAmount: group.platformRevenueAmount,
+      platformRevenueCount: group.platformRevenueCount,
       oldestDonation: group.donations[group.donations.length - 1]?.createdAt,
       donations: group.donations,
     }));

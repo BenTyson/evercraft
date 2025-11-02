@@ -1,7 +1,7 @@
 # Evercraft Documentation Router
 
-**Last Updated:** October 22, 2025
-**Total Models:** 38 | **Total Routes:** 30 | **Status:** Session 19 Complete
+**Last Updated:** November 1, 2025
+**Total Models:** 38 | **Total Routes:** 31 | **Status:** Session 22 Complete
 
 > **DOCUMENTATION POLICY:**
 >
@@ -46,6 +46,7 @@
 
 - Browse page filters → [Eco Impact V2](../features/eco-impact-v2.md#browse-filters)
 - Product variants in cart → [Product Variants](../features/product-variants.md)
+- Checkout donations → [Nonprofit Donations](../features/nonprofit-donations.md#flow-2-buyer-optional-donations) (buyer impact tracking)
 - Order tracking → See buyer-experience.md#order-management
 
 ---
@@ -192,13 +193,16 @@ See [TECH_STACK.md](../reference/TECH_STACK.md) for full details and decision lo
 - Seller finance system (balance, payouts, transactions, Stripe Connect) - Session 17
 - Admin financial dashboard (platform-wide balance, payouts, seller monitoring) - Session 18
 - Buyer-seller messaging (text + images, order context, unread counts) - Session 19
+- UI improvements and Faire-inspired design refinements - Session 20
+- Nonprofit donation system - Flows 1 & 2 (seller contributions, buyer donations, admin payouts) - Session 21-22
 
 ### 🚧 In Progress (Phase 8)
 
-- Admin Panel (85% complete)
+- Admin Panel (95% complete)
   - Dashboard metrics ✅
   - User management ✅
   - Nonprofit management ✅
+  - Nonprofit payouts ✅
   - Applications ✅
   - Product moderation ✅
   - Financial analytics ✅
@@ -229,6 +233,7 @@ See [TECH_STACK.md](../reference/TECH_STACK.md) for full details and decision lo
 │   ├── product-variants.md (variant system)
 │   ├── shop-sections.md (section organization)
 │   ├── eco-impact-v2.md (eco-profiles & filters)
+│   ├── nonprofit-donations.md (3-flow donation system)
 │   └── smart-gate.md (application wizard)
 ├── /reference/
 │   └── TECH_STACK.md (technologies & decisions)

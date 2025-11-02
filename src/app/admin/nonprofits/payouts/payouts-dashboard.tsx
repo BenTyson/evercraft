@@ -29,11 +29,18 @@ interface PendingNonprofit {
   };
   totalAmount: number;
   donationCount: number;
+  sellerContributionAmount: number;
+  sellerContributionCount: number;
+  buyerDirectAmount: number;
+  buyerDirectCount: number;
+  platformRevenueAmount: number;
+  platformRevenueCount: number;
   oldestDonation: Date;
   donations: Array<{
     id: string;
     amount: number;
     createdAt: Date;
+    donorType: string;
     shop: { name: string } | null;
     order: { orderNumber: string; createdAt: Date };
   }>;
@@ -225,6 +232,25 @@ export function PayoutsDashboard() {
                         <p className="text-sm text-gray-600">
                           {item.donationCount} donation{item.donationCount !== 1 ? 's' : ''}
                         </p>
+                        <div className="mt-2 space-y-1 text-xs text-gray-500">
+                          {item.sellerContributionCount > 0 && (
+                            <div>
+                              Sellers: ${item.sellerContributionAmount.toFixed(2)} (
+                              {item.sellerContributionCount})
+                            </div>
+                          )}
+                          {item.buyerDirectCount > 0 && (
+                            <div>
+                              Buyers: ${item.buyerDirectAmount.toFixed(2)} ({item.buyerDirectCount})
+                            </div>
+                          )}
+                          {item.platformRevenueCount > 0 && (
+                            <div>
+                              Platform: ${item.platformRevenueAmount.toFixed(2)} (
+                              {item.platformRevenueCount})
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* Actions */}
@@ -288,6 +314,7 @@ export function PayoutsDashboard() {
                             <tr>
                               <th className="px-4 py-2 text-left">Date</th>
                               <th className="px-4 py-2 text-left">Order</th>
+                              <th className="px-4 py-2 text-left">Type</th>
                               <th className="px-4 py-2 text-left">Shop</th>
                               <th className="px-4 py-2 text-right">Amount</th>
                             </tr>
@@ -302,6 +329,23 @@ export function PayoutsDashboard() {
                                 </td>
                                 <td className="px-4 py-3 font-medium text-gray-900">
                                   {donation.order.orderNumber}
+                                </td>
+                                <td className="px-4 py-3">
+                                  {donation.donorType === 'SELLER_CONTRIBUTION' && (
+                                    <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-800">
+                                      Seller
+                                    </span>
+                                  )}
+                                  {donation.donorType === 'BUYER_DIRECT' && (
+                                    <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
+                                      Buyer
+                                    </span>
+                                  )}
+                                  {donation.donorType === 'PLATFORM_REVENUE' && (
+                                    <span className="inline-flex items-center rounded-full bg-purple-100 px-2 py-1 text-xs font-semibold text-purple-800">
+                                      Platform
+                                    </span>
+                                  )}
                                 </td>
                                 <td className="px-4 py-3 text-gray-600">
                                   {donation.shop?.name || 'N/A'}
