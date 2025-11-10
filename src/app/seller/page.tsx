@@ -68,7 +68,7 @@ export default async function SellerDashboardPage() {
                 {activeProducts} active, {draftProducts} draft
               </p>
             </div>
-            <div className="bg-eco-light text-forest-dark rounded-full p-3">
+            <div className="rounded-full bg-gray-100 p-3 text-gray-600">
               <Package className="size-6" />
             </div>
           </div>
@@ -84,7 +84,7 @@ export default async function SellerDashboardPage() {
                 To {shop.nonprofit?.name || 'nonprofit'}
               </p>
             </div>
-            <div className="rounded-full bg-pink-50 p-3 text-pink-600">
+            <div className="rounded-full bg-gray-100 p-3 text-gray-600">
               <DollarSign className="size-6" />
             </div>
           </div>
@@ -106,7 +106,7 @@ export default async function SellerDashboardPage() {
                 {shop.isVerified ? 'Ready to sell' : 'Awaiting verification'}
               </p>
             </div>
-            <div className="rounded-full bg-blue-50 p-3 text-blue-600">
+            <div className="rounded-full bg-gray-100 p-3 text-gray-600">
               <TrendingUp className="size-6" />
             </div>
           </div>
@@ -119,9 +119,9 @@ export default async function SellerDashboardPage() {
         <div className="grid gap-4 md:grid-cols-2">
           <Link
             href="/seller/products/new"
-            className="hover:bg-eco-light/30 flex items-center gap-3 rounded-lg border p-4 transition-colors"
+            className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-gray-100"
           >
-            <div className="bg-eco-light text-forest-dark rounded-full p-2">
+            <div className="rounded-full bg-gray-100 p-2 text-gray-600">
               <Plus className="size-5" />
             </div>
             <div>
@@ -132,9 +132,9 @@ export default async function SellerDashboardPage() {
 
           <Link
             href="/seller/products"
-            className="hover:bg-eco-light/30 flex items-center gap-3 rounded-lg border p-4 transition-colors"
+            className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-gray-100"
           >
-            <div className="bg-eco-light text-forest-dark rounded-full p-2">
+            <div className="rounded-full bg-gray-100 p-2 text-gray-600">
               <Package className="size-5" />
             </div>
             <div>

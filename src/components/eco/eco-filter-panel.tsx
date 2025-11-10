@@ -87,7 +87,16 @@ export interface EcoFilterPanelProps extends Omit<React.ComponentProps<'div'>, '
   showClearAll?: boolean;
 }
 
-function EcoFilterPanel({ filters, onFilterChange, className, ...props }: EcoFilterPanelProps) {
+function EcoFilterPanel({
+  filters,
+  onFilterChange,
+  className,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  resultCount: _resultCount,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  showClearAll: _showClearAll,
+  ...props
+}: EcoFilterPanelProps) {
   const isExpanded = true;
 
   // Group filters by category

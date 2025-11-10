@@ -91,14 +91,38 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
 - Cart clearing on successful order (prevents redirect to empty cart)
 - Links to orders page and continue shopping
 
-### Buyer Dashboard (Auth Required)
+### Buyer Account (Auth Required) ⭐ Session 22
 
-| Route              | File                                | Lines | Description                |
-| ------------------ | ----------------------------------- | ----- | -------------------------- |
-| `/orders`          | `/src/app/orders/page.tsx`          | 216   | User's order history       |
-| `/orders/[id]`     | `/src/app/orders/[id]/page.tsx`     | 353   | Order detail with tracking |
-| `/account/reviews` | `/src/app/account/reviews/page.tsx` | 56    | User's reviews management  |
-| `/favorites`       | `/src/app/favorites/page.tsx`       | 123   | User's favorited products  |
+**Last Updated:** November 2025
+
+| Route                    | File                                    | Lines | Description                    |
+| ------------------------ | --------------------------------------- | ----- | ------------------------------ |
+| `/account`               | `/src/app/account/page.tsx`             | ~200  | Account dashboard with stats   |
+| `/account/orders`        | `/src/app/account/orders/page.tsx`      | 216   | User's order history           |
+| `/account/orders/[id]`   | `/src/app/account/orders/[id]/page.tsx` | 353   | Order detail with tracking     |
+| `/account/messages`      | `/src/app/account/messages/page.tsx`    | 152   | Inbox with conversations       |
+| `/account/messages/[id]` | `/src/app/account/messages/[id]/...`    | 113   | Thread with seller             |
+| `/account/favorites`     | `/src/app/account/favorites/page.tsx`   | 123   | User's favorited products      |
+| `/account/reviews`       | `/src/app/account/reviews/page.tsx`     | 56    | User's reviews management      |
+| `/account/addresses`     | `/src/app/account/addresses/page.tsx`   | -     | Saved shipping addresses       |
+| `/account/preferences`   | `/src/app/account/preferences/page.tsx` | -     | Communication preferences      |
+| `/account/settings`      | `/src/app/account/settings/page.tsx`    | -     | Account settings               |
+| `/account/impact`        | `/src/app/account/impact/page.tsx`      | ~250  | Buyer donation impact tracking |
+
+**Layout Features (Session 22):**
+
+- Persistent sidebar navigation (desktop: 240px)
+- Mobile-responsive drawer (slide-out from right)
+- Clean gray color scheme matching admin dashboards
+- Active state uses forest-dark accent
+- Redirects from old routes (`/orders` → `/account/orders`, `/favorites` → `/account/favorites`, `/messages` → `/account/messages`)
+
+**Account Dashboard Features:**
+
+- Stats cards: Orders, Messages (with unread badge), Favorites
+- Recent orders preview (last 3)
+- Recent messages preview (last 3 conversations)
+- Quick action links
 
 **Order Features:**
 
@@ -130,22 +154,16 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
 | `/sign-in/[[...sign-in]]` | `/src/app/sign-in/[[...sign-in]]/page.tsx` | Clerk sign-in |
 | `/sign-up/[[...sign-up]]` | `/src/app/sign-up/[[...sign-up]]/page.tsx` | Clerk sign-up |
 
-### Messaging (Auth Required)
-
-| Route                | File                                  | Lines | Description                    |
-| -------------------- | ------------------------------------- | ----- | ------------------------------ |
-| `/messages`          | `/src/app/messages/page.tsx`          | 152   | Buyer inbox with conversations |
-| `/messages/[userId]` | `/src/app/messages/[userId]/page.tsx` | 113   | Thread with seller             |
-
-**Messaging Features:**
+**Messaging Features (Moved to /account/messages in Session 22):**
 
 - Conversation-based inbox (grouped by participants)
 - Text messages (up to 2000 characters)
 - Image attachments (up to 3 per message, 4MB each)
 - Order context linking
-- Unread count badge in header
+- Unread count badge in header and account nav
 - Real-time read status updates
 - Lightbox image viewer
+- Integrated into account dashboard with recent messages preview
 
 **Entry Points:**
 
@@ -153,6 +171,7 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
 - Shop pages: Contact Shop Owner button in hero
 - Product cards: MessageCircle icon on hover
 - Order detail pages: Message Seller button per order item
+- Account dashboard: Messages stat card and recent preview
 
 ---
 

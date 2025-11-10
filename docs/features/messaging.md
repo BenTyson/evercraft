@@ -2,7 +2,7 @@
 
 Complete reference for buyer-seller messaging with text and image support.
 
-**Last Updated:** October 22, 2025 (Session 19)
+**Last Updated:** November 2025 (Session 22: Routes moved to /account/messages for buyer)
 
 ---
 
@@ -100,18 +100,20 @@ model Message {
 
 ## Page Routes
 
-### Buyer Routes
+### Buyer Routes (Session 22: Moved to /account/messages)
 
-| Route                | File                                  | Lines | Description                    |
-| -------------------- | ------------------------------------- | ----- | ------------------------------ |
-| `/messages`          | `/src/app/messages/page.tsx`          | 152   | Buyer inbox with conversations |
-| `/messages/[userId]` | `/src/app/messages/[userId]/page.tsx` | 113   | Thread with specific seller    |
+| Route                        | File                                          | Lines | Description                    |
+| ---------------------------- | --------------------------------------------- | ----- | ------------------------------ |
+| `/account/messages`          | `/src/app/account/messages/page.tsx`          | 152   | Buyer inbox with conversations |
+| `/account/messages/[userId]` | `/src/app/account/messages/[userId]/page.tsx` | 113   | Thread with specific seller    |
 
 **Features:**
 
-- SiteHeaderWrapper integration (shows unread count badge)
-- Full-page layout with header
+- Integrated into account layout with persistent sidebar navigation
+- Unread count badge in account nav and header
+- Recent messages preview on account dashboard
 - Responsive design (mobile + desktop)
+- Old routes redirect: `/messages` → `/account/messages`
 
 ### Seller Routes
 

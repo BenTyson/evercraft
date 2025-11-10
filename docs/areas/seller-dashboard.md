@@ -2,7 +2,7 @@
 
 Complete reference for seller-related routes, components, and server actions.
 
-**Last Updated:** October 29, 2025 (Session 21: Automated Stripe Transfers & Nonprofit Impact Dashboard)
+**Last Updated:** November 2025 (Session 22: Dashboard UI Redesign with Clean Gray Color Scheme)
 
 ---
 
@@ -17,15 +17,25 @@ Sellers can manage products, orders, analytics, marketing, and shop settings thr
 - [Eco Impact V2](../features/eco-impact-v2.md) - Shop eco-profiles
 - [Nonprofit Donations](../features/nonprofit-donations.md) - Three-flow donation system and impact tracking
 - [Database Schema](../session-start/database_schema.md) - Shop/Product/OrderItem models
+- [Design System](../planning/DESIGN_SYSTEM.md#dashboard-color-philosophy-session-22) - Dashboard color guidelines ⭐ Session 22
 
-**Seller Navigation (Session 21):**
+**Seller Navigation (Session 22 Redesign):**
 
-The seller dashboard sidebar includes:
+The seller dashboard features a persistent sidebar (240px) with clean, consistent navigation:
 
 - Dashboard, Products, Sections, Orders
 - **Finance** - Stripe Connect payouts and transactions
-- **Impact** - Nonprofit contribution tracking and reports ⭐ NEW
+- **Impact** - Nonprofit contribution tracking and reports
 - Analytics, Settings
+
+**UI Updates (Session 22):**
+
+- Clean gray color palette for professional appearance
+- All stat card icons use `bg-gray-100 text-gray-600`
+- Active navigation uses `bg-forest-dark/10 text-forest-dark`
+- Removed bright colored backgrounds (blue, pink, eco-light)
+- Consistent patterns across all dashboard pages
+- See [Dashboard Color Philosophy](../planning/DESIGN_SYSTEM.md#dashboard-color-philosophy-session-22) for details
 
 ---
 

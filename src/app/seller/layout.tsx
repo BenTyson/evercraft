@@ -5,32 +5,10 @@
  */
 
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
-import {
-  Home,
-  Package,
-  Settings,
-  BarChart3,
-  Leaf,
-  ShoppingBag,
-  LayoutList,
-  DollarSign,
-  Heart,
-} from 'lucide-react';
+import { Leaf } from 'lucide-react';
 import { SiteHeaderWrapper } from '@/components/layout/site-header-wrapper';
-import { cn } from '@/lib/utils';
+import { SellerNavigation } from '@/components/seller/seller-navigation';
 import { isSeller } from '@/lib/auth';
-
-const navigation = [
-  { name: 'Dashboard', href: '/seller', icon: Home },
-  { name: 'Products', href: '/seller/products', icon: Package },
-  { name: 'Sections', href: '/seller/sections', icon: LayoutList },
-  { name: 'Orders', href: '/seller/orders', icon: ShoppingBag },
-  { name: 'Finance', href: '/seller/finance', icon: DollarSign },
-  { name: 'Impact', href: '/seller/impact', icon: Heart },
-  { name: 'Analytics', href: '/seller/analytics', icon: BarChart3 },
-  { name: 'Settings', href: '/seller/settings', icon: Settings },
-];
 
 export default async function SellerLayout({ children }: { children: React.ReactNode }) {
   const seller = await isSeller();
@@ -40,14 +18,14 @@ export default async function SellerLayout({ children }: { children: React.React
   }
 
   return (
-    <div>
+    <div className="bg-gray-50">
       <SiteHeaderWrapper />
 
-      <div className="border-b bg-neutral-50 dark:bg-neutral-900">
+      <div className="border-b border-gray-200 bg-white">
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-2 py-4">
-            <Leaf className="text-forest-dark size-5" />
-            <span className="text-sm font-semibold">Seller Dashboard</span>
+            <Leaf className="size-5 text-gray-600" />
+            <span className="text-sm font-semibold text-gray-900">Seller Dashboard</span>
           </div>
         </div>
       </div>
@@ -55,26 +33,7 @@ export default async function SellerLayout({ children }: { children: React.React
       <div className="container mx-auto px-4 py-8">
         <div className="grid gap-8 lg:grid-cols-[240px_1fr]">
           {/* Sidebar Navigation */}
-          <aside className="hidden lg:block">
-            <nav className="bg-card sticky top-24 space-y-1 rounded-lg border p-4">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={cn(
-                      'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                      'hover:bg-eco-light/50 hover:text-forest-dark'
-                    )}
-                  >
-                    <Icon className="size-5" />
-                    {item.name}
-                  </Link>
-                );
-              })}
-            </nav>
-          </aside>
+          <SellerNavigation />
 
           {/* Main Content */}
           <main className="min-w-0">{children}</main>

@@ -139,8 +139,8 @@ export function ImpactDashboard() {
               </p>
               <p className="mt-1 text-xs text-gray-500">{impact.donationCount} donations</p>
             </div>
-            <div className="rounded-full bg-green-100 p-3">
-              <DollarSign className="size-6 text-green-600" />
+            <div className="rounded-full bg-gray-100 p-3">
+              <DollarSign className="size-6 text-gray-600" />
             </div>
           </div>
         </div>
@@ -155,8 +155,8 @@ export function ImpactDashboard() {
               </p>
               <p className="mt-1 text-xs text-gray-500">{impact.paidCount} donations</p>
             </div>
-            <div className="rounded-full bg-blue-100 p-3">
-              <CheckCircle className="size-6 text-blue-600" />
+            <div className="rounded-full bg-gray-100 p-3">
+              <CheckCircle className="size-6 text-gray-600" />
             </div>
           </div>
         </div>
@@ -171,8 +171,8 @@ export function ImpactDashboard() {
               </p>
               <p className="mt-1 text-xs text-gray-500">{impact.pendingCount} donations</p>
             </div>
-            <div className="rounded-full bg-yellow-100 p-3">
-              <Clock className="size-6 text-yellow-600" />
+            <div className="rounded-full bg-gray-100 p-3">
+              <Clock className="size-6 text-gray-600" />
             </div>
           </div>
         </div>
@@ -186,32 +186,24 @@ export function ImpactDashboard() {
             <TrendingUp className="size-5 text-gray-400" />
           </div>
 
-          {/* Simple bar chart visualization */}
+          {/* Simple list visualization */}
           <div className="space-y-3">
             {impact.monthlyData
               .filter((m) => m.amount > 0)
-              .map((month) => {
-                const maxAmount = Math.max(...impact.monthlyData.map((m) => m.amount));
-                const barWidth = maxAmount > 0 ? (month.amount / maxAmount) * 100 : 0;
-
-                return (
-                  <div key={month.month}>
-                    <div className="mb-1 flex items-center justify-between text-sm">
-                      <span className="font-medium text-gray-700">{month.month}</span>
-                      <span className="font-semibold text-gray-900">
-                        ${month.amount.toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="h-2 w-full rounded-full bg-gray-100">
-                      <div
-                        className="h-2 rounded-full bg-green-500"
-                        style={{ width: `${barWidth}%` }}
-                      />
-                    </div>
-                    <p className="mt-1 text-xs text-gray-500">{month.count} donations</p>
+              .map((month) => (
+                <div
+                  key={month.month}
+                  className="flex items-center justify-between border-b border-gray-100 pb-3 last:border-0"
+                >
+                  <div>
+                    <span className="font-medium text-gray-900">{month.month}</span>
+                    <p className="text-xs text-gray-500">{month.count} donations</p>
                   </div>
-                );
-              })}
+                  <span className="text-xl font-bold text-gray-900">
+                    ${month.amount.toFixed(2)}
+                  </span>
+                </div>
+              ))}
           </div>
         </div>
       )}
@@ -236,8 +228,8 @@ export function ImpactDashboard() {
                       className="size-12 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="flex size-12 items-center justify-center rounded-full bg-pink-100">
-                      <Heart className="size-6 text-pink-600" />
+                    <div className="flex size-12 items-center justify-center rounded-full bg-gray-100">
+                      <Heart className="size-6 text-gray-600" />
                     </div>
                   )}
                   <div>
@@ -299,12 +291,12 @@ export function ImpactDashboard() {
                   <td className="px-4 py-3 text-gray-700">{donation.nonprofit.name}</td>
                   <td className="px-4 py-3">
                     {donation.status === 'PAID' ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-1 text-xs font-semibold text-green-700">
                         <CheckCircle className="size-3" />
                         Distributed
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-800">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-yellow-50 px-2 py-1 text-xs font-semibold text-yellow-700">
                         <Clock className="size-3" />
                         Pending
                       </span>
@@ -321,9 +313,9 @@ export function ImpactDashboard() {
       </div>
 
       {/* Tax Information Note */}
-      <div className="rounded-lg border border-blue-200 bg-blue-50 p-6">
-        <h3 className="mb-2 font-bold text-blue-900">Tax Deduction Information</h3>
-        <p className="text-sm text-blue-800">
+      <div className="rounded-lg border border-gray-200 bg-gray-50 p-6">
+        <h3 className="mb-2 font-bold text-gray-900">Tax Deduction Information</h3>
+        <p className="text-sm text-gray-700">
           Your donations may be tax-deductible if you itemize deductions. Evercraft facilitates your
           donations and can provide documentation for your tax records. Consult with a tax
           professional to determine your eligibility for deductions. Donations shown as

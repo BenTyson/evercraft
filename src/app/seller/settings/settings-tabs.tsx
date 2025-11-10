@@ -102,17 +102,19 @@ export default function SettingsTabs({ shop }: SettingsTabsProps) {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex w-full items-start gap-3 rounded-lg px-4 py-3 text-left transition-colors ${
-                  isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
+                  isActive
+                    ? 'bg-forest-dark/10 text-forest-dark'
+                    : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
                 <Icon
                   className={`mt-0.5 size-5 flex-shrink-0 ${
-                    isActive ? 'text-blue-700' : 'text-gray-400'
+                    isActive ? 'text-forest-dark' : 'text-gray-400'
                   }`}
                 />
                 <div className="flex-1">
                   <p
-                    className={`text-sm font-medium ${isActive ? 'text-blue-700' : 'text-gray-900'}`}
+                    className={`text-sm font-medium ${isActive ? 'text-forest-dark' : 'text-gray-900'}`}
                   >
                     {tab.name}
                   </p>

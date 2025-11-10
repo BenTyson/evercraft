@@ -104,8 +104,6 @@ export default async function SellerAnalyticsPage() {
           value={`$${analytics.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           subtitle={`${analytics.revenueGrowth >= 0 ? '+' : ''}${analytics.revenueGrowth.toFixed(1)}% from last month`}
           icon={DollarSign}
-          iconColor="text-green-600"
-          bgColor="bg-green-50"
           trend={analytics.revenueGrowth >= 0 ? 'up' : 'down'}
         />
 
@@ -114,8 +112,6 @@ export default async function SellerAnalyticsPage() {
           value={analytics.totalOrders.toLocaleString()}
           subtitle={`${analytics.ordersGrowth >= 0 ? '+' : ''}${analytics.ordersGrowth.toFixed(1)}% from last month`}
           icon={ShoppingBag}
-          iconColor="text-blue-600"
-          bgColor="bg-blue-50"
           trend={analytics.ordersGrowth >= 0 ? 'up' : 'down'}
         />
 
@@ -124,8 +120,6 @@ export default async function SellerAnalyticsPage() {
           value={`$${analytics.averageOrderValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           subtitle="Per order average"
           icon={TrendingUp}
-          iconColor="text-purple-600"
-          bgColor="bg-purple-50"
         />
 
         <MetricCard
@@ -133,8 +127,6 @@ export default async function SellerAnalyticsPage() {
           value={`$${analytics.totalDonations.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           subtitle="To selected nonprofit"
           icon={Heart}
-          iconColor="text-pink-600"
-          bgColor="bg-pink-50"
         />
       </div>
 
@@ -170,14 +162,14 @@ export default async function SellerAnalyticsPage() {
                 </div>
                 <div className="text-center">
                   <div className="mb-1 flex items-center justify-center">
-                    <Users className="size-5 text-green-600" />
+                    <Users className="size-5 text-gray-600" />
                   </div>
                   <p className="text-2xl font-bold text-gray-900">{customerStats.newCustomers}</p>
                   <p className="text-sm text-gray-600">New</p>
                 </div>
                 <div className="text-center">
                   <div className="mb-1 flex items-center justify-center">
-                    <Users className="size-5 text-blue-600" />
+                    <Users className="size-5 text-gray-600" />
                   </div>
                   <p className="text-2xl font-bold text-gray-900">
                     {customerStats.repeatCustomers}
@@ -187,9 +179,9 @@ export default async function SellerAnalyticsPage() {
               </div>
 
               {/* Repeat Rate */}
-              <div className="rounded-lg bg-blue-50 p-4">
-                <p className="text-sm font-medium text-blue-900">Repeat Customer Rate</p>
-                <p className="mt-1 text-2xl font-bold text-blue-900">
+              <div className="rounded-lg bg-gray-50 p-4">
+                <p className="text-sm font-medium text-gray-700">Repeat Customer Rate</p>
+                <p className="mt-1 text-2xl font-bold text-gray-900">
                   {customerStats.repeatRate.toFixed(1)}%
                 </p>
               </div>
@@ -239,9 +231,9 @@ export default async function SellerAnalyticsPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-lg bg-pink-50 p-4">
-                  <p className="text-sm font-medium text-pink-900">Total Donated</p>
-                  <p className="mt-1 text-2xl font-bold text-pink-900">
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <p className="text-sm font-medium text-gray-700">Total Donated</p>
+                  <p className="mt-1 text-2xl font-bold text-gray-900">
                     $
                     {nonprofitImpact.totalDonated.toLocaleString('en-US', {
                       minimumFractionDigits: 2,
@@ -249,16 +241,16 @@ export default async function SellerAnalyticsPage() {
                     })}
                   </p>
                 </div>
-                <div className="rounded-lg bg-pink-50 p-4">
-                  <p className="text-sm font-medium text-pink-900">Orders Contributed</p>
-                  <p className="mt-1 text-2xl font-bold text-pink-900">
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <p className="text-sm font-medium text-gray-700">Orders Contributed</p>
+                  <p className="mt-1 text-2xl font-bold text-gray-900">
                     {nonprofitImpact.orderCount}
                   </p>
                 </div>
               </div>
 
-              <div className="rounded-lg border border-pink-200 bg-pink-50 p-4">
-                <p className="text-sm text-pink-800">
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <p className="text-sm text-gray-700">
                   You&apos;re donating <strong>{nonprofitImpact.donationPercentage}%</strong> of
                   your sales to this nonprofit.
                 </p>
@@ -273,36 +265,36 @@ export default async function SellerAnalyticsPage() {
             <h2 className="mb-6 text-xl font-bold text-gray-900">Environmental Impact</h2>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-lg bg-green-50 p-4">
+                <div className="rounded-lg bg-gray-50 p-4">
                   <div className="mb-2 flex items-center gap-2">
-                    <Leaf className="size-5 text-green-600" />
-                    <p className="text-sm font-medium text-green-900">Avg Eco-Score</p>
+                    <Leaf className="size-5 text-gray-600" />
+                    <p className="text-sm font-medium text-gray-700">Avg Eco-Score</p>
                   </div>
-                  <p className="text-2xl font-bold text-green-900">
+                  <p className="text-2xl font-bold text-gray-900">
                     {environmentalImpact.averageEcoScore}/100
                   </p>
                 </div>
 
-                <div className="rounded-lg bg-green-50 p-4">
+                <div className="rounded-lg bg-gray-50 p-4">
                   <div className="mb-2 flex items-center gap-2">
-                    <Leaf className="size-5 text-green-600" />
-                    <p className="text-sm font-medium text-green-900">Carbon Saved</p>
+                    <Leaf className="size-5 text-gray-600" />
+                    <p className="text-sm font-medium text-gray-700">Carbon Saved</p>
                   </div>
-                  <p className="text-2xl font-bold text-green-900">
+                  <p className="text-2xl font-bold text-gray-900">
                     {environmentalImpact.carbonSaved}kg
                   </p>
                 </div>
               </div>
 
-              <div className="rounded-lg bg-blue-50 p-4">
-                <p className="text-sm font-medium text-blue-900">Plastic Avoided</p>
-                <p className="mt-1 text-2xl font-bold text-blue-900">
+              <div className="rounded-lg bg-gray-50 p-4">
+                <p className="text-sm font-medium text-gray-700">Plastic Avoided</p>
+                <p className="mt-1 text-2xl font-bold text-gray-900">
                   {environmentalImpact.plasticAvoided}kg
                 </p>
               </div>
 
-              <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-                <p className="text-sm text-green-800">
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <p className="text-sm text-gray-700">
                   You&apos;ve sold <strong>{environmentalImpact.itemsSold}</strong> sustainable
                   items, making a real environmental difference!
                 </p>
@@ -320,20 +312,10 @@ interface MetricCardProps {
   value: string;
   subtitle: string;
   icon: React.ElementType;
-  iconColor: string;
-  bgColor: string;
   trend?: 'up' | 'down';
 }
 
-function MetricCard({
-  title,
-  value,
-  subtitle,
-  icon: Icon,
-  iconColor,
-  bgColor,
-  trend,
-}: MetricCardProps) {
+function MetricCard({ title, value, subtitle, icon: Icon, trend }: MetricCardProps) {
   return (
     <div className="rounded-lg border bg-white p-6">
       <div className="flex items-center justify-between">
@@ -357,8 +339,8 @@ function MetricCard({
             </p>
           </div>
         </div>
-        <div className={`rounded-full p-3 ${bgColor}`}>
-          <Icon className={`size-6 ${iconColor}`} />
+        <div className="rounded-full bg-gray-100 p-3">
+          <Icon className="size-6 text-gray-600" />
         </div>
       </div>
     </div>

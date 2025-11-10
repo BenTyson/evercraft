@@ -835,12 +835,219 @@ module.exports = {
 - Moved search to browse page (removed from global navigation)
 - Emphasized whitespace and minimal design elements
 
-### Testing Tools
+###Testing Tools
 
 - **Lighthouse** - Performance, accessibility audit
 - **axe DevTools** - Accessibility testing
 - **WebAIM Contrast Checker** - Color contrast
 - **Responsively App** - Multi-device preview
+
+---
+
+## Dashboard Color Philosophy (Session 22) 🎨
+
+**Last Updated:** November 2025
+
+**Context:** Buyer account and seller dashboard were redesigned for professional cohesion with clean, neutral colors and consistent navigation patterns.
+
+### Core Principles
+
+1. **Neutral by Default** - Gray palette for UI elements, icons, and backgrounds
+2. **Purposeful Accents** - Forest-dark for active states, semantic colors for status only
+3. **Consistent Navigation** - Same patterns across buyer/seller dashboards
+4. **Subtle Semantics** - Status colors kept but muted (50/100 backgrounds)
+
+### Standard Color Palette
+
+**Neutral UI (Default):**
+
+```css
+bg-gray-50      /* Page background */
+bg-gray-100     /* Icon/button backgrounds, card hover states */
+bg-white        /* Card/section backgrounds */
+text-gray-600   /* Icon colors, secondary labels */
+text-gray-700   /* Tertiary text, inactive states */
+text-gray-900   /* Primary text, headings */
+border-gray-200 /* Card borders, dividers */
+```
+
+**Active States:**
+
+```css
+bg-forest-dark/10 text-forest-dark   /* Active navigation, selected tabs */
+border-forest-dark                    /* Active tab underlines */
+```
+
+**Semantic Status Colors (Subtle Use Only):**
+
+```css
+bg-green-50 text-green-700    /* Success, published, active status */
+bg-yellow-50 text-yellow-700  /* Warning, pending, draft status */
+bg-red-50 text-red-700        /* Error, cancelled, failed status */
+```
+
+### What to Avoid
+
+❌ **Don't:**
+
+- Bright colored icon backgrounds (blue-50, pink-50, eco-light)
+- Multiple competing accent colors in stat cards
+- Colored backgrounds for decorative/non-semantic icons
+- Eco-themed colors outside actual eco-content
+
+✅ **Do:**
+
+- Use gray for all stat card icons
+- Reserve forest-dark for active/selected states
+- Use semantic colors only for actual status indicators
+- Maintain visual consistency across dashboards
+
+### Navigation Components
+
+**Sidebar Pattern:**
+
+```tsx
+// Active nav item
+<Link className="bg-forest-dark/10 text-forest-dark flex items-center gap-3 rounded-md px-3 py-2">
+  <Icon className="size-5 text-forest-dark" />
+  Dashboard
+</Link>
+
+// Inactive nav item
+<Link className="text-gray-700 hover:bg-gray-100 hover:text-gray-900 flex items-center gap-3 rounded-md px-3 py-2">
+  <Icon className="size-5 text-gray-600" />
+  Settings
+</Link>
+```
+
+**Tab Pattern:**
+
+```tsx
+// Active tab
+<button className="bg-forest-dark/10 text-forest-dark border-b-2 border-forest-dark px-4 py-3">
+  Overview
+</button>
+
+// Inactive tab
+<button className="text-gray-700 hover:bg-gray-100 border-b-2 border-transparent px-4 py-3">
+  Details
+</button>
+```
+
+### Stat Cards & Metrics
+
+**Standard Pattern:**
+
+```tsx
+<div className="rounded-lg border border-gray-200 bg-white p-6">
+  <div className="flex items-center justify-between">
+    <div>
+      <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+      <p className="mt-2 text-3xl font-bold text-gray-900">$12,345</p>
+      <p className="mt-1 text-xs text-gray-500">+12% from last month</p>
+    </div>
+    {/* Always gray for decorative icons */}
+    <div className="rounded-full bg-gray-100 p-3">
+      <DollarSign className="size-6 text-gray-600" />
+    </div>
+  </div>
+</div>
+```
+
+### Selection & Interactive States
+
+**Selection Indicators:**
+
+```tsx
+// Selected checkbox
+<CheckSquare className="size-5 text-gray-700" />
+
+// Unselected
+<Square className="size-5 text-gray-400" />
+
+// Selection ring
+<div className="ring-2 ring-gray-400 ring-offset-2">
+```
+
+**Badges:**
+
+```tsx
+// Neutral badges (counts, categories)
+<span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
+  5 products
+</span>
+
+// Status badges (semantic)
+<span className="rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-700">
+  Published
+</span>
+```
+
+### Layout Structure
+
+**Dashboard Page:**
+
+```tsx
+<div className="bg-gray-50">
+  {' '}
+  {/* Page background */}
+  <SiteHeaderWrapper />
+  <div className="container mx-auto px-4 py-8">
+    <div className="grid gap-8 lg:grid-cols-[240px_1fr]">
+      <Navigation /> {/* 240px sidebar */}
+      <main>{children}</main>
+    </div>
+  </div>
+</div>
+```
+
+**Section Cards:**
+
+```tsx
+<div className="space-y-8">
+  <div className="rounded-lg border border-gray-200 bg-white p-6">
+    <h2 className="mb-6 text-xl font-bold text-gray-900">Section Title</h2>
+    {/* Content */}
+  </div>
+</div>
+```
+
+### Bulk Actions & Toolbars
+
+**Standard Toolbar:**
+
+```tsx
+<div className="mb-4 flex items-center justify-between rounded-lg border border-gray-300 bg-gray-50 px-4 py-3">
+  <span className="text-sm font-medium">3 items selected</span>
+  <div className="flex gap-2">
+    <Button variant="outline">Edit</Button>
+    <Button variant="destructive">Delete</Button>
+  </div>
+</div>
+```
+
+### Migration Checklist
+
+When updating dashboard pages to this standard:
+
+- [ ] Replace colored stat card icons with `bg-gray-100 text-gray-600`
+- [ ] Update active nav to `bg-forest-dark/10 text-forest-dark`
+- [ ] Update inactive nav to `text-gray-700 hover:bg-gray-100`
+- [ ] Replace bulk toolbars from eco-light to `bg-gray-50 border-gray-300`
+- [ ] Update selection rings from colored to `ring-gray-400`
+- [ ] Change badge backgrounds from colored to `bg-gray-100 text-gray-700`
+- [ ] Keep semantic status badges (green/yellow/red) but use subtle shades
+- [ ] Update chart colors to single gray or forest-dark
+- [ ] Remove decorative color from non-semantic icons
+
+### Reference Implementations
+
+**Correct Examples:**
+
+- **Buyer Account**: `/src/app/account/page.tsx` - Gray stats, forest-dark nav
+- **Seller Dashboard**: `/src/app/seller/page.tsx` - Gray cards, consistent icons
+- **Seller Analytics**: `/src/app/seller/analytics/page.tsx` - Neutral metrics
+- **Seller Impact**: `/src/app/seller/impact/impact-dashboard.tsx` - Gray charts
 
 ---
 

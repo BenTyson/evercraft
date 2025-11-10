@@ -1,17 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import {
-  ChevronLeft,
-  Bell,
-  Mail,
-  MessageSquare,
-  Star,
-  Smartphone,
-  Save,
-  RotateCcw,
-} from 'lucide-react';
+import { Bell, Mail, MessageSquare, Star, Smartphone, Save, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { updateNotificationPreferences, resetNotificationPreferences } from '@/actions/preferences';
@@ -108,12 +98,6 @@ export function PreferencesClient({ initialPreferences }: PreferencesClientProps
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <Button asChild variant="ghost" size="sm" className="mb-4">
-          <Link href="/account">
-            <ChevronLeft className="mr-1 size-4" />
-            Back to Account
-          </Link>
-        </Button>
         <h1 className="mb-2 text-3xl font-bold">Notification Preferences</h1>
         <p className="text-muted-foreground">Manage your email and notification settings</p>
       </div>
@@ -128,7 +112,7 @@ export function PreferencesClient({ initialPreferences }: PreferencesClientProps
         {/* Email Notifications */}
         <Card className="p-6">
           <div className="mb-6 flex items-center gap-3">
-            <div className="flex size-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+            <div className="flex size-12 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
               <Mail className="size-6" />
             </div>
             <div>
@@ -233,7 +217,7 @@ export function PreferencesClient({ initialPreferences }: PreferencesClientProps
         {/* Other Notifications */}
         <Card className="p-6">
           <div className="mb-6 flex items-center gap-3">
-            <div className="flex size-12 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+            <div className="flex size-12 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
               <Smartphone className="size-6" />
             </div>
             <div>

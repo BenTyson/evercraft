@@ -9,7 +9,6 @@ import { auth } from '@clerk/nextjs/server';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, Store } from 'lucide-react';
-import { SiteHeaderWrapper } from '@/components/layout/site-header-wrapper';
 import { getConversation } from '@/actions/messages';
 import { ConversationThread } from '@/components/messages/conversation-thread';
 import { MarkReadHandler } from '@/components/messages/mark-read-handler';
@@ -26,21 +25,18 @@ export default async function MessageThreadPage({ params }: MessageThreadPagePro
   const { userId: otherUserId } = await params;
 
   if (!userId) {
-    redirect('/sign-in?redirect_url=/messages');
+    redirect('/sign-in?redirect_url=/account/messages');
   }
 
   const result = await getConversation(otherUserId);
 
   if (!result.success || !result.conversation) {
     return (
-      <>
-        <SiteHeaderWrapper />
-        <div className="container mx-auto px-4 py-8">
-          <div className="rounded-lg border border-red-200 bg-red-50 p-6">
-            <p className="text-sm text-red-800">{result.error || 'Failed to load conversation'}</p>
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-6">
+          <p className="text-sm text-red-800">{result.error || 'Failed to load conversation'}</p>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -51,7 +47,6 @@ export default async function MessageThreadPage({ params }: MessageThreadPagePro
 
   return (
     <>
-      <SiteHeaderWrapper />
       {/* Mark conversation as read client-side */}
       {conversation.id && <MarkReadHandler conversationId={conversation.id} />}
       <div className="container mx-auto px-4 py-6">
@@ -59,7 +54,7 @@ export default async function MessageThreadPage({ params }: MessageThreadPagePro
         <div className="mb-4 flex items-center gap-4">
           {/* Back Button */}
           <Button asChild variant="ghost" size="sm" className="lg:hidden">
-            <Link href="/messages">
+            <Link href="/account/messages">
               <ChevronLeft className="mr-1 size-4" />
               Back
             </Link>

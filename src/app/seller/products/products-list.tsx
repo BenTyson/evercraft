@@ -132,7 +132,7 @@ export function ProductsList({ products, viewMode = 'list' }: ProductsListProps)
     <div>
       {/* Bulk Actions Toolbar */}
       {selectedIds.size > 0 && (
-        <div className="bg-eco-light/30 border-eco-dark mb-4 flex items-center justify-between rounded-lg border px-4 py-3">
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-gray-300 bg-gray-50 px-4 py-3">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">
               {selectedIds.size} product{selectedIds.size > 1 ? 's' : ''} selected
@@ -194,7 +194,7 @@ export function ProductsList({ products, viewMode = 'list' }: ProductsListProps)
               <div
                 key={product.id}
                 className={`bg-card flex items-start gap-4 rounded-lg border p-4 transition-all hover:shadow-md ${
-                  isSelected ? 'ring-eco-dark ring-2 ring-offset-2' : ''
+                  isSelected ? 'ring-2 ring-gray-400 ring-offset-2' : ''
                 }`}
               >
                 {/* Checkbox */}
@@ -203,7 +203,7 @@ export function ProductsList({ products, viewMode = 'list' }: ProductsListProps)
                   className="text-muted-foreground hover:text-foreground mt-1 shrink-0 transition-colors"
                 >
                   {isSelected ? (
-                    <CheckSquare className="text-eco-dark size-6" />
+                    <CheckSquare className="size-6 text-gray-700" />
                   ) : (
                     <Square className="size-6" />
                   )}
@@ -245,7 +245,7 @@ export function ProductsList({ products, viewMode = 'list' }: ProductsListProps)
                           </span>
                         )}
                         {product.hasVariants && product._count && product._count.variants > 0 && (
-                          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
                             {product._count.variants} variant
                             {product._count.variants > 1 ? 's' : ''}
                           </span>
@@ -278,7 +278,7 @@ export function ProductsList({ products, viewMode = 'list' }: ProductsListProps)
                       {product.certifications.slice(0, 3).map((cert) => (
                         <span
                           key={cert.id}
-                          className="bg-eco-light text-forest-dark rounded-full px-2 py-0.5 text-xs"
+                          className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700"
                         >
                           {cert.name}
                         </span>
@@ -310,7 +310,7 @@ export function ProductsList({ products, viewMode = 'list' }: ProductsListProps)
               <div
                 key={product.id}
                 className={`bg-card group relative flex flex-col overflow-hidden rounded-lg border transition-all hover:shadow-md ${
-                  isSelected ? 'ring-eco-dark ring-2 ring-offset-2' : ''
+                  isSelected ? 'ring-2 ring-gray-400 ring-offset-2' : ''
                 }`}
               >
                 {/* Checkbox - Top Left */}
@@ -319,7 +319,7 @@ export function ProductsList({ products, viewMode = 'list' }: ProductsListProps)
                   className="absolute top-2 left-2 z-10 rounded bg-white/90 p-1.5 shadow-sm transition-colors hover:bg-white"
                 >
                   {isSelected ? (
-                    <CheckSquare className="text-eco-dark size-5" />
+                    <CheckSquare className="size-5 text-gray-700" />
                   ) : (
                     <Square className="text-muted-foreground size-5" />
                   )}
@@ -348,7 +348,7 @@ export function ProductsList({ products, viewMode = 'list' }: ProductsListProps)
                 <div className="flex flex-1 flex-col gap-3 p-4">
                   <div className="flex-1">
                     <Link href={`/seller/products/${product.id}/edit`}>
-                      <h3 className="hover:text-eco-dark mb-2 line-clamp-2 leading-tight font-bold">
+                      <h3 className="mb-2 line-clamp-2 leading-tight font-bold hover:text-gray-700">
                         {product.title}
                       </h3>
                     </Link>
@@ -364,7 +364,7 @@ export function ProductsList({ products, viewMode = 'list' }: ProductsListProps)
                         </span>
                       )}
                       {product.hasVariants && product._count && product._count.variants > 0 && (
-                        <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
                           {product._count.variants} variant{product._count.variants > 1 ? 's' : ''}
                         </span>
                       )}
@@ -390,7 +390,7 @@ export function ProductsList({ products, viewMode = 'list' }: ProductsListProps)
                         {product.certifications.slice(0, 2).map((cert) => (
                           <span
                             key={cert.id}
-                            className="bg-eco-light text-forest-dark rounded-full px-2 py-0.5 text-xs"
+                            className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700"
                           >
                             {cert.name}
                           </span>

@@ -157,15 +157,15 @@ export function ImpactDashboard() {
                   className="size-16 rounded-full object-cover"
                 />
               ) : (
-                <div className="flex size-16 items-center justify-center rounded-full bg-pink-100">
-                  <Heart className="size-8 text-pink-600" />
+                <div className="flex size-16 items-center justify-center rounded-full bg-gray-100">
+                  <Heart className="size-8 text-gray-600" />
                 </div>
               )}
               <div>
                 <h2 className="text-xl font-bold text-gray-900">{impact.currentNonprofit.name}</h2>
                 <p className="text-sm text-gray-600">{impact.currentNonprofit.mission}</p>
                 <div className="mt-2 flex items-center gap-4">
-                  <span className="text-sm font-semibold text-green-700">
+                  <span className="text-sm font-semibold text-gray-700">
                     {impact.donationPercentage}% of your sales
                   </span>
                   {impact.currentNonprofit.website && (
@@ -220,8 +220,8 @@ export function ImpactDashboard() {
               </p>
               <p className="mt-1 text-xs text-gray-500">{impact.donationCount} donations</p>
             </div>
-            <div className="rounded-full bg-green-100 p-3">
-              <DollarSign className="size-6 text-green-600" />
+            <div className="rounded-full bg-gray-100 p-3">
+              <DollarSign className="size-6 text-gray-600" />
             </div>
           </div>
         </div>
@@ -236,8 +236,8 @@ export function ImpactDashboard() {
               </p>
               <p className="mt-1 text-xs text-gray-500">{impact.paidCount} donations</p>
             </div>
-            <div className="rounded-full bg-blue-100 p-3">
-              <CheckCircle className="size-6 text-blue-600" />
+            <div className="rounded-full bg-gray-100 p-3">
+              <CheckCircle className="size-6 text-gray-600" />
             </div>
           </div>
         </div>
@@ -252,8 +252,8 @@ export function ImpactDashboard() {
               </p>
               <p className="mt-1 text-xs text-gray-500">{impact.pendingCount} donations</p>
             </div>
-            <div className="rounded-full bg-yellow-100 p-3">
-              <Clock className="size-6 text-yellow-600" />
+            <div className="rounded-full bg-gray-100 p-3">
+              <Clock className="size-6 text-gray-600" />
             </div>
           </div>
         </div>
@@ -279,10 +279,7 @@ export function ImpactDashboard() {
                   <span className="font-semibold text-gray-900">${month.amount.toFixed(2)}</span>
                 </div>
                 <div className="h-2 w-full rounded-full bg-gray-100">
-                  <div
-                    className="h-2 rounded-full bg-green-500"
-                    style={{ width: `${barWidth}%` }}
-                  />
+                  <div className="h-2 rounded-full bg-gray-400" style={{ width: `${barWidth}%` }} />
                 </div>
                 <p className="mt-1 text-xs text-gray-500">{month.count} donations</p>
               </div>
@@ -311,8 +308,8 @@ export function ImpactDashboard() {
                       className="size-10 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="flex size-10 items-center justify-center rounded-full bg-pink-100">
-                      <Heart className="size-5 text-pink-600" />
+                    <div className="flex size-10 items-center justify-center rounded-full bg-gray-100">
+                      <Heart className="size-5 text-gray-600" />
                     </div>
                   )}
                   <div>
@@ -403,9 +400,9 @@ export function ImpactDashboard() {
       </div>
 
       {/* Impact Statement */}
-      <div className="rounded-lg border border-green-200 bg-green-50 p-6">
-        <h3 className="mb-2 font-bold text-green-900">Impact Report Note</h3>
-        <p className="text-sm text-green-800">
+      <div className="rounded-lg border border-gray-200 bg-gray-50 p-6">
+        <h3 className="mb-2 font-bold text-gray-900">Impact Report Note</h3>
+        <p className="text-sm text-gray-700">
           This report is for your records and marketing purposes. Evercraft facilitates your
           donations by consolidating contributions and distributing them to nonprofits on your
           behalf. Tax receipts are issued to Evercraft as the donor. You can use these metrics in

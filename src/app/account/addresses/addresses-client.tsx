@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { MapPin, Plus, ChevronLeft } from 'lucide-react';
+import { MapPin, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AddressCard } from '@/components/account/address-card';
 import { AddressFormDialog } from '@/components/account/address-form-dialog';
@@ -62,12 +61,6 @@ export function AddressesClient({ initialAddresses }: AddressesClientProps) {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <Button asChild variant="ghost" size="sm" className="mb-4">
-          <Link href="/account">
-            <ChevronLeft className="mr-1 size-4" />
-            Back to Account
-          </Link>
-        </Button>
         <div className="flex items-center justify-between">
           <div>
             <h1 className="mb-2 text-3xl font-bold">My Addresses</h1>

@@ -71,8 +71,11 @@
 
 - **[Project Plan](../planning/PROJECT_PLAN.md)** - 20-phase roadmap, MVP scope
 - **[Design System](../planning/DESIGN_SYSTEM.md)** - UI components, tokens, patterns
+  - ⭐ **[Dashboard Color Philosophy](../planning/DESIGN_SYSTEM.md#dashboard-color-philosophy-session-22)** - Clean gray palette for admin dashboards (Session 22)
 - **[UX Research](../planning/UX_RESEARCH.md)** - User personas, competitive analysis
 - **[Tech Stack](../reference/TECH_STACK.md)** - Technologies and decision log
+
+> **IMPORTANT for UI/Dashboard work:** All buyer/seller dashboard pages should follow the [Dashboard Color Philosophy](../planning/DESIGN_SYSTEM.md#dashboard-color-philosophy-session-22) established in Session 22. Use neutral grays for UI elements, forest-dark for active states, and semantic colors only for status indicators.
 
 ---
 

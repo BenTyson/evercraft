@@ -1,6 +1,6 @@
 # Evercraft Documentation
 
-**Last Updated:** October 17, 2025
+**Last Updated:** November 2025 (Session 22: Dashboard UI Redesign)
 
 This documentation is organized for optimal AI agent onboarding and reference with **modular, linkable architecture**.
 
@@ -79,9 +79,12 @@ This documentation is organized for optimal AI agent onboarding and reference wi
 
 - `PROJECT_PLAN.md` - Overall vision, all 20 phases, feature roadmap, MVP scope
 - `DESIGN_SYSTEM.md` - UI components, design tokens, styling patterns, accessibility
+  - ⭐ **Dashboard Color Philosophy** (Session 22) - Clean gray palette guidelines for all admin dashboards
 - `UX_RESEARCH.md` - User personas, journey maps, competitive analysis (900+ lines)
 
 **Prompt:** `"Read planning/PROJECT_PLAN.md"` or specific file as needed
+
+> **Session 22 Update:** All dashboard UI work should reference the [Dashboard Color Philosophy](planning/DESIGN_SYSTEM.md#dashboard-color-philosophy-session-22) for consistent gray color scheme.
 
 ---
 

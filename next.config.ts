@@ -31,6 +31,35 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  async redirects() {
+    return [
+      {
+        source: '/orders',
+        destination: '/account/orders',
+        permanent: true,
+      },
+      {
+        source: '/orders/:id',
+        destination: '/account/orders/:id',
+        permanent: true,
+      },
+      {
+        source: '/favorites',
+        destination: '/account/favorites',
+        permanent: true,
+      },
+      {
+        source: '/messages',
+        destination: '/account/messages',
+        permanent: true,
+      },
+      {
+        source: '/messages/:userId',
+        destination: '/account/messages/:userId',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

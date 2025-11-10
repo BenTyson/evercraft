@@ -27,7 +27,6 @@ interface Tab {
   label: string;
   value: ProductStatus | 'favorites' | null;
   count: number;
-  color: string;
 }
 
 export function StatusTabs({ currentStatus, counts }: StatusTabsProps) {
@@ -38,37 +37,31 @@ export function StatusTabs({ currentStatus, counts }: StatusTabsProps) {
       label: 'All',
       value: null,
       count: counts.all,
-      color: 'text-foreground',
     },
     {
       label: 'Favorites',
       value: 'favorites',
       count: counts.favorites,
-      color: 'text-pink-600',
     },
     {
       label: 'Draft',
       value: ProductStatus.DRAFT,
       count: counts.draft,
-      color: 'text-yellow-600',
     },
     {
       label: 'Active',
       value: ProductStatus.ACTIVE,
       count: counts.active,
-      color: 'text-green-600',
     },
     {
       label: 'Sold Out',
       value: ProductStatus.SOLD_OUT,
       count: counts.soldOut,
-      color: 'text-orange-600',
     },
     {
       label: 'Archived',
       value: ProductStatus.ARCHIVED,
       count: counts.archived,
-      color: 'text-gray-600',
     },
   ];
 
@@ -102,15 +95,15 @@ export function StatusTabs({ currentStatus, counts }: StatusTabsProps) {
                 'border-b-2 px-4 py-3 text-sm font-medium transition-colors',
                 'hover:text-foreground whitespace-nowrap',
                 active
-                  ? 'border-eco-dark text-foreground'
+                  ? 'border-forest-dark text-foreground'
                   : 'text-muted-foreground hover:border-border border-transparent'
               )}
             >
-              <span className={cn(active && tab.color)}>{tab.label}</span>
+              <span>{tab.label}</span>
               <span
                 className={cn(
                   'ml-2 rounded-full px-2 py-0.5 text-xs font-semibold',
-                  active ? 'bg-eco-dark/10 text-eco-dark' : 'bg-muted text-muted-foreground'
+                  active ? 'bg-forest-dark/10 text-forest-dark' : 'bg-muted text-muted-foreground'
                 )}
               >
                 {tab.count}
