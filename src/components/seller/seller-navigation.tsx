@@ -36,28 +36,30 @@ export function SellerNavigation() {
   };
 
   return (
-    <aside className="hidden lg:block">
-      <nav className="bg-card sticky top-24 space-y-1 rounded-lg border border-gray-200 bg-white p-4">
-        {navigation.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.href);
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={cn(
-                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                active
-                  ? 'bg-forest-dark/10 text-forest-dark'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-              )}
-            >
-              <Icon className="size-5" />
-              {item.name}
-            </Link>
-          );
-        })}
-      </nav>
+    <aside className="w-64 border-r border-gray-200 bg-white">
+      <div className="p-4">
+        <nav className="space-y-1">
+          {navigation.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.href);
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={cn(
+                  'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                  active
+                    ? 'bg-forest-dark/10 text-forest-dark'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                )}
+              >
+                <Icon className="size-5" />
+                {item.name}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
     </aside>
   );
 }

@@ -22,14 +22,16 @@ export default async function SellerDashboardPage() {
 
   if (!shop) {
     return (
-      <div className="text-center">
-        <h1 className="mb-4 text-2xl font-bold">No Shop Found</h1>
-        <p className="text-muted-foreground mb-6">
-          You need to set up your shop before you can start selling.
-        </p>
-        <Button asChild>
-          <Link href="/seller/setup">Set Up Shop</Link>
-        </Button>
+      <div className="container mx-auto px-4 py-12">
+        <div className="text-center">
+          <h1 className="mb-4 text-2xl font-bold">No Shop Found</h1>
+          <p className="text-muted-foreground mb-6">
+            You need to set up your shop before you can start selling.
+          </p>
+          <Button asChild>
+            <Link href="/seller/setup">Set Up Shop</Link>
+          </Button>
+        </div>
       </div>
     );
   }
@@ -41,7 +43,7 @@ export default async function SellerDashboardPage() {
   const totalProducts = products?.length || 0;
 
   return (
-    <div>
+    <div className="container mx-auto px-4 py-12">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>

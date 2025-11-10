@@ -6,8 +6,7 @@
  */
 
 import { Metadata } from 'next';
-import { Plus, FolderTree } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { FolderTree } from 'lucide-react';
 import { getAllCategoriesHierarchy, getCategoryStats } from '@/actions/admin-categories';
 import { CategoryTreeView } from './category-tree-view';
 import { CreateCategoryButton } from './create-category-button';
@@ -25,12 +24,14 @@ export default async function AdminCategoriesPage() {
 
   if (!categoriesResult.success || !categoriesResult.categories) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Categories</h1>
-        </div>
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
-          Error loading categories: {categoriesResult.error}
+      <div className="container mx-auto px-4 py-12">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold">Categories</h1>
+          </div>
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
+            Error loading categories: {categoriesResult.error}
+          </div>
         </div>
       </div>
     );
@@ -40,9 +41,10 @@ export default async function AdminCategoriesPage() {
   const stats = statsResult.success ? statsResult.stats : null;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto px-4 py-12">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Categories</h1>
           <p className="text-muted-foreground mt-1">Manage your product category hierarchy</p>
@@ -109,6 +111,7 @@ export default async function AdminCategoriesPage() {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

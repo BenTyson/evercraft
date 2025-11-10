@@ -20,7 +20,7 @@ export default async function SellerOrdersPage() {
 
   if (!result.success) {
     return (
-      <div className="p-8">
+      <div className="container mx-auto px-4 py-12">
         <div className="rounded-lg border border-red-200 bg-red-50 p-6">
           <p className="text-sm text-red-800">{result.error}</p>
         </div>
@@ -31,10 +31,10 @@ export default async function SellerOrdersPage() {
   const orders = result.orders || [];
 
   return (
-    <div className="p-8">
+    <div className="container mx-auto px-4 py-12">
       <div className="mb-8">
         <h1 className="mb-2 text-3xl font-bold">Orders</h1>
-        <p className="text-muted-foreground">Manage and fulfill your shop's orders</p>
+        <p className="text-muted-foreground">Manage and fulfill your shop&apos;s orders</p>
       </div>
 
       {orders.length === 0 ? (

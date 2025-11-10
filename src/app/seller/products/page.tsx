@@ -52,7 +52,7 @@ export default async function SellerProductsPage({ searchParams }: PageProps) {
   ]);
 
   return (
-    <div>
+    <div className="container mx-auto px-4 py-12">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>

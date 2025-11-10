@@ -211,8 +211,8 @@ export function PayoutsDashboard() {
                           className="size-12 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="flex size-12 items-center justify-center rounded-full bg-pink-100">
-                          <Heart className="size-6 text-pink-600" />
+                        <div className="flex size-12 items-center justify-center rounded-full bg-gray-100">
+                          <Heart className="size-6 text-gray-600" />
                         </div>
                       )}
 
@@ -412,8 +412,8 @@ export function PayoutsDashboard() {
                             className="size-8 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="flex size-8 items-center justify-center rounded-full bg-pink-100">
-                            <Heart className="size-4 text-pink-600" />
+                          <div className="flex size-8 items-center justify-center rounded-full bg-gray-100">
+                            <Heart className="size-4 text-gray-600" />
                           </div>
                         )}
                         <span className="font-medium text-gray-900">{payout.nonprofit.name}</span>

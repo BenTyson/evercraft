@@ -22,23 +22,25 @@ export default async function FinancePage() {
   ]);
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Finance</h1>
-        <p className="mt-2 text-gray-600">Manage your earnings, payouts, and financial settings</p>
-      </div>
+    <div className="container mx-auto px-4 py-12">
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Finance</h1>
+          <p className="mt-2 text-gray-600">Manage your earnings, payouts, and financial settings</p>
+        </div>
 
-      <FinanceTabs
-        overview={
-          overviewResult.success && overviewResult.overview ? overviewResult.overview : null
-        }
-        payouts={payoutsResult.success && payoutsResult.payouts ? payoutsResult.payouts : []}
-        transactions={
-          transactionsResult.success && transactionsResult.transactions
-            ? transactionsResult.transactions
-            : []
-        }
-      />
+        <FinanceTabs
+          overview={
+            overviewResult.success && overviewResult.overview ? overviewResult.overview : null
+          }
+          payouts={payoutsResult.success && payoutsResult.payouts ? payoutsResult.payouts : []}
+          transactions={
+            transactionsResult.success && transactionsResult.transactions
+              ? transactionsResult.transactions
+              : []
+          }
+        />
+      </div>
     </div>
   );
 }

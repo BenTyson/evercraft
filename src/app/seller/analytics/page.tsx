@@ -74,9 +74,10 @@ export default async function SellerAnalyticsPage() {
     : null;
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto px-4 py-12">
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
           <p className="mt-2 text-gray-600">Track your shop&apos;s performance and growth</p>
@@ -302,6 +303,7 @@ export default async function SellerAnalyticsPage() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

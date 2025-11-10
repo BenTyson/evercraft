@@ -277,8 +277,8 @@ export function NonprofitsList() {
                             className="size-10 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="flex size-10 items-center justify-center rounded-full bg-pink-100">
-                            <Heart className="size-5 text-pink-600" />
+                          <div className="flex size-10 items-center justify-center rounded-full bg-gray-100">
+                            <Heart className="size-5 text-gray-600" />
                           </div>
                         )}
                         <div className="max-w-xs">

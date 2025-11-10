@@ -65,8 +65,8 @@ export default async function AdminDashboardPage() {
           value={`$${stats.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           subtitle={`$${stats.revenueThisMonth.toLocaleString('en-US', { minimumFractionDigits: 2 })} this month`}
           icon={DollarSign}
-          iconColor="text-green-600"
-          bgColor="bg-green-50"
+          iconColor="text-gray-600"
+          bgColor="bg-gray-100"
         />
 
         <MetricCard
@@ -74,8 +74,8 @@ export default async function AdminDashboardPage() {
           value={stats.totalOrders.toLocaleString()}
           subtitle={`${stats.ordersThisMonth} this month`}
           icon={ShoppingBag}
-          iconColor="text-blue-600"
-          bgColor="bg-blue-50"
+          iconColor="text-gray-600"
+          bgColor="bg-gray-100"
         />
 
         <MetricCard
@@ -83,8 +83,8 @@ export default async function AdminDashboardPage() {
           value={stats.activeSellers.toLocaleString()}
           subtitle={`${stats.newSellersThisMonth} new this month`}
           icon={Store}
-          iconColor="text-purple-600"
-          bgColor="bg-purple-50"
+          iconColor="text-gray-600"
+          bgColor="bg-gray-100"
         />
 
         <MetricCard
@@ -92,8 +92,8 @@ export default async function AdminDashboardPage() {
           value={`$${stats.totalDonations.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           subtitle="Total contributed"
           icon={Heart}
-          iconColor="text-pink-600"
-          bgColor="bg-pink-50"
+          iconColor="text-gray-600"
+          bgColor="bg-gray-100"
         />
 
         <MetricCard
@@ -101,8 +101,8 @@ export default async function AdminDashboardPage() {
           value={stats.totalProducts.toLocaleString()}
           subtitle="Listed for sale"
           icon={Package}
-          iconColor="text-orange-600"
-          bgColor="bg-orange-50"
+          iconColor="text-gray-600"
+          bgColor="bg-gray-100"
         />
 
         <MetricCard
@@ -110,8 +110,8 @@ export default async function AdminDashboardPage() {
           value={stats.activeBuyers.toLocaleString()}
           subtitle="Have placed orders"
           icon={Users}
-          iconColor="text-cyan-600"
-          bgColor="bg-cyan-50"
+          iconColor="text-gray-600"
+          bgColor="bg-gray-100"
         />
 
         <Link
@@ -123,8 +123,8 @@ export default async function AdminDashboardPage() {
             value={stats.pendingApplications.toLocaleString()}
             subtitle="Needs review"
             icon={TrendingUp}
-            iconColor="text-yellow-600"
-            bgColor="bg-yellow-50"
+            iconColor="text-gray-600"
+            bgColor="bg-gray-100"
             clickable
           />
         </Link>

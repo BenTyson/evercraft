@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState } from 'react';
@@ -106,7 +106,7 @@ export default function AnalyticsTabs({
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
                   isActive
-                    ? 'border-blue-600 text-blue-600'
+                    ? 'border-forest-dark text-forest-dark'
                     : 'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900'
                 }`}
               >
@@ -163,8 +163,8 @@ function OverviewTab({ data }: { data: any }) {
           subtitle={`${data.usersThisMonth} this month`}
           growth={data.userGrowth}
           icon={Users}
-          iconColor="text-blue-600"
-          bgColor="bg-blue-50"
+          iconColor="text-gray-600"
+          bgColor="bg-gray-100"
         />
 
         <MetricCard
@@ -173,8 +173,8 @@ function OverviewTab({ data }: { data: any }) {
           subtitle={`$${data.revenueThisMonth.toLocaleString()} this month`}
           growth={data.revenueGrowth}
           icon={DollarSign}
-          iconColor="text-green-600"
-          bgColor="bg-green-50"
+          iconColor="text-gray-600"
+          bgColor="bg-gray-100"
         />
 
         <MetricCard
@@ -183,8 +183,8 @@ function OverviewTab({ data }: { data: any }) {
           subtitle={`${data.ordersThisMonth} this month`}
           growth={data.orderGrowth}
           icon={ShoppingCart}
-          iconColor="text-purple-600"
-          bgColor="bg-purple-50"
+          iconColor="text-gray-600"
+          bgColor="bg-gray-100"
         />
 
         <MetricCard
@@ -193,8 +193,8 @@ function OverviewTab({ data }: { data: any }) {
           subtitle={`${data.productsThisMonth} added this month`}
           growth={data.productGrowth}
           icon={Package}
-          iconColor="text-orange-600"
-          bgColor="bg-orange-50"
+          iconColor="text-gray-600"
+          bgColor="bg-gray-100"
         />
 
         <MetricCard
@@ -202,8 +202,8 @@ function OverviewTab({ data }: { data: any }) {
           value={data.totalSellers.toLocaleString()}
           subtitle="Shops on platform"
           icon={Store}
-          iconColor="text-cyan-600"
-          bgColor="bg-cyan-50"
+          iconColor="text-gray-600"
+          bgColor="bg-gray-100"
         />
 
         <MetricCard
@@ -211,8 +211,8 @@ function OverviewTab({ data }: { data: any }) {
           value={data.totalBuyers.toLocaleString()}
           subtitle="Have placed orders"
           icon={Users}
-          iconColor="text-pink-600"
-          bgColor="bg-pink-50"
+          iconColor="text-gray-600"
+          bgColor="bg-gray-100"
         />
 
         <MetricCard
@@ -220,8 +220,8 @@ function OverviewTab({ data }: { data: any }) {
           value={`$${data.averageOrderValue.toFixed(2)}`}
           subtitle="Per order"
           icon={DollarSign}
-          iconColor="text-indigo-600"
-          bgColor="bg-indigo-50"
+          iconColor="text-gray-600"
+          bgColor="bg-gray-100"
         />
       </div>
 
@@ -293,7 +293,7 @@ function RevenueTab({
             {forecast.map((month: any) => (
               <div key={month.month} className="flex items-center justify-between border-b border-gray-100 pb-3 last:border-0">
                 <span className="text-sm font-medium text-gray-900">{month.month}</span>
-                <span className="text-lg font-bold text-blue-600">
+                <span className="text-lg font-bold text-gray-900">
                   ${month.projected.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </span>
               </div>
