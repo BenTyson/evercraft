@@ -145,7 +145,9 @@ export function ShopEcoProfileForm({
     }));
   };
 
-  const handleNumberChange = (field: keyof ShopEcoProfileData, value: number | null) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _handleNumberChange = (field: keyof ShopEcoProfileData, value: number | null) => {
+    // Placeholder for future feature
     setFormData((prev) => ({
       ...prev,
       [field]: value,

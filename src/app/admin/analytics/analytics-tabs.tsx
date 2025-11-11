@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState } from 'react';
@@ -17,23 +16,114 @@ import TopProductsTable from './top-products-table';
 
 type TabId = 'overview' | 'revenue' | 'users' | 'sellers' | 'products' | 'orders';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-interface AnalyticsTabsProps {
-  overview: any;
-  revenueAnalytics: any;
-  revenueForecast: any;
-  topSellers: any[];
-  userAnalytics: any;
-  cohortAnalytics: any;
-  userBehavior: any;
-  sellerAnalytics: any;
-  productAnalytics: any;
-  categoryAnalytics: any[];
-  inventoryInsights: any[];
-  orderAnalytics: any;
-  paymentAnalytics: any;
+interface OverviewData {
+  totalUsers: number;
+  usersThisMonth: number;
+  userGrowth: number;
+  totalRevenue: number;
+  revenueThisMonth: number;
+  revenueGrowth: number;
+  totalOrders: number;
+  ordersThisMonth: number;
+  orderGrowth: number;
+  totalProducts: number;
+  productsThisMonth: number;
+  productGrowth: number;
+  totalSellers: number;
+  totalBuyers: number;
+  averageOrderValue: number;
 }
-/* eslint-enable @typescript-eslint/no-explicit-any */
+
+interface RevenueData {
+  totalPlatformFees: number;
+  totalSellerPayouts: number;
+  categoryBreakdown: Array<{ category: string; revenue: number }>;
+}
+
+interface ForecastMonth {
+  month: string;
+  projected: number;
+}
+
+interface TopSeller {
+  shopId: string;
+  shopName: string;
+  totalOrders: number;
+  totalRevenue: number;
+}
+
+interface UserAnalytics {
+  roleDistribution: Array<{ role: string; count: number }>;
+  averageLTV: number;
+  averageOrdersPerUser: number;
+}
+
+interface CohortData {
+  cohort: string;
+  totalUsers: number;
+  activeUsers: number;
+  retentionRate: number;
+}
+
+interface UserBehavior {
+  repeatPurchaseRate: number;
+  averagePurchaseFrequency: number;
+}
+
+interface SellerAnalytics {
+  totalSellers: number;
+  activeSellers: number;
+  activeRate: number;
+  newSellersThisMonth: number;
+  averageRevenuePerSeller: number;
+}
+
+interface ProductAnalytics {
+  totalProducts: number;
+  activeProducts: number;
+  productsAddedThisMonth: number;
+  averageProductsPerShop: number;
+}
+
+interface CategoryData {
+  category: string;
+  count: number;
+}
+
+interface InventoryItem {
+  productId: string;
+  productName: string;
+  shopName: string;
+  inventory: number;
+}
+
+interface OrderAnalytics {
+  statusDistribution: Array<{ status: string; count: number }>;
+}
+
+interface PaymentAnalytics {
+  totalPayments: number;
+  successfulPayments: number;
+  failedPayments: number;
+  successRate: number;
+  statusBreakdown: Array<{ status: string; count: number }>;
+}
+
+interface AnalyticsTabsProps {
+  overview: OverviewData;
+  revenueAnalytics: RevenueData;
+  revenueForecast: ForecastMonth[];
+  topSellers: TopSeller[];
+  userAnalytics: UserAnalytics;
+  cohortAnalytics: CohortData[];
+  userBehavior: UserBehavior;
+  sellerAnalytics: SellerAnalytics;
+  productAnalytics: ProductAnalytics;
+  categoryAnalytics: CategoryData[];
+  inventoryInsights: InventoryItem[];
+  orderAnalytics: OrderAnalytics;
+  paymentAnalytics: PaymentAnalytics;
+}
 
 const tabs = [
   {
@@ -104,7 +194,7 @@ export default function AnalyticsTabs({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium whitespace-nowrap transition-colors ${
                   isActive
                     ? 'border-forest-dark text-forest-dark'
                     : 'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900'
@@ -122,18 +212,10 @@ export default function AnalyticsTabs({
       <div className="min-h-[500px]">
         {activeTab === 'overview' && <OverviewTab data={overview} />}
         {activeTab === 'revenue' && (
-          <RevenueTab
-            data={revenueAnalytics}
-            forecast={revenueForecast}
-            topSellers={topSellers}
-          />
+          <RevenueTab data={revenueAnalytics} forecast={revenueForecast} topSellers={topSellers} />
         )}
         {activeTab === 'users' && (
-          <UsersTab
-            data={userAnalytics}
-            cohorts={cohortAnalytics}
-            behavior={userBehavior}
-          />
+          <UsersTab data={userAnalytics} cohorts={cohortAnalytics} behavior={userBehavior} />
         )}
         {activeTab === 'sellers' && <SellersTab data={sellerAnalytics} />}
         {activeTab === 'products' && (
@@ -143,16 +225,14 @@ export default function AnalyticsTabs({
             inventory={inventoryInsights}
           />
         )}
-        {activeTab === 'orders' && (
-          <OrdersTab data={orderAnalytics} payments={paymentAnalytics} />
-        )}
+        {activeTab === 'orders' && <OrdersTab data={orderAnalytics} payments={paymentAnalytics} />}
       </div>
     </div>
   );
 }
 
 // Overview Tab Component
-function OverviewTab({ data }: { data: any }) {
+function OverviewTab({ data }: { data: OverviewData }) {
   return (
     <div className="space-y-6">
       {/* KPI Grid */}
@@ -265,9 +345,9 @@ function RevenueTab({
   forecast,
   topSellers,
 }: {
-  data: any;
-  forecast: any;
-  topSellers: any[];
+  data: RevenueData;
+  forecast: ForecastMonth[];
+  topSellers: TopSeller[];
 }) {
   if (!data) {
     return <div className="text-center text-gray-600">No revenue data available</div>;
@@ -290,8 +370,11 @@ function RevenueTab({
           <h3 className="mb-2 text-lg font-bold text-gray-900">Revenue Forecast (3 Months)</h3>
           <p className="mb-4 text-sm text-gray-600">Projected revenue based on linear regression</p>
           <div className="space-y-3">
-            {forecast.map((month: any) => (
-              <div key={month.month} className="flex items-center justify-between border-b border-gray-100 pb-3 last:border-0">
+            {forecast.map((month) => (
+              <div
+                key={month.month}
+                className="flex items-center justify-between border-b border-gray-100 pb-3 last:border-0"
+              >
                 <span className="text-sm font-medium text-gray-900">{month.month}</span>
                 <span className="text-lg font-bold text-gray-900">
                   ${month.projected.toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -317,7 +400,9 @@ function RevenueTab({
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-gray-900">{seller.shopName}</p>
-                  <p className="text-sm text-gray-600">{seller.totalOrders.toLocaleString()} orders</p>
+                  <p className="text-sm text-gray-600">
+                    {seller.totalOrders.toLocaleString()} orders
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-gray-900">
@@ -334,7 +419,7 @@ function RevenueTab({
       <div className="rounded-lg border border-gray-200 bg-white p-6">
         <h3 className="mb-4 text-lg font-bold text-gray-900">Revenue by Category</h3>
         <div className="space-y-3">
-          {data.categoryBreakdown.slice(0, 10).map((category: any) => (
+          {data.categoryBreakdown.slice(0, 10).map((category) => (
             <div key={category.category} className="flex items-center justify-between">
               <span className="text-sm font-medium text-gray-900">{category.category}</span>
               <span className="text-sm text-gray-600">
@@ -377,9 +462,9 @@ function UsersTab({
   cohorts,
   behavior,
 }: {
-  data: any;
-  cohorts: any;
-  behavior: any;
+  data: UserAnalytics;
+  cohorts: CohortData[];
+  behavior: UserBehavior;
 }) {
   if (!data) {
     return <div className="text-center text-gray-600">No user data available</div>;
@@ -391,7 +476,7 @@ function UsersTab({
       <div className="rounded-lg border border-gray-200 bg-white p-6">
         <h3 className="mb-4 text-lg font-bold text-gray-900">User Role Distribution</h3>
         <div className="space-y-3">
-          {data.roleDistribution.map((role: any) => (
+          {data.roleDistribution.map((role) => (
             <div key={role.role} className="flex items-center justify-between">
               <span className="text-sm font-medium text-gray-900">{role.role}</span>
               <span className="text-sm text-gray-600">{role.count.toLocaleString()}</span>
@@ -406,9 +491,7 @@ function UsersTab({
           <h3 className="mb-2 text-sm font-semibold tracking-wide text-gray-600 uppercase">
             Average LTV
           </h3>
-          <p className="text-3xl font-bold text-gray-900">
-            ${data.averageLTV.toFixed(2)}
-          </p>
+          <p className="text-3xl font-bold text-gray-900">${data.averageLTV.toFixed(2)}</p>
           <p className="mt-1 text-sm text-gray-600">Per customer</p>
         </div>
 
@@ -416,9 +499,7 @@ function UsersTab({
           <h3 className="mb-2 text-sm font-semibold tracking-wide text-gray-600 uppercase">
             Avg Orders/User
           </h3>
-          <p className="text-3xl font-bold text-gray-900">
-            {data.averageOrdersPerUser.toFixed(1)}
-          </p>
+          <p className="text-3xl font-bold text-gray-900">{data.averageOrdersPerUser.toFixed(1)}</p>
           <p className="mt-1 text-sm text-gray-600">Orders per user</p>
         </div>
 
@@ -463,7 +544,7 @@ function UsersTab({
                 </tr>
               </thead>
               <tbody>
-                {cohorts.slice(0, 12).map((cohort: any) => (
+                {cohorts.slice(0, 12).map((cohort) => (
                   <tr key={cohort.cohort} className="border-b border-gray-100 last:border-0">
                     <td className="py-2 font-medium text-gray-900">{cohort.cohort}</td>
                     <td className="py-2 text-right text-gray-600">
@@ -497,7 +578,7 @@ function UsersTab({
 }
 
 // Sellers Tab Component
-function SellersTab({ data }: { data: any }) {
+function SellersTab({ data }: { data: SellerAnalytics }) {
   if (!data) {
     return <div className="text-center text-gray-600">No seller data available</div>;
   }
@@ -517,9 +598,7 @@ function SellersTab({ data }: { data: any }) {
           <h3 className="mb-2 text-sm font-semibold tracking-wide text-gray-600 uppercase">
             Active Sellers
           </h3>
-          <p className="text-3xl font-bold text-gray-900">
-            {data.activeSellers.toLocaleString()}
-          </p>
+          <p className="text-3xl font-bold text-gray-900">{data.activeSellers.toLocaleString()}</p>
           <p className="mt-1 text-sm text-gray-600">{data.activeRate.toFixed(1)}% active rate</p>
         </div>
 
@@ -554,9 +633,9 @@ function ProductsTab({
   categories,
   inventory,
 }: {
-  data: any;
-  categories: any[];
-  inventory: any[];
+  data: ProductAnalytics;
+  categories: CategoryData[];
+  inventory: InventoryItem[];
 }) {
   if (!data) {
     return <div className="text-center text-gray-600">No product data available</div>;
@@ -604,7 +683,7 @@ function ProductsTab({
         <div className="rounded-lg border border-gray-200 bg-white p-6">
           <h3 className="mb-4 text-lg font-bold text-gray-900">Products by Category</h3>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {categories.map((category: any) => (
+            {categories.map((category) => (
               <div
                 key={category.category}
                 className="flex items-center justify-between rounded-lg border border-gray-100 p-3"
@@ -625,7 +704,7 @@ function ProductsTab({
           <h3 className="mb-2 text-lg font-bold text-red-900">Low Stock Alerts</h3>
           <p className="mb-4 text-sm text-red-700">Products with inventory below 10 units</p>
           <div className="space-y-3">
-            {inventory.slice(0, 20).map((item: any) => (
+            {inventory.slice(0, 20).map((item) => (
               <div
                 key={item.productId}
                 className="flex items-center justify-between rounded-lg border border-red-200 bg-white p-3"
@@ -650,7 +729,7 @@ function ProductsTab({
 }
 
 // Orders Tab Component
-function OrdersTab({ data, payments }: { data: any; payments: any }) {
+function OrdersTab({ data, payments }: { data: OrderAnalytics; payments: PaymentAnalytics }) {
   if (!data) {
     return <div className="text-center text-gray-600">No order data available</div>;
   }
@@ -661,7 +740,7 @@ function OrdersTab({ data, payments }: { data: any; payments: any }) {
       <div className="rounded-lg border border-gray-200 bg-white p-6">
         <h3 className="mb-4 text-lg font-bold text-gray-900">Order Status Distribution</h3>
         <div className="space-y-3">
-          {data.statusDistribution.map((status: any) => (
+          {data.statusDistribution.map((status) => (
             <div key={status.status} className="flex items-center justify-between">
               <span className="text-sm font-medium text-gray-900">{status.status}</span>
               <span className="text-sm text-gray-600">{status.count.toLocaleString()}</span>
@@ -709,7 +788,7 @@ function OrdersTab({ data, payments }: { data: any; payments: any }) {
             <div className="mt-6">
               <h4 className="mb-3 text-sm font-semibold text-gray-700">Status Breakdown</h4>
               <div className="space-y-2">
-                {payments.statusBreakdown.map((item: any) => (
+                {payments.statusBreakdown.map((item) => (
                   <div key={item.status} className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-900">{item.status}</span>
                     <span className="text-sm text-gray-600">{item.count.toLocaleString()}</span>
@@ -761,7 +840,9 @@ function MetricCard({
             ) : (
               <TrendingDown className="size-4 text-red-600" />
             )}
-            <span className={`text-sm font-medium ${growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <span
+              className={`text-sm font-medium ${growth >= 0 ? 'text-green-600' : 'text-red-600'}`}
+            >
               {growth >= 0 ? '+' : ''}
               {growth.toFixed(1)}%
             </span>

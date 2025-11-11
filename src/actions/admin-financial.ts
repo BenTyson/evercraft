@@ -508,53 +508,74 @@ export async function getPlatformFinancialMetrics() {
       return { success: false, error: 'Unauthorized' };
     }
 
-    const [platformBalances, payoutStats, paymentStats, sellerCount] = await Promise.all([
-      // Aggregate all seller balances
-      db.sellerBalance.aggregate({
-        _sum: {
-          availableBalance: true,
-          pendingBalance: true,
-          totalEarned: true,
-          totalPaidOut: true,
-        },
-      }),
-
-      // Payout statistics
-      Promise.all([
-        db.sellerPayout.count(),
-        db.sellerPayout.count({ where: { status: 'pending' } }),
-        db.sellerPayout.count({ where: { status: 'failed' } }),
-        db.sellerPayout.aggregate({
-          _sum: { amount: true },
-          where: { status: 'paid' },
-        }),
-      ]),
-
-      // Payment statistics
-      Promise.all([
-        db.payment.count({ where: { status: 'PAID' } }),
-        db.payment.count({ where: { status: 'FAILED' } }),
-        db.payment.aggregate({
-          _sum: { platformFee: true },
-          where: { status: 'PAID' },
-        }),
-        db.payment.aggregate({
-          _sum: { platformFee: true },
-          where: {
-            status: 'PAID',
-            createdAt: { gte: startOfMonth(new Date()) },
+    const [platformBalances, payoutStats, paymentStats, platformDonationStats, sellerCount] =
+      await Promise.all([
+        // Aggregate all seller balances
+        db.sellerBalance.aggregate({
+          _sum: {
+            availableBalance: true,
+            pendingBalance: true,
+            totalEarned: true,
+            totalPaidOut: true,
           },
         }),
-      ]),
 
-      // Active sellers with Stripe Connect
-      db.sellerConnectedAccount.count({
-        where: { status: 'active', payoutsEnabled: true },
-      }),
-    ]);
+        // Payout statistics
+        Promise.all([
+          db.sellerPayout.count(),
+          db.sellerPayout.count({ where: { status: 'pending' } }),
+          db.sellerPayout.count({ where: { status: 'failed' } }),
+          db.sellerPayout.aggregate({
+            _sum: { amount: true },
+            where: { status: 'paid' },
+          }),
+        ]),
+
+        // Payment statistics
+        Promise.all([
+          db.payment.count({ where: { status: 'PAID' } }),
+          db.payment.count({ where: { status: 'FAILED' } }),
+          db.payment.aggregate({
+            _sum: { platformFee: true },
+            where: { status: 'PAID' },
+          }),
+          db.payment.aggregate({
+            _sum: { platformFee: true },
+            where: {
+              status: 'PAID',
+              createdAt: { gte: startOfMonth(new Date()) },
+            },
+          }),
+        ]),
+
+        // Platform donation statistics (Flow 3: PLATFORM_REVENUE)
+        Promise.all([
+          db.donation.aggregate({
+            _sum: { amount: true },
+            where: { donorType: 'PLATFORM_REVENUE' },
+          }),
+          db.donation.aggregate({
+            _sum: { amount: true },
+            where: {
+              donorType: 'PLATFORM_REVENUE',
+              createdAt: { gte: startOfMonth(new Date()) },
+            },
+          }),
+        ]),
+
+        // Active sellers with Stripe Connect
+        db.sellerConnectedAccount.count({
+          where: { status: 'active', payoutsEnabled: true },
+        }),
+      ]);
 
     const [totalPayouts, pendingPayouts, failedPayouts, totalPaidOut] = payoutStats;
     const [successfulPayments, failedPayments, totalPlatformFees, thisMonthFees] = paymentStats;
+    const [totalPlatformDonations, thisMonthPlatformDonations] = platformDonationStats;
+
+    const platformFeesTotal = totalPlatformFees._sum.platformFee || 0;
+    const platformDonationsTotal = totalPlatformDonations._sum.amount || 0;
+    const platformNetRevenue = platformFeesTotal - platformDonationsTotal;
 
     return {
       success: true,
@@ -565,9 +586,16 @@ export async function getPlatformFinancialMetrics() {
         totalEarned: platformBalances._sum.totalEarned || 0,
         totalPaidOut: platformBalances._sum.totalPaidOut || 0,
 
-        // Platform fees
-        totalPlatformFees: totalPlatformFees._sum.platformFee || 0,
+        // Platform fees (6.5% total)
+        totalPlatformFees: platformFeesTotal,
         thisMonthPlatformFees: thisMonthFees._sum.platformFee || 0,
+
+        // Platform donations (1.5% from platform fee)
+        totalPlatformDonations: platformDonationsTotal,
+        thisMonthPlatformDonations: thisMonthPlatformDonations._sum.amount || 0,
+
+        // Net platform revenue (5.0% = 6.5% - 1.5%)
+        totalNetPlatformRevenue: platformNetRevenue,
 
         // Payout stats
         totalPayouts,

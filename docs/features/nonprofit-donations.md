@@ -124,33 +124,54 @@ Order {
 
 ---
 
-### Flow 3: Platform Revenue Donations 📋 (V3 - Future)
+### Flow 3: Platform Revenue Donations ✅ (V3 - Session 24)
 
 **How it works:**
 
-1. Platform commits to donate X% of platform fees to selected nonprofits
-2. Monthly/quarterly, platform calculates donation from collected fees
-3. Platform distributes to nonprofits based on predetermined allocation
-4. Tracked with `donorType: PLATFORM_REVENUE`
+1. Platform automatically donates **1.5% of every transaction** to nonprofits from the 6.5% platform fee
+2. If seller has selected a nonprofit, that nonprofit receives the 1.5%
+3. If seller has NO nonprofit, the platform-wide default nonprofit receives the 1.5%
+4. Platform net revenue: 5.0% (6.5% - 1.5%)
+5. Donation created automatically with `donorType: PLATFORM_REVENUE` on each order
+6. Tracked separately in admin financial dashboard
 
-**Schema (additions):**
+**Schema:**
 
 ```prisma
 Donation {
   donorType          DonorType    // = PLATFORM_REVENUE
-  amount             Float        // Platform's donation
-  nonprofitId        String       // Recipient
-  metadata           Json         // { source: "platform_fees", period: "2025-Q4" }
+  amount             Float        // 1.5% of transaction
+  nonprofitId        String       // Shop's nonprofit OR platform default
+  shopId             String?      // Which shop's transaction generated this
+  orderId            String       // Linked to order
+  status             DonationStatus
+}
+
+PlatformSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique  // e.g., "default_nonprofit_id"
+  value     String   // Nonprofit ID
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 }
 ```
 
 **Example:**
 
-- Platform collects $10,000 in fees this quarter
-- Commits 10% to nonprofits ($1,000)
-- Splits: 40% Ocean Conservancy, 30% Rainforest Alliance, 30% The Nature Conservancy
-- Three Donation records created, status PENDING
-- Admin marks as paid when quarterly distribution occurs
+- Buyer purchases $100 product
+- Platform fee (6.5%): $6.50
+  - Platform donation (1.5%): $1.50 → Nonprofit
+  - Net platform revenue (5.0%): $5.00 → Evercraft
+- Seller payout: $93.50 (unchanged)
+- Donation record created automatically with `PLATFORM_REVENUE` type
+
+**Configuration:**
+
+Admin can set platform default nonprofit at `/admin/nonprofits`:
+
+- Database setting stored in `PlatformSetting` table
+- Overrides `PLATFORM_DEFAULT_NONPROFIT_ID` env variable
+- Only verified nonprofits can be selected
 
 ---
 
@@ -361,6 +382,126 @@ const donations = await db.donation.findMany({
 
 ---
 
+## Payment Flow (Flow 3 - Platform Revenue)
+
+### Order Creation Process
+
+**File:** `/src/actions/payment.ts` - `createOrder()` function
+
+**Steps:**
+
+1. **Calculate platform donation** (lines 405-410):
+
+   ```typescript
+   const platformDonation = calculatePlatformDonation(shopSubtotal); // 1.5%
+   const platformDefaultNonprofitId = await getPlatformDefaultNonprofit();
+   const platformDonationNonprofitId = shop?.nonprofitId || platformDefaultNonprofitId;
+   ```
+
+2. **Create PLATFORM_REVENUE Donation record** (lines 411-421):
+
+   ```typescript
+   if (platformDonationNonprofitId && platformDonation > 0) {
+     await tx.donation.create({
+       data: {
+         orderId: newOrder.id,
+         nonprofitId: platformDonationNonprofitId,
+         shopId: shopId, // Track which shop's transaction generated this
+         amount: platformDonation,
+         donorType: 'PLATFORM_REVENUE',
+         status: 'PENDING',
+       },
+     });
+   }
+   ```
+
+3. **Warning if no default configured:**
+   - Logs warning if no platform default nonprofit is set
+   - Donation is skipped rather than failing the order
+
+### Platform Settings Management
+
+**Helper Functions:** `/src/lib/platform-settings.ts`
+
+```typescript
+// Get platform default nonprofit (DB setting → env variable)
+export async function getPlatformDefaultNonprofit(): Promise<string | null>;
+
+// Calculate 1.5% platform donation
+export function calculatePlatformDonation(amount: number): number;
+
+// Get rates as percentages
+export function getPlatformDonationRate(): number; // Returns 1.5
+export function getPlatformNetRevenueRate(): number; // Returns 5.0
+```
+
+**Server Actions:** `/src/actions/platform-settings.ts`
+
+```typescript
+// Admin-only actions
+setPlatformDefaultNonprofitAction(nonprofitId: string)
+getPlatformDefaultNonprofitAction()
+getPlatformDonationStatsAction()
+```
+
+### Admin Configuration
+
+**Route:** `/admin/nonprofits`
+
+**Component:** `PlatformDefaultSelector`
+
+**Features:**
+
+- Displays current platform default nonprofit with logo and details
+- Dropdown to select from verified nonprofits only
+- Real-time validation and feedback
+- Info box explaining 1.5% system
+
+**Database Setting:**
+
+- Stored in `PlatformSetting` table with key `default_nonprofit_id`
+- Overrides `PLATFORM_DEFAULT_NONPROFIT_ID` environment variable
+- Admin-only access to modify
+
+### Checkout Display
+
+**Route:** `/checkout` and `/checkout/payment`
+
+**Display:**
+
+- Subtle info box after order total
+- Green heart icon with eco-dark color
+- Message: "Evercraft contributes 1.5% of every transaction to environmental nonprofits selected by sellers. Your purchase helps support their mission—at no extra cost to you."
+- **NOT a line item** - buyer doesn't pay extra
+
+### Admin Financial Dashboard
+
+**Route:** `/admin/financial`
+
+**Platform Fees Card Updates:**
+
+- Shows total fees collected (6.5%)
+- Breaks down into:
+  - Platform donations (1.5%): Tracked separately
+  - Net platform revenue (5.0%): Actual platform income
+- Monthly tracking for both metrics
+- Info box explaining the system
+
+**Metrics Added:**
+
+```typescript
+interface PlatformMetrics {
+  totalPlatformFees: number; // 6.5% collected
+  totalPlatformDonations: number; // 1.5% donated
+  totalNetPlatformRevenue: number; // 5.0% net
+  thisMonthPlatformFees: number;
+  thisMonthPlatformDonations: number;
+  // ...
+}
+```
+
+---
+
 ## Admin Payout Process
 
 ### Viewing Pending Donations
@@ -558,13 +699,25 @@ const summary = donations.reduce((acc, d) => {
 - [x] Order confirmation with donation thank you
 - [x] Email confirmation with donation details
 
+**Flow 3 - Platform Revenue Donations (Session 24):**
+
+- [x] PlatformSetting database model and migration
+- [x] Platform donation calculation (1.5% of every transaction)
+- [x] Automatic PLATFORM_REVENUE donation records
+- [x] Platform default nonprofit configuration (admin UI)
+- [x] Shop nonprofit OR platform default fallback logic
+- [x] Admin financial dashboard fee breakdown (6.5% → 1.5% + 5.0%)
+- [x] Checkout page subtle platform donation messaging
+- [x] Platform donation statistics in admin overview
+- [x] Helper functions and server actions
+
 ### 📋 Planned (Future Sessions)
 
-- [ ] Flow 3: Platform revenue donations
 - [ ] Stripe Connect for nonprofits (automated payouts)
 - [ ] Impact metrics aggregation (trees planted, etc.)
 - [ ] Nonprofit portal (view their earnings)
 - [ ] Email notifications for completed payouts
+- [ ] Per-seller free shipping thresholds (shipping settings)
 
 ---
 

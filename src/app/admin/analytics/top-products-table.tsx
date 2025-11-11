@@ -1,9 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getTopProducts } from '@/actions/admin-analytics';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
+
+interface TopProduct {
+  productId: string;
+  image: string | null;
+  title: string;
+  shopName: string;
+  price: number;
+  totalRevenue: number;
+  unitsSold: number;
+}
 
 interface TopProductsTableProps {
   limit?: number;
@@ -14,23 +24,23 @@ export default function TopProductsTable({
   limit = 50,
   metric = 'revenue',
 }: TopProductsTableProps) {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<TopProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentMetric, setCurrentMetric] = useState<'revenue' | 'units'>(metric);
   const [displayLimit, setDisplayLimit] = useState(20);
 
-  useEffect(() => {
-    loadProducts();
-  }, [currentMetric]);
-
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     setLoading(true);
     const result = await getTopProducts(limit, currentMetric);
     if (result.success && result.topProducts) {
-      setProducts(result.topProducts);
+      setProducts(result.topProducts as TopProduct[]);
     }
     setLoading(false);
-  };
+  }, [limit, currentMetric]);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
 
   const displayedProducts = products.slice(0, displayLimit);
 
@@ -117,7 +127,8 @@ export default function TopProductsTable({
                     </td>
                     <td className="py-3 text-right">
                       <p className="font-semibold text-gray-900">
-                        ${product.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        $
+                        {product.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </p>
                     </td>
                     <td className="py-3 text-right">

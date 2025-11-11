@@ -6,12 +6,19 @@ import { CheckCircle, XCircle, Eye, FileText, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { updateApplicationStatus } from '@/actions/seller-application';
 
+interface EcoQuestions {
+  sustainabilityPractices: string;
+  materialSourcing: string;
+  packagingApproach?: string;
+  carbonFootprint?: string;
+}
+
 interface Application {
   id: string;
   businessName: string;
   businessWebsite?: string | null;
   businessDescription: string;
-  ecoQuestions: any;
+  ecoQuestions: EcoQuestions;
   donationPercentage: number;
   status: string;
   createdAt: Date;
@@ -44,9 +51,7 @@ export function ApplicationsList({ applications: initialApplications }: Applicat
 
     if (result.success) {
       setApplications((prev) =>
-        prev.map((app) =>
-          app.id === applicationId ? { ...app, status: 'APPROVED' } : app
-        )
+        prev.map((app) => (app.id === applicationId ? { ...app, status: 'APPROVED' } : app))
       );
       router.refresh();
     }
@@ -69,9 +74,7 @@ export function ApplicationsList({ applications: initialApplications }: Applicat
 
     if (result.success) {
       setApplications((prev) =>
-        prev.map((app) =>
-          app.id === applicationId ? { ...app, status: 'REJECTED' } : app
-        )
+        prev.map((app) => (app.id === applicationId ? { ...app, status: 'REJECTED' } : app))
       );
       router.refresh();
     }
@@ -85,9 +88,7 @@ export function ApplicationsList({ applications: initialApplications }: Applicat
 
     if (result.success) {
       setApplications((prev) =>
-        prev.map((app) =>
-          app.id === applicationId ? { ...app, status: 'UNDER_REVIEW' } : app
-        )
+        prev.map((app) => (app.id === applicationId ? { ...app, status: 'UNDER_REVIEW' } : app))
       );
       router.refresh();
     }
@@ -142,9 +143,7 @@ export function ApplicationsList({ applications: initialApplications }: Applicat
       {/* Under Review */}
       {reviewingApplications.length > 0 && (
         <div>
-          <h2 className="mb-4 text-xl font-bold">
-            Under Review ({reviewingApplications.length})
-          </h2>
+          <h2 className="mb-4 text-xl font-bold">Under Review ({reviewingApplications.length})</h2>
           <div className="space-y-4">
             {reviewingApplications.map((app) => (
               <ApplicationCard
@@ -170,9 +169,7 @@ export function ApplicationsList({ applications: initialApplications }: Applicat
       {/* Processed Applications */}
       {processedApplications.length > 0 && (
         <div>
-          <h2 className="mb-4 text-xl font-bold">
-            Processed ({processedApplications.length})
-          </h2>
+          <h2 className="mb-4 text-xl font-bold">Processed ({processedApplications.length})</h2>
           <div className="space-y-4">
             {processedApplications.map((app) => (
               <ApplicationCard
@@ -196,9 +193,7 @@ export function ApplicationsList({ applications: initialApplications }: Applicat
       )}
 
       {applications.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          No applications to review
-        </div>
+        <div className="text-muted-foreground py-12 text-center">No applications to review</div>
       )}
     </div>
   );
@@ -234,7 +229,7 @@ function ApplicationCard({
       <div className="p-6">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
+            <div className="mb-2 flex items-center gap-3">
               <h3 className="text-lg font-bold">{application.businessName}</h3>
               <span
                 className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadge(application.status)}`}
@@ -242,10 +237,10 @@ function ApplicationCard({
                 {application.status.replace('_', ' ')}
               </span>
             </div>
-            <p className="text-sm text-muted-foreground mb-1">
+            <p className="text-muted-foreground mb-1 text-sm">
               {application.user.name || application.user.email}
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Applied {new Date(application.createdAt).toLocaleDateString()}
             </p>
           </div>
@@ -259,13 +254,13 @@ function ApplicationCard({
         {expanded && (
           <div className="mt-6 space-y-4 border-t pt-4">
             <div>
-              <h4 className="text-sm font-semibold mb-2">Business Description</h4>
+              <h4 className="mb-2 text-sm font-semibold">Business Description</h4>
               <p className="text-sm">{application.businessDescription}</p>
             </div>
 
             {application.businessWebsite && (
               <div>
-                <h4 className="text-sm font-semibold mb-2">Website</h4>
+                <h4 className="mb-2 text-sm font-semibold">Website</h4>
                 <a
                   href={application.businessWebsite}
                   target="_blank"
@@ -278,37 +273,40 @@ function ApplicationCard({
             )}
 
             <div>
-              <h4 className="text-sm font-semibold mb-2">Sustainability Practices</h4>
+              <h4 className="mb-2 text-sm font-semibold">Sustainability Practices</h4>
               <p className="text-sm">{application.ecoQuestions.sustainabilityPractices}</p>
             </div>
 
             <div>
-              <h4 className="text-sm font-semibold mb-2">Material Sourcing</h4>
+              <h4 className="mb-2 text-sm font-semibold">Material Sourcing</h4>
               <p className="text-sm">{application.ecoQuestions.materialSourcing}</p>
             </div>
 
             {application.ecoQuestions.packagingApproach && (
               <div>
-                <h4 className="text-sm font-semibold mb-2">Packaging Approach</h4>
+                <h4 className="mb-2 text-sm font-semibold">Packaging Approach</h4>
                 <p className="text-sm">{application.ecoQuestions.packagingApproach}</p>
               </div>
             )}
 
             {application.ecoQuestions.carbonFootprint && (
               <div>
-                <h4 className="text-sm font-semibold mb-2">Carbon Footprint</h4>
+                <h4 className="mb-2 text-sm font-semibold">Carbon Footprint</h4>
                 <p className="text-sm">{application.ecoQuestions.carbonFootprint}</p>
               </div>
             )}
 
             <div>
-              <h4 className="text-sm font-semibold mb-2">Donation Percentage</h4>
+              <h4 className="mb-2 text-sm font-semibold">Donation Percentage</h4>
               <p className="text-sm">{application.donationPercentage}%</p>
             </div>
 
             {/* Review Notes */}
             <div>
-              <label htmlFor={`notes-${application.id}`} className="block text-sm font-semibold mb-2">
+              <label
+                htmlFor={`notes-${application.id}`}
+                className="mb-2 block text-sm font-semibold"
+              >
                 Review Notes
               </label>
               <textarea
@@ -318,7 +316,7 @@ function ApplicationCard({
                 placeholder="Add notes about this application..."
                 rows={3}
                 disabled={application.status === 'APPROVED' || application.status === 'REJECTED'}
-                className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[80px] w-full rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[80px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
 
@@ -370,8 +368,8 @@ function ApplicationCard({
             )}
 
             {application.reviewNotes && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="text-sm font-semibold mb-2">Admin Review Notes</h4>
+              <div className="rounded-lg bg-gray-50 p-4">
+                <h4 className="mb-2 text-sm font-semibold">Admin Review Notes</h4>
                 <p className="text-sm">{application.reviewNotes}</p>
               </div>
             )}

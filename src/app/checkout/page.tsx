@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, ShoppingBag, Loader2 } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, Loader2, Heart } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,9 @@ import { useCartStore } from '@/store/cart-store';
 import { useCheckoutStore, ShippingAddress } from '@/store/checkout-store';
 import { SavedAddressSelector } from '@/components/checkout/saved-address-selector';
 import { createAddress } from '@/actions/addresses';
-import { calculateCartShipping, getShippingEstimateMessage } from '@/lib/shipping';
+import { calculateCartShipping } from '@/lib/shipping';
+// TODO: Re-enable when per-seller shipping thresholds are implemented
+// import { getShippingEstimateMessage } from '@/lib/shipping';
 
 // Address type from database (matches Prisma Address model)
 interface Address {
@@ -102,7 +104,8 @@ export default function CheckoutPage() {
   const subtotal = getTotalPrice();
   const shipping = shippingResult.shippingCost;
   const total = subtotal + shipping;
-  const shippingMessage = getShippingEstimateMessage(shippingResult);
+  // TODO: Re-enable when per-seller shipping thresholds are implemented
+  // const shippingMessage = getShippingEstimateMessage(shippingResult);
 
   // Redirect to cart if empty
   if (items.length === 0) {
@@ -456,17 +459,29 @@ export default function CheckoutPage() {
                   </span>
                 </div>
 
-                {/* Shipping Estimate Message */}
-                {shippingMessage && (
+                {/* TODO: Shipping Estimate Message - Will be re-enabled with per-seller thresholds */}
+                {/* {shippingMessage && (
                   <div className="bg-eco-light/10 text-eco-dark rounded-md px-3 py-2 text-xs">
                     {shippingMessage}
                   </div>
-                )}
+                )} */}
 
                 <div className="border-t pt-3">
                   <div className="flex justify-between text-lg">
                     <span className="font-bold">Total</span>
                     <span className="font-bold">${total.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                {/* Platform Donation Info */}
+                <div className="bg-eco-light/20 mt-3 rounded-md p-3 text-xs text-gray-600">
+                  <div className="flex items-start gap-2">
+                    <Heart className="text-eco-dark mt-0.5 size-3 shrink-0" />
+                    <p>
+                      <span className="text-eco-dark font-medium">Evercraft contributes 1.5%</span>{' '}
+                      of every transaction to environmental nonprofits selected by sellers. Your
+                      purchase helps support their mission—at no extra cost to you.
+                    </p>
                   </div>
                 </div>
               </div>

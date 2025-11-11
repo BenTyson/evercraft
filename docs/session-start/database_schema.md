@@ -1,7 +1,7 @@
 # Database Schema
 
-**Last Updated:** October 17, 2025
-**Status:** ✅ Production - Fully implemented with 38 models (Analytics-optimized with Eco-Impact V2 + Shop Sections + Product Variants + Seller Finance)
+**Last Updated:** November 10, 2025 (Session 24)
+**Status:** ✅ Production - Fully implemented with 39 models (Analytics + Eco-Impact V2 + Shop Sections + Product Variants + Seller Finance + Platform Settings)
 
 > **DOCUMENTATION POLICY:**
 >
@@ -1130,6 +1130,59 @@ model ShopSectionProduct {
 
 ---
 
+### PlatformSetting
+
+**Purpose:** Store platform-wide configuration settings.
+
+**Status:** ✅ FULLY IMPLEMENTED (Session 24)
+
+**Primary Use Case:** Platform default nonprofit for 1.5% donation system (Flow 3)
+
+```prisma
+model PlatformSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@index([key])
+}
+```
+
+**Key Points:**
+
+- **Key-value storage**: Generic settings storage for platform configuration
+- **Current usage**: Stores `default_nonprofit_id` for platform donation system
+- **Admin-controlled**: Modified via `/admin/nonprofits` interface
+- **Environment fallback**: Database setting overrides env variables
+
+**Example Settings:**
+
+```typescript
+// Current implementation
+{ key: "default_nonprofit_id", value: "clx7k8p2q000008l6bqwe9h2v" }
+
+// Future potential uses
+{ key: "maintenance_mode", value: "false" }
+{ key: "platform_message", value: "Welcome to Evercraft!" }
+```
+
+**Usage in Platform Donation (Flow 3):**
+
+- When order is created, system checks if seller has selected nonprofit
+- If NO nonprofit: Query PlatformSetting for `default_nonprofit_id`
+- Fallback: Use `PLATFORM_DEFAULT_NONPROFIT_ID` env variable
+- 1.5% of transaction goes to resulting nonprofit
+
+**Related Files:**
+
+- `/src/lib/platform-settings.ts` - Helper functions
+- `/src/actions/platform-settings.ts` - Server actions (admin-only)
+- `/src/app/admin/nonprofits/platform-default-selector.tsx` - UI component
+
+---
+
 ### Additional Entities
 
 - **SellerConnectedAccount** - Stripe Connect accounts for payouts ✅ FULLY IMPLEMENTED (Session 17)
@@ -1146,6 +1199,7 @@ model ShopSectionProduct {
 - **ProductEcoProfile** - Product eco-attributes ✅ FULLY IMPLEMENTED (Eco-Impact V2)
 - **ShopSection** - Seller-created product sections ✅ FULLY IMPLEMENTED
 - **ShopSectionProduct** - Junction table for section-product assignments ✅ FULLY IMPLEMENTED
+- **PlatformSetting** - Platform-wide configuration settings ✅ FULLY IMPLEMENTED (Session 24)
 - **Promotions** - Coupons and discounts ✅ FULLY IMPLEMENTED
 - **SellerApplications** - Seller verification applications ✅ FULLY IMPLEMENTED
 - **Certifications** - Product/shop eco-certifications ✅ FULLY IMPLEMENTED
@@ -1376,6 +1430,27 @@ All models include appropriate indexes for:
 ## Migration History
 
 ### Recent Migrations
+
+**Migration #10: `add_platform_setting_model` (November 10, 2025) - Session 24**
+
+- Added `PlatformSetting` model for platform-wide configuration:
+  - Fields: id (cuid), key (unique string), value (string), updatedAt, createdAt
+  - Index on `key` field for fast lookups
+- Primary use case: Store platform default nonprofit ID for Flow 3 (PLATFORM_REVENUE donations)
+- Generic key-value storage for future platform settings (maintenance mode, announcements, etc.)
+- Admin-controlled via `/admin/nonprofits` UI
+- Database setting overrides `PLATFORM_DEFAULT_NONPROFIT_ID` environment variable
+
+**Migration #9: Nonprofit Donation System Flow 1 & 2 (October-November 2025) - Sessions 21-22**
+
+- Flow 1: Seller-committed donations (SELLER_CONTRIBUTION)
+- Flow 2: Buyer optional donations (BUYER_DIRECT)
+- Added `NonprofitPayout` model for batch payout tracking
+- Added donation tracking fields to OrderItem and Payment models
+
+**Migration #8: `add_seller_finance_system` (October 17, 2025) - Session 17**
+
+- See below for full details
 
 **Migration #7: Product Variants (October 12-14, 2025) - Sessions 12-13**
 

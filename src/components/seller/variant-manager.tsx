@@ -7,6 +7,7 @@
 
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { Plus, X, Trash2, AlertCircle, Shuffle, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -524,11 +525,14 @@ export function VariantManager({
                               );
                               return selectedImage ? (
                                 <>
-                                  <img
-                                    src={selectedImage.url}
-                                    alt="Selected"
-                                    className="size-8 rounded object-cover"
-                                  />
+                                  <div className="relative size-8 overflow-hidden rounded">
+                                    <Image
+                                      src={selectedImage.url}
+                                      alt="Selected"
+                                      fill
+                                      className="object-cover"
+                                    />
+                                  </div>
                                   <span>Change</span>
                                 </>
                               ) : (
@@ -682,10 +686,11 @@ export function VariantManager({
                           : 'border-gray-300 hover:border-gray-400'
                       }`}
                     >
-                      <img
+                      <Image
                         src={img.url}
                         alt={img.altText || `Image ${imgIndex + 1}`}
-                        className="size-full object-cover"
+                        fill
+                        className="object-cover"
                       />
                       {isSelected && (
                         <div className="bg-forest-dark/20 absolute inset-0 flex items-center justify-center">
@@ -721,8 +726,8 @@ export function VariantManager({
                             const cleanName = decoded.split('?')[0];
                             // If filename is too long, show just the extension part
                             if (cleanName.length > 30) {
-                              const parts = cleanName.split('.');
-                              const ext = parts[parts.length - 1];
+                              // const parts = cleanName.split('.');
+                              // const ext = parts[parts.length - 1]; // Placeholder for future feature
                               return `...${cleanName.slice(-20)}`;
                             }
                             return cleanName;

@@ -60,7 +60,7 @@ interface ProductFormProps {
 export function ProductForm({
   shopId,
   categories,
-  certifications: _certifications,
+  certifications: _certifications, // eslint-disable-line @typescript-eslint/no-unused-vars
   sections,
   initialData,
   productId,

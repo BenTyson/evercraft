@@ -37,7 +37,7 @@ export function ShopHero({
   isVerified,
   createdAt,
   bio,
-  productCount,
+  productCount: _productCount, // eslint-disable-line @typescript-eslint/no-unused-vars -- Placeholder for future feature
   reviewCount,
   averageRating,
 }: ShopHeroProps) {

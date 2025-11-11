@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, TrendingUp, Receipt, Heart, AlertTriangle, CheckCircle } from 'lucide-react';
 
@@ -10,6 +11,9 @@ interface PlatformMetrics {
   totalPaidOut: number;
   totalPlatformFees: number;
   thisMonthPlatformFees: number;
+  totalPlatformDonations: number;
+  thisMonthPlatformDonations: number;
+  totalNetPlatformRevenue: number;
   totalPayouts: number;
   pendingPayouts: number;
   failedPayouts: number;
@@ -97,29 +101,45 @@ export default function AdminOverviewTab({ metrics, nonprofitBreakdown }: AdminO
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <DollarSign className="h-5 w-5" />
-            Platform Fees
+            Platform Fees & Revenue
           </CardTitle>
-          <CardDescription>Revenue from platform fees (6.5% of gross)</CardDescription>
+          <CardDescription>6.5% of gross = 1.5% donations + 5.0% net revenue</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             <div className="flex items-center justify-between border-b pb-2">
-              <span className="text-muted-foreground text-sm">All Time Fees Collected:</span>
+              <span className="text-muted-foreground text-sm">All Time Fees Collected (6.5%):</span>
               <span className="text-lg font-bold">${metrics.totalPlatformFees.toFixed(2)}</span>
             </div>
             <div className="flex items-center justify-between border-b pb-2">
               <span className="text-muted-foreground text-sm">This Month:</span>
               <span className="font-medium">${metrics.thisMonthPlatformFees.toFixed(2)}</span>
             </div>
-            <div className="flex items-center justify-between pt-2">
-              <span className="text-muted-foreground text-sm">
-                Percentage of Total Earned (
-                {metrics.totalEarned > 0
-                  ? ((metrics.totalPlatformFees / metrics.totalEarned) * 100).toFixed(1)
-                  : 0}
-                %):
-              </span>
-              <span className="text-sm text-gray-600">6.5% standard rate</span>
+
+            {/* Breakdown Section */}
+            <div className="space-y-2 border-t pt-3">
+              <p className="text-xs font-medium text-gray-700">Fee Breakdown:</p>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-eco-dark flex items-center gap-1">
+                  <Heart className="size-3" />
+                  Platform Donations (1.5%):
+                </span>
+                <span className="text-eco-dark font-medium">
+                  -${metrics.totalPlatformDonations.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Net Platform Revenue (5.0%):</span>
+                <span className="font-semibold">${metrics.totalNetPlatformRevenue.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="rounded-md bg-blue-50 p-2 text-xs text-blue-800">
+              <p className="font-medium">How it works:</p>
+              <p className="mt-0.5">
+                1.5% of every transaction goes to nonprofits from the platform fee. Sellers keep
+                their full payout.
+              </p>
             </div>
           </div>
         </CardContent>
@@ -203,11 +223,14 @@ export default function AdminOverviewTab({ metrics, nonprofitBreakdown }: AdminO
                 >
                   <div className="flex items-center gap-3">
                     {nonprofit.nonprofitLogo ? (
-                      <img
-                        src={nonprofit.nonprofitLogo}
-                        alt={nonprofit.nonprofitName}
-                        className="h-10 w-10 rounded-full object-cover"
-                      />
+                      <div className="relative h-10 w-10 overflow-hidden rounded-full">
+                        <Image
+                          src={nonprofit.nonprofitLogo}
+                          alt={nonprofit.nonprofitName}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
                     ) : (
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-pink-100">
                         <Heart className="h-5 w-5 text-pink-600" />

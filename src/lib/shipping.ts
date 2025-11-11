@@ -39,7 +39,8 @@ export interface ShippingCalculationResult {
 }
 
 // Configuration constants
-const FREE_SHIPPING_THRESHOLD = 50; // Free shipping over $50
+// TODO: Free shipping thresholds will be set per-seller in seller settings
+// const FREE_SHIPPING_THRESHOLD = 50; // Removed - to be implemented per-seller
 const DOMESTIC_BASE_RATE = 5.99;
 const INTERNATIONAL_BASE_RATE = 15.99;
 const WEIGHT_RATE_PER_POUND = 0.5; // Additional cost per pound over base weight
@@ -53,7 +54,10 @@ const METHOD_MULTIPLIERS: Record<ShippingMethod, number> = {
 };
 
 // Method labels and descriptions
-const METHOD_INFO: Record<ShippingMethod, { label: string; estimatedDays: string; description: string }> = {
+const METHOD_INFO: Record<
+  ShippingMethod,
+  { label: string; estimatedDays: string; description: string }
+> = {
   standard: {
     label: 'Standard Shipping',
     estimatedDays: '5-7 business days',
@@ -75,7 +79,12 @@ const METHOD_INFO: Record<ShippingMethod, { label: string; estimatedDays: string
  * Determine shipping zone based on destination
  */
 function getShippingZone(country?: string): ShippingZone {
-  if (!country || country.toUpperCase() === 'US' || country.toUpperCase() === 'USA' || country.toUpperCase() === 'UNITED STATES') {
+  if (
+    !country ||
+    country.toUpperCase() === 'US' ||
+    country.toUpperCase() === 'USA' ||
+    country.toUpperCase() === 'UNITED STATES'
+  ) {
     return 'domestic';
   }
   return 'international';
@@ -89,10 +98,8 @@ function calculateBaseRate(
   zone: ShippingZone,
   totalWeight: number = 0
 ): { baseRate: number; isFreeShipping: boolean } {
-  // Check for free shipping threshold
-  if (subtotal >= FREE_SHIPPING_THRESHOLD) {
-    return { baseRate: 0, isFreeShipping: true };
-  }
+  // TODO: Free shipping threshold check will be implemented per-seller
+  // For now, free shipping is always false
 
   // Get base rate for zone
   let baseRate = zone === 'domestic' ? DOMESTIC_BASE_RATE : INTERNATIONAL_BASE_RATE;
@@ -126,9 +133,8 @@ function generateAvailableRates(
     ];
   }
 
-  const methods: ShippingMethod[] = zone === 'domestic'
-    ? ['standard', 'express', 'overnight']
-    : ['standard', 'express'];
+  const methods: ShippingMethod[] =
+    zone === 'domestic' ? ['standard', 'express', 'overnight'] : ['standard', 'express'];
 
   return methods.map((method) => ({
     method,
@@ -145,7 +151,7 @@ function generateAvailableRates(
 export function calculateShipping(input: ShippingCalculationInput): ShippingCalculationResult {
   const {
     subtotal,
-    itemCount,
+    itemCount: _itemCount, // eslint-disable-line @typescript-eslint/no-unused-vars -- Reserved for future features
     totalWeight = 0,
     destinationCountry,
     method = 'standard',
@@ -164,13 +170,13 @@ export function calculateShipping(input: ShippingCalculationInput): ShippingCalc
   const selectedRate = availableRates.find((r) => r.method === method) || availableRates[0];
   const shippingCost = selectedRate.cost;
 
-  // Calculate amount needed for free shipping
-  const amountToFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+  // TODO: Free shipping threshold calculations will be implemented per-seller
+  const amountToFreeShipping = 0;
 
   return {
     shippingCost,
     isFreeShipping,
-    freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
+    freeShippingThreshold: 0, // Will be set per-seller in future
     amountToFreeShipping,
     availableRates,
     selectedMethod: method,

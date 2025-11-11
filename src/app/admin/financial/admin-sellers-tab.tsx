@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -172,11 +173,14 @@ export default function AdminSellersTab({ sellers }: AdminSellersTabProps) {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           {seller.shopLogo ? (
-                            <img
-                              src={seller.shopLogo}
-                              alt={seller.shopName}
-                              className="h-10 w-10 rounded-full object-cover"
-                            />
+                            <div className="relative h-10 w-10 overflow-hidden rounded-full">
+                              <Image
+                                src={seller.shopLogo}
+                                alt={seller.shopName}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
                           ) : (
                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
                               <span className="text-sm font-medium text-gray-600">

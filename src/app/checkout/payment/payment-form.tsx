@@ -15,7 +15,7 @@ export function PaymentForm() {
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { items, clearCart } = useCartStore();
+  const { items } = useCartStore();
   const { shippingAddress, buyerDonation } = useCheckoutStore();
 
   const handleSubmit = async (e: React.FormEvent) => {

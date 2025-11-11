@@ -880,6 +880,16 @@ model Seller1099Data {
   @@index([reportingRequired])
 }
 
+model PlatformSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@index([key])
+}
+
 enum ApplicationStatus {
   PENDING
   UNDER_REVIEW

@@ -115,6 +115,17 @@ export default function BrowsePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [isPending, startTransition] = useTransition();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Load initial data
   useEffect(() => {
@@ -157,6 +168,7 @@ export default function BrowsePage() {
         const hasEcoFilters = Object.values(filters).some(Boolean);
 
         const productsData = await getProducts({
+          search: debouncedSearchQuery || undefined,
           categoryIds: selectedCategories.length > 0 ? selectedCategories : undefined,
           certificationIds: selectedCertifications.length > 0 ? selectedCertifications : undefined,
           ecoFilters: hasEcoFilters ? filters : undefined,
@@ -176,7 +188,14 @@ export default function BrowsePage() {
         loadProducts();
       });
     }
-  }, [selectedCategories, selectedCertifications, ecoFilters, sortBy, isLoading]);
+  }, [
+    selectedCategories,
+    selectedCertifications,
+    ecoFilters,
+    sortBy,
+    debouncedSearchQuery,
+    isLoading,
+  ]);
 
   const toggleCategory = (categoryId: string) => {
     setSelectedCategories((prev) =>
@@ -214,6 +233,7 @@ export default function BrowsePage() {
     setSelectedCategories([]);
     setSelectedCertifications([]);
     setEcoFilters({});
+    setSearchQuery('');
   };
 
   // Helper to find category by ID in hierarchical structure
@@ -240,7 +260,7 @@ export default function BrowsePage() {
     return (
       <div className="min-h-screen">
         <SiteHeader />
-        <div className="container mx-auto flex min-h-[50vh] items-center justify-center px-4 py-16">
+        <div className="mx-auto flex min-h-[50vh] max-w-[2000px] items-center justify-center px-4 py-16 lg:px-6 xl:px-8">
           <div className="flex items-center gap-3 text-lg">
             <Loader2 className="size-6 animate-spin" />
             <span>Loading products...</span>
@@ -254,7 +274,7 @@ export default function BrowsePage() {
     <div className="min-h-screen">
       <SiteHeader />
 
-      <div className="container mx-auto px-4 py-6">
+      <div className="mx-auto max-w-[2000px] px-4 py-6 lg:px-6 xl:px-8">
         {/* Search-Focused Header */}
         <div className="mb-6">
           <div className="mx-auto max-w-3xl">
@@ -264,7 +284,9 @@ export default function BrowsePage() {
               <Input
                 type="search"
                 placeholder="Search sustainable products from verified eco-conscious sellers"
-                className="h-14 pr-4 pl-12 text-base shadow-sm"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-14 rounded-xl pr-4 pl-12 text-base shadow-sm"
               />
             </div>
           </div>
@@ -278,6 +300,9 @@ export default function BrowsePage() {
                 <div key={category.id} className="relative">
                   <button
                     onClick={() => {
+                      // Toggle the category filter
+                      toggleCategory(category.id);
+                      // Also toggle expansion to show subcategories
                       if (expandedCategory === category.id) {
                         setExpandedCategory(null);
                       } else {
@@ -502,7 +527,7 @@ export default function BrowsePage() {
             )}
 
             {/* Product Grid */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               {products.map((product) => (
                 <ProductCard
                   key={product.id}

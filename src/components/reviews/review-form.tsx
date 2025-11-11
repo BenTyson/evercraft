@@ -2,12 +2,10 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { StarRating } from './star-rating';
 import { createReview } from '@/actions/reviews';
-import { cn } from '@/lib/utils';
 
 interface ReviewFormProps {
   productId: string;
@@ -78,12 +76,7 @@ export function ReviewForm({
           Your Rating <span className="text-red-500">*</span>
         </label>
         <div className="flex items-center gap-3">
-          <StarRating
-            rating={rating}
-            interactive
-            onRatingChange={setRating}
-            size="lg"
-          />
+          <StarRating rating={rating} interactive onRatingChange={setRating} size="lg" />
           {rating > 0 && (
             <span className="text-muted-foreground text-sm">
               {rating === 5 && 'Excellent!'}

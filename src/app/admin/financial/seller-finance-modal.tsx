@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState } from 'react';
 import {
   Dialog,
@@ -93,11 +94,14 @@ export default function SellerFinanceModal({ isOpen, onClose, details }: SellerF
         <DialogHeader>
           <div className="flex items-center gap-3">
             {details.shop.logo ? (
-              <img
-                src={details.shop.logo}
-                alt={details.shop.name}
-                className="h-12 w-12 rounded-full object-cover"
-              />
+              <div className="relative h-12 w-12 overflow-hidden rounded-full">
+                <Image
+                  src={details.shop.logo}
+                  alt={details.shop.name}
+                  fill
+                  className="object-cover"
+                />
+              </div>
             ) : (
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200">
                 <span className="text-lg font-medium text-gray-600">

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -163,11 +164,14 @@ export default function AdminTransactionsTab({ transactions }: AdminTransactions
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           {transaction.shopLogo ? (
-                            <img
-                              src={transaction.shopLogo}
-                              alt={transaction.shopName}
-                              className="h-6 w-6 rounded-full object-cover"
-                            />
+                            <div className="relative h-6 w-6 overflow-hidden rounded-full">
+                              <Image
+                                src={transaction.shopLogo}
+                                alt={transaction.shopName}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
                           ) : (
                             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200">
                               <span className="text-xs font-medium text-gray-600">

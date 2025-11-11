@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import {
   Dialog,
   DialogContent,
@@ -79,11 +80,9 @@ export default function PayoutDetailsModal({ isOpen, onClose, payout }: PayoutDe
         <DialogHeader>
           <div className="flex items-center gap-3">
             {payout.shopLogo ? (
-              <img
-                src={payout.shopLogo}
-                alt={payout.shopName}
-                className="h-12 w-12 rounded-full object-cover"
-              />
+              <div className="relative h-12 w-12 overflow-hidden rounded-full">
+                <Image src={payout.shopLogo} alt={payout.shopName} fill className="object-cover" />
+              </div>
             ) : (
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200">
                 <span className="text-lg font-medium text-gray-600">

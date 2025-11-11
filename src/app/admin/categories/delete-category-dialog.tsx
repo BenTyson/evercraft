@@ -46,7 +46,7 @@ export function DeleteCategoryDialog({ open, onClose, category }: DeleteCategory
       } else {
         setError(result.error || 'Failed to delete category');
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setIsDeleting(false);

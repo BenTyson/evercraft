@@ -8,6 +8,7 @@ import { sendOrderConfirmationEmail } from '@/lib/email';
 import { calculateCartShipping } from '@/lib/shipping';
 import { Prisma } from '@/generated/prisma';
 import { syncUserToDatabase } from '@/lib/auth';
+import { getPlatformDefaultNonprofit, calculatePlatformDonation } from '@/lib/platform-settings';
 
 // Platform fee rate (6.5%)
 const platformFeeRate = 0.065;
@@ -397,6 +398,33 @@ export async function createOrder(input: CreateOrderInput) {
               status: 'PENDING',
             },
           });
+        }
+
+        // Create platform donation record (Flow 3: PLATFORM_REVENUE)
+        // 1.5% of every transaction goes to nonprofit from platform fee
+        const platformDonation = calculatePlatformDonation(shopSubtotal);
+        const platformDefaultNonprofitId = await getPlatformDefaultNonprofit();
+
+        // Use shop's selected nonprofit if they have one, otherwise use platform default
+        const platformDonationNonprofitId = shop?.nonprofitId || platformDefaultNonprofitId;
+
+        if (platformDonationNonprofitId && platformDonation > 0) {
+          await tx.donation.create({
+            data: {
+              orderId: newOrder.id,
+              nonprofitId: platformDonationNonprofitId,
+              shopId: shopId, // Track which shop's transaction generated this
+              amount: platformDonation,
+              donorType: 'PLATFORM_REVENUE',
+              status: 'PENDING',
+            },
+          });
+
+          totalNonprofitDonation += platformDonation;
+        } else if (!platformDonationNonprofitId) {
+          console.warn(
+            `⚠️ No platform default nonprofit configured - skipping platform donation of $${platformDonation.toFixed(2)} for shop ${shopId}`
+          );
         }
 
         // Update or create SellerBalance

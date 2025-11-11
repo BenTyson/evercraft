@@ -1,6 +1,6 @@
 # Shipping Cost Calculator Documentation
 
-**Last Updated:** 2025-10-07
+**Last Updated:** 2025-11-10 (Session 24)
 
 ## Overview
 
@@ -8,12 +8,13 @@ The Evercraft shipping calculator provides dynamic, intelligent shipping cost ca
 
 ## Features
 
-✅ **Free Shipping Threshold** - Automatic free shipping over $50
+❌ **Free Shipping Threshold** - REMOVED (Session 24) - Will be implemented per-seller in future session
 ✅ **Weight-Based Pricing** - Additional charges for heavier items
 ✅ **Zone-Based Rates** - Different rates for domestic and international
 ✅ **Multiple Shipping Methods** - Standard, Express, and Overnight options
-✅ **Smart Messaging** - Incentivize customers to reach free shipping
 ✅ **Real-Time Calculations** - Updates as cart changes
+
+> **NOTE (Session 24):** The hardcoded $50 free shipping threshold was removed. Future implementation will allow sellers to set their own free shipping thresholds in seller settings (`/seller/settings`).
 
 ---
 
@@ -24,7 +25,8 @@ The Evercraft shipping calculator provides dynamic, intelligent shipping cost ca
 Located in `src/lib/shipping.ts`:
 
 ```typescript
-const FREE_SHIPPING_THRESHOLD = 50; // Free shipping over $50
+// TODO: Free shipping thresholds will be set per-seller in seller settings
+// const FREE_SHIPPING_THRESHOLD = 50; // REMOVED - to be implemented per-seller
 const DOMESTIC_BASE_RATE = 5.99;
 const INTERNATIONAL_BASE_RATE = 15.99;
 const WEIGHT_RATE_PER_POUND = 0.5; // Additional cost per pound over base

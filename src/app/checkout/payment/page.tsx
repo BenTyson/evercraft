@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, ShoppingBag, Loader2, Lock } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, Loader2, Lock, Heart } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
@@ -203,6 +203,18 @@ export default function PaymentPage() {
                   <div className="flex justify-between text-lg">
                     <span className="font-bold">Total</span>
                     <span className="font-bold">${total.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                {/* Platform Donation Info */}
+                <div className="bg-eco-light/20 mt-3 rounded-md p-3 text-xs text-gray-600">
+                  <div className="flex items-start gap-2">
+                    <Heart className="text-eco-dark mt-0.5 size-3 shrink-0" />
+                    <p>
+                      <span className="text-eco-dark font-medium">Evercraft contributes 1.5%</span>{' '}
+                      of every transaction to environmental nonprofits selected by sellers. Your
+                      purchase helps support their mission—at no extra cost to you.
+                    </p>
                   </div>
                 </div>
               </div>

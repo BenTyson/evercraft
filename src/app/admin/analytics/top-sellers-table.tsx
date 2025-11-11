@@ -1,9 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getTopSellers } from '@/actions/admin-analytics';
 import { Users, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+
+interface TopSeller {
+  shopId: string;
+  shopName: string;
+  shopLogo: string | null;
+  totalOrders: number;
+  totalRevenue: number;
+}
 
 interface TopSellersTableProps {
   limit?: number;
@@ -11,22 +19,22 @@ interface TopSellersTableProps {
 }
 
 export default function TopSellersTable({ limit = 20, metric = 'revenue' }: TopSellersTableProps) {
-  const [sellers, setSellers] = useState<any[]>([]);
+  const [sellers, setSellers] = useState<TopSeller[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentMetric, setCurrentMetric] = useState<'revenue' | 'orders'>(metric);
 
-  useEffect(() => {
-    loadSellers();
-  }, [currentMetric]);
-
-  const loadSellers = async () => {
+  const loadSellers = useCallback(async () => {
     setLoading(true);
     const result = await getTopSellers(limit, currentMetric);
     if (result.success && result.topSellers) {
-      setSellers(result.topSellers);
+      setSellers(result.topSellers as TopSeller[]);
     }
     setLoading(false);
-  };
+  }, [limit, currentMetric]);
+
+  useEffect(() => {
+    loadSellers();
+  }, [loadSellers]);
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-6">

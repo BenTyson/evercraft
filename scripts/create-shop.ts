@@ -4,7 +4,6 @@
  * Creates a shop for a specific user
  */
 
-/* eslint-disable */
 import { db } from '../src/lib/db';
 
 async function createShop() {

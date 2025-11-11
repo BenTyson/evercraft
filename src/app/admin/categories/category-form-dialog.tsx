@@ -88,7 +88,7 @@ export function CategoryFormDialog({
       } else {
         setError(result.error || 'Failed to save category');
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setIsSubmitting(false);

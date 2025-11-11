@@ -7,6 +7,7 @@
 import { redirect } from 'next/navigation';
 import { isAdmin } from '@/lib/auth';
 import { NonprofitsList } from './nonprofits-list';
+import { PlatformDefaultSelector } from './platform-default-selector';
 
 export default async function AdminNonprofitsPage() {
   const admin = await isAdmin();
@@ -24,6 +25,9 @@ export default async function AdminNonprofitsPage() {
           Manage environmental nonprofits, verify organizations, and track donations
         </p>
       </div>
+
+      {/* Platform Default Nonprofit Selector */}
+      <PlatformDefaultSelector />
 
       {/* Nonprofits List Component */}
       <NonprofitsList />

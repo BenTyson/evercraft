@@ -16,6 +16,9 @@ interface PlatformMetrics {
   totalPaidOut: number;
   totalPlatformFees: number;
   thisMonthPlatformFees: number;
+  totalPlatformDonations: number;
+  thisMonthPlatformDonations: number;
+  totalNetPlatformRevenue: number;
   totalPayouts: number;
   pendingPayouts: number;
   failedPayouts: number;

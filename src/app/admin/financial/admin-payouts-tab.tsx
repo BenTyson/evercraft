@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -168,11 +169,14 @@ export default function AdminPayoutsTab({ payouts }: AdminPayoutsTabProps) {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           {payout.shopLogo ? (
-                            <img
-                              src={payout.shopLogo}
-                              alt={payout.shopName}
-                              className="h-8 w-8 rounded-full object-cover"
-                            />
+                            <div className="relative h-8 w-8 overflow-hidden rounded-full">
+                              <Image
+                                src={payout.shopLogo}
+                                alt={payout.shopName}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
                           ) : (
                             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
                               <span className="text-xs font-medium text-gray-600">

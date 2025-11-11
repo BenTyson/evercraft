@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { updateApplicationStatus } from '@/actions/seller-application';
-import { getTierEmoji, getTierColor, getRedFlags } from '@/lib/application-scoring';
+import { getTierColor, getRedFlags } from '@/lib/application-scoring';
 import type { ApplicationTier } from '@/lib/application-scoring';
 
 interface Application {

@@ -169,8 +169,8 @@ function ProductCard({
           variant="ghost"
           size="icon-sm"
           className={cn(
-            'absolute top-2 right-2 z-10 bg-white/90 shadow-sm backdrop-blur-sm transition-colors hover:bg-white',
-            isFavorited && 'text-pink-600 hover:bg-pink-50 hover:text-pink-700'
+            'absolute top-2 right-2 z-10 transition-all hover:scale-110 hover:bg-transparent',
+            isFavorited ? 'text-pink-600 hover:text-pink-700' : 'text-gray-700 hover:text-gray-900'
           )}
           onClick={(e) => {
             e.stopPropagation();
@@ -178,7 +178,12 @@ function ProductCard({
           }}
           aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
         >
-          <Heart className={cn('size-4', isFavorited && 'fill-current')} />
+          <Heart
+            className={cn(
+              'size-5 stroke-[2] drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] transition-all',
+              isFavorited ? 'fill-current' : 'fill-white/40'
+            )}
+          />
         </Button>
       </div>
 

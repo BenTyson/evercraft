@@ -8,9 +8,9 @@ export default async function DebugAuthPage() {
 
   return (
     <div className="container mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold mb-8">Auth Debug Info</h1>
+      <h1 className="mb-8 text-3xl font-bold">Auth Debug Info</h1>
 
-      <div className="bg-white rounded-lg border p-6 space-y-4">
+      <div className="space-y-4 rounded-lg border bg-white p-6">
         <div>
           <h2 className="font-bold">User ID:</h2>
           <p className="font-mono">{userId || 'Not authenticated'}</p>
@@ -18,15 +18,19 @@ export default async function DebugAuthPage() {
 
         <div>
           <h2 className="font-bold">Session Claims (Raw):</h2>
-          <pre className="font-mono bg-gray-100 p-4 rounded overflow-auto">
+          <pre className="overflow-auto rounded bg-gray-100 p-4 font-mono">
             {JSON.stringify(sessionClaims, null, 2)}
           </pre>
         </div>
 
         <div>
           <h2 className="font-bold">Public Metadata:</h2>
-          <pre className="font-mono bg-gray-100 p-4 rounded overflow-auto">
-            {JSON.stringify((sessionClaims as any)?.publicMetadata, null, 2)}
+          <pre className="overflow-auto rounded bg-gray-100 p-4 font-mono">
+            {JSON.stringify(
+              (sessionClaims as Record<string, unknown> | null)?.publicMetadata,
+              null,
+              2
+            )}
           </pre>
         </div>
 
