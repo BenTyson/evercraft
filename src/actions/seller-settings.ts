@@ -27,11 +27,6 @@ export async function getShopSettings() {
             website: true,
           },
         },
-        shippingProfiles: {
-          orderBy: {
-            createdAt: 'desc',
-          },
-        },
       },
     });
 

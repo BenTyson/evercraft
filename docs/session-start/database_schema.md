@@ -1,7 +1,7 @@
 # Database Schema
 
-**Last Updated:** November 10, 2025 (Session 24)
-**Status:** ✅ Production - Fully implemented with 39 models (Analytics + Eco-Impact V2 + Shop Sections + Product Variants + Seller Finance + Platform Settings)
+**Last Updated:** November 11, 2025 (Session 25)
+**Status:** ✅ Production - Fully implemented with 39 models (Analytics + Eco-Impact V2 + Shop Sections + Product Variants + Seller Finance + Platform Settings + Shipping Profiles)
 
 > **DOCUMENTATION POLICY:**
 >
@@ -189,12 +189,16 @@ model Product {
   hasVariants        Boolean  @default(false)  // Product has variants
   variantOptions     Json?    // Variant option structure: { options: { Size: ["S", "M", "L"], Color: ["Red", "Blue"] } }
 
+  // Shipping (Session 25)
+  shippingProfileId  String?  // Optional shipping profile assignment
+
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
   // Relations
   shop            Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
   category        Category? @relation(fields: [categoryId], references: [id])
+  shippingProfile ShippingProfile? @relation(fields: [shippingProfileId], references: [id])  // Session 25
   variants        ProductVariant[]  // Product variations (if hasVariants = true)
   images          ProductImage[]
   reviews         Review[]
@@ -220,6 +224,8 @@ enum ProductStatus {
 - **Inventory field**: Use `inventoryQuantity` (NOT `quantity`)
 - **Category queries**: Use `categoryId` scalar for `groupBy` operations (NOT `category` relation)
 - **Inventory tracking**: Added in migration `20251007031524_add_product_inventory`
+- **Shipping profiles**: Optional `shippingProfileId` field added in Session 25 (migration `20251111151144_add_shipping_profile_to_products`)
+- **Products without profiles**: Use default fallback rates ($5.99 domestic, $15.99 international)
 
 ---
 
@@ -1200,11 +1206,11 @@ model PlatformSetting {
 - **ShopSection** - Seller-created product sections ✅ FULLY IMPLEMENTED
 - **ShopSectionProduct** - Junction table for section-product assignments ✅ FULLY IMPLEMENTED
 - **PlatformSetting** - Platform-wide configuration settings ✅ FULLY IMPLEMENTED (Session 24)
+- **ShippingProfile** - Seller shipping configurations ✅ FULLY IMPLEMENTED (Session 25)
 - **Promotions** - Coupons and discounts ✅ FULLY IMPLEMENTED
 - **SellerApplications** - Seller verification applications ✅ FULLY IMPLEMENTED
 - **Certifications** - Product/shop eco-certifications ✅ FULLY IMPLEMENTED
 - **SustainabilityScores** - Detailed eco-scoring (LEGACY - being replaced by eco-profiles)
-- **ShippingProfiles** - Seller shipping configurations (schema ready, no UI)
 - **Collections** - User-created product collections (schema ready, no UI)
 - **CollectionProducts** - Products in collections (schema ready, no UI)
 - **AnalyticsEvents** - Event tracking (schema ready, no implementation)
@@ -1430,6 +1436,17 @@ All models include appropriate indexes for:
 ## Migration History
 
 ### Recent Migrations
+
+**Migration #11: `add_shipping_profile_to_products` (November 11, 2025) - Session 25**
+
+- Added `shippingProfileId` field to `Product` model:
+  - Type: String (nullable)
+  - Foreign key to `ShippingProfile.id`
+  - ON DELETE SET NULL (product remains if profile deleted)
+  - ON UPDATE CASCADE
+- Enables products to be assigned to seller-created shipping profiles
+- Products without profile use default fallback rates
+- Supports seller-specific free shipping thresholds and rates
 
 **Migration #10: `add_platform_setting_model` (November 10, 2025) - Session 24**
 

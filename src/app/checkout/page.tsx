@@ -19,9 +19,7 @@ import { useCartStore } from '@/store/cart-store';
 import { useCheckoutStore, ShippingAddress } from '@/store/checkout-store';
 import { SavedAddressSelector } from '@/components/checkout/saved-address-selector';
 import { createAddress } from '@/actions/addresses';
-import { calculateCartShipping } from '@/lib/shipping';
-// TODO: Re-enable when per-seller shipping thresholds are implemented
-// import { getShippingEstimateMessage } from '@/lib/shipping';
+import { calculateShippingForCart } from '@/actions/shipping-calculation';
 
 // Address type from database (matches Prisma Address model)
 interface Address {
@@ -48,6 +46,8 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [saveAddress, setSaveAddress] = useState(false);
+  const [shippingCost, setShippingCost] = useState<number>(0);
+  const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
   const [formData, setFormData] = useState<ShippingAddress>({
     firstName: shippingAddress?.firstName || '',
     lastName: shippingAddress?.lastName || '',
@@ -68,18 +68,32 @@ export default function CheckoutPage() {
     }
   }, [isLoaded, userId, router]);
 
-  // Calculate shipping dynamically
-  const cartItems = items.map((item) => ({
-    price: item.price,
-    quantity: item.quantity,
-    weight: 1, // Default weight per item (can be extended to use product weight)
-  }));
+  // Calculate shipping dynamically based on products' shipping profiles
+  useEffect(() => {
+    const calculateShipping = async () => {
+      if (items.length === 0) return;
 
-  const shippingResult = calculateCartShipping({
-    items: cartItems,
-    destinationCountry: formData.country || 'US',
-    destinationState: formData.state,
-  });
+      setIsCalculatingShipping(true);
+      try {
+        const cartItems = items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.price,
+        }));
+
+        const result = await calculateShippingForCart(cartItems, formData.country || 'US');
+        setShippingCost(result.shippingCost);
+      } catch (error) {
+        console.error('Error calculating shipping:', error);
+        // Fall back to default rate
+        setShippingCost(5.99);
+      } finally {
+        setIsCalculatingShipping(false);
+      }
+    };
+
+    calculateShipping();
+  }, [items, formData.country]);
 
   // Show loading while checking auth
   if (!isLoaded) {
@@ -102,10 +116,8 @@ export default function CheckoutPage() {
   }
 
   const subtotal = getTotalPrice();
-  const shipping = shippingResult.shippingCost;
+  const shipping = shippingCost;
   const total = subtotal + shipping;
-  // TODO: Re-enable when per-seller shipping thresholds are implemented
-  // const shippingMessage = getShippingEstimateMessage(shippingResult);
 
   // Redirect to cart if empty
   if (items.length === 0) {
@@ -451,7 +463,9 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
                   <span className="font-semibold">
-                    {shipping === 0 ? (
+                    {isCalculatingShipping ? (
+                      <span className="text-muted-foreground text-xs">Calculating...</span>
+                    ) : shipping === 0 ? (
                       <span className="text-eco-dark">Free</span>
                     ) : (
                       `$${shipping.toFixed(2)}`

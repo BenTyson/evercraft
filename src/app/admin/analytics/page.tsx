@@ -23,6 +23,23 @@ import {
 } from '@/actions/admin-analytics';
 import AnalyticsTabs from './analytics-tabs';
 
+// Type for forecast prediction
+interface ForecastPrediction {
+  month: string;
+  predictedRevenue: number;
+  lowerBound: number;
+  upperBound: number;
+}
+
+// Type for category analytics
+interface CategoryData {
+  category: string;
+  productCount: number;
+  revenue: number;
+  orderCount: number;
+  count?: number;
+}
+
 export default async function AnalyticsPage() {
   const admin = await isAdmin();
 
@@ -71,27 +88,92 @@ export default async function AnalyticsPage() {
   }
 
   const overview = overviewResult.overview!;
-  const revenueAnalytics = revenueResult.success ? revenueResult.analytics! : null;
-  const revenueForecast = forecastResult.success ? forecastResult.forecast! : null;
-  const userAnalytics = userResult.success ? userResult.analytics! : null;
-  const cohortAnalytics = cohortResult.success ? cohortResult.cohorts! : null;
-  const userBehavior = behaviorResult.success ? behaviorResult.behavior! : null;
-  const sellerAnalytics = sellerResult.success ? sellerResult.analytics! : null;
+  const revenueAnalytics = revenueResult.success
+    ? revenueResult.analytics!
+    : {
+        trends: [],
+        categoryBreakdown: [],
+        totalPlatformFees: 0,
+        totalSellerPayouts: 0,
+      };
+  const revenueForecast = forecastResult.success
+    ? (forecastResult.forecast!.predictions || []).map((p: ForecastPrediction) => ({
+        month: p.month,
+        projected: p.predictedRevenue,
+        lowerBound: p.lowerBound,
+        upperBound: p.upperBound,
+      }))
+    : [];
+  const userAnalytics = userResult.success
+    ? userResult.analytics!
+    : {
+        growthTrends: [],
+        roleDistribution: [],
+        averageLTV: 0,
+        averageOrdersPerUser: 0,
+      };
+  const cohortAnalytics = cohortResult.success ? cohortResult.cohorts! : [];
+  const userBehavior = behaviorResult.success
+    ? behaviorResult.behavior!
+    : {
+        pageViews: [],
+        searches: [],
+        conversions: { cartAdditions: 0, checkouts: 0, completedOrders: 0, conversionRate: 0 },
+        repeatPurchaseRate: 0,
+        averagePurchaseFrequency: 0,
+      };
+  const sellerAnalytics = sellerResult.success
+    ? sellerResult.analytics!
+    : {
+        totalSellers: 0,
+        activeSellers: 0,
+        inactiveSellers: 0,
+        newSellers: 0,
+        averageProductsPerSeller: 0,
+        averageRevenuePerSeller: 0,
+        sellerGrowth: [],
+        activeRate: 0,
+        newSellersThisMonth: 0,
+      };
   const topSellers = topSellersResult.success ? topSellersResult.topSellers! : [];
-  const productAnalytics = productResult.success ? productResult.analytics! : null;
-  const categoryAnalytics = categoryResult.success ? categoryResult.categories! : [];
+  const productAnalytics = productResult.success
+    ? productResult.analytics!
+    : {
+        totalProducts: 0,
+        activeProducts: 0,
+        productsAddedThisMonth: 0,
+        averageProductsPerShop: 0,
+      };
+  const categoryAnalytics = categoryResult.success
+    ? categoryResult.categories!.map((c: CategoryData) => ({
+        ...c,
+        count: c.productCount || c.count || 0,
+      }))
+    : [];
   const inventoryInsights = inventoryResult.success ? inventoryResult.lowStock! : [];
-  const orderAnalytics = orderResult.success ? orderResult.analytics! : null;
-  const paymentAnalytics = paymentResult.success ? paymentResult.analytics : null;
+  const orderAnalytics = orderResult.success
+    ? orderResult.analytics!
+    : {
+        orderVelocity: [],
+        statusDistribution: [],
+      };
+  const paymentAnalytics =
+    paymentResult.success && paymentResult.analytics
+      ? paymentResult.analytics
+      : {
+          totalPayments: 0,
+          successfulPayments: 0,
+          failedPayments: 0,
+          successRate: 0,
+          statusBreakdown: [],
+        };
 
   return (
     <div className="container mx-auto px-4 py-12">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Platform Analytics</h1>
-        <p className="mt-2 text-gray-600">
-          Comprehensive insights and business intelligence
-        </p>
+        <p className="mt-2 text-gray-600">Comprehensive insights and business intelligence</p>
       </div>
 
       {/* Tabbed Analytics */}

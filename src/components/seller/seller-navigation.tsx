@@ -11,6 +11,7 @@ import {
   LayoutList,
   DollarSign,
   Heart,
+  Truck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +20,7 @@ const navigation = [
   { name: 'Products', href: '/seller/products', icon: Package },
   { name: 'Sections', href: '/seller/sections', icon: LayoutList },
   { name: 'Orders', href: '/seller/orders', icon: ShoppingBag },
+  { name: 'Shipping', href: '/seller/shipping', icon: Truck },
   { name: 'Finance', href: '/seller/finance', icon: DollarSign },
   { name: 'Impact', href: '/seller/impact', icon: Heart },
   { name: 'Analytics', href: '/seller/analytics', icon: BarChart3 },

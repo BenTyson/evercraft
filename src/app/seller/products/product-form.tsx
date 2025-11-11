@@ -47,11 +47,19 @@ interface Section {
   };
 }
 
+interface ShippingProfile {
+  id: string;
+  name: string;
+  processingTimeMin: number;
+  processingTimeMax: number;
+}
+
 interface ProductFormProps {
   shopId: string;
   categories: HierarchicalCategory[];
   certifications: Array<{ id: string; name: string; count: number }>;
   sections: Section[];
+  shippingProfiles: ShippingProfile[];
   initialData?: Partial<CreateProductInput>;
   productId?: string;
   isEditing?: boolean;
@@ -62,6 +70,7 @@ export function ProductForm({
   categories,
   certifications: _certifications, // eslint-disable-line @typescript-eslint/no-unused-vars
   sections,
+  shippingProfiles,
   initialData,
   productId,
   isEditing = false,
@@ -78,6 +87,7 @@ export function ProductForm({
     sku: initialData?.sku || '',
     categoryId: initialData?.categoryId || '',
     shopId,
+    shippingProfileId: initialData?.shippingProfileId,
     tags: initialData?.tags || [],
     certificationIds: initialData?.certificationIds || [],
     sectionIds: initialData?.sectionIds || [],
@@ -440,6 +450,54 @@ export function ProductForm({
           )}
         </div>
       )}
+
+      {/* Shipping Profile */}
+      <div className="bg-card space-y-4 rounded-lg border p-6">
+        <div>
+          <h2 className="text-xl font-bold">Shipping</h2>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Select a shipping profile for this product
+          </p>
+        </div>
+
+        {shippingProfiles.length > 0 ? (
+          <div className="space-y-2">
+            <label htmlFor="shippingProfileId" className="text-sm font-medium">
+              Shipping Profile
+            </label>
+            <select
+              id="shippingProfileId"
+              value={formData.shippingProfileId || ''}
+              onChange={(e) => handleChange('shippingProfileId', e.target.value || undefined)}
+              className="focus:border-forest-dark focus:ring-forest-dark block w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-1 focus:outline-none"
+            >
+              <option value="">No shipping profile (use default rates)</option>
+              {shippingProfiles.map((profile) => (
+                <option key={profile.id} value={profile.id}>
+                  {profile.name} ({profile.processingTimeMin}-{profile.processingTimeMax} days)
+                </option>
+              ))}
+            </select>
+            <p className="text-muted-foreground text-xs">
+              Shipping profiles define rates, processing times, and shipping origins. You can{' '}
+              <Link href="/seller/shipping" className="text-forest underline">
+                manage profiles
+              </Link>
+              .
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center">
+            <p className="text-muted-foreground text-sm">
+              No shipping profiles yet. Create one from the{' '}
+              <Link href="/seller/shipping" className="text-forest underline">
+                Shipping page
+              </Link>
+              .
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Shop Sections */}
       {sections.length > 0 && (

@@ -5,7 +5,7 @@ import { stripe, isStripeConfigured } from '@/lib/stripe';
 import { db } from '@/lib/db';
 import { ShippingAddress } from '@/store/checkout-store';
 import { sendOrderConfirmationEmail } from '@/lib/email';
-import { calculateCartShipping } from '@/lib/shipping';
+import { calculateShippingForCart } from '@/actions/shipping-calculation';
 import { Prisma } from '@/generated/prisma';
 import { syncUserToDatabase } from '@/lib/auth';
 import { getPlatformDefaultNonprofit, calculatePlatformDonation } from '@/lib/platform-settings';
@@ -56,16 +56,15 @@ export async function createPaymentIntent(input: CreatePaymentIntentInput) {
     // Calculate totals
     const subtotal = input.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-    // Calculate shipping dynamically
-    const shippingResult = calculateCartShipping({
-      items: input.items.map((item) => ({
+    // Calculate shipping dynamically based on products' shipping profiles
+    const shippingResult = await calculateShippingForCart(
+      input.items.map((item) => ({
+        productId: item.productId,
         price: item.price,
         quantity: item.quantity,
-        weight: 1, // Default weight
       })),
-      destinationCountry: input.shippingAddress.country,
-      destinationState: input.shippingAddress.state,
-    });
+      input.shippingAddress.country
+    );
     const shipping = shippingResult.shippingCost;
 
     // Buyer donation (optional)
@@ -140,16 +139,15 @@ export async function createOrder(input: CreateOrderInput) {
     // Calculate totals
     const subtotal = input.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-    // Calculate shipping dynamically
-    const shippingResult = calculateCartShipping({
-      items: input.items.map((item) => ({
+    // Calculate shipping dynamically based on products' shipping profiles
+    const shippingResult = await calculateShippingForCart(
+      input.items.map((item) => ({
+        productId: item.productId,
         price: item.price,
         quantity: item.quantity,
-        weight: 1, // Default weight
       })),
-      destinationCountry: input.shippingAddress.country,
-      destinationState: input.shippingAddress.state,
-    });
+      input.shippingAddress.country
+    );
     const shipping = shippingResult.shippingCost;
 
     // Stripe processing fee (2.9% + $0.30)

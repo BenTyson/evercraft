@@ -9,6 +9,7 @@ import { redirect } from 'next/navigation';
 import { getCategoriesHierarchical, getCertifications } from '@/actions/products';
 import { getSellerShop } from '@/actions/seller-products';
 import { getShopSections } from '@/actions/shop-sections';
+import { getShippingProfiles } from '@/actions/seller-settings';
 import { ProductForm } from '../product-form';
 
 export default async function NewProductPage() {
@@ -24,14 +25,19 @@ export default async function NewProductPage() {
     redirect('/seller');
   }
 
-  // Fetch hierarchical categories, certifications, and sections for the form
-  const [categories, certifications, sectionsResult] = await Promise.all([
+  // Fetch hierarchical categories, certifications, sections, and shipping profiles for the form
+  const [categories, certifications, sectionsResult, shippingProfilesResult] = await Promise.all([
     getCategoriesHierarchical(),
     getCertifications(),
     getShopSections(shop.id, true), // Include hidden sections for editing
+    getShippingProfiles(),
   ]);
 
   const sections = sectionsResult.success ? sectionsResult.sections : [];
+  const shippingProfiles =
+    shippingProfilesResult.success && shippingProfilesResult.profiles
+      ? shippingProfilesResult.profiles
+      : [];
 
   return (
     <div>
@@ -45,6 +51,7 @@ export default async function NewProductPage() {
         categories={categories}
         certifications={certifications}
         sections={sections}
+        shippingProfiles={shippingProfiles}
       />
     </div>
   );

@@ -19,11 +19,12 @@ Sellers can manage products, orders, analytics, marketing, and shop settings thr
 - [Database Schema](../session-start/database_schema.md) - Shop/Product/OrderItem models
 - [Design System](../planning/DESIGN_SYSTEM.md#dashboard-color-philosophy-session-22) - Dashboard color guidelines ⭐ Session 22
 
-**Seller Navigation (Session 22 Redesign):**
+**Seller Navigation (Session 22 Redesign, Session 25 Shipping):**
 
 The seller dashboard features a persistent sidebar (240px) with clean, consistent navigation:
 
 - Dashboard, Products, Sections, Orders
+- **Shipping** - Manage shipping profiles and rates (Session 25: Top-level navigation)
 - **Finance** - Stripe Connect payouts and transactions
 - **Impact** - Nonprofit contribution tracking and reports
 - Analytics, Settings
@@ -70,6 +71,29 @@ The seller dashboard features a persistent sidebar (240px) with clean, consisten
 | Route            | File                              | Description                                  |
 | ---------------- | --------------------------------- | -------------------------------------------- |
 | `/seller/orders` | `/src/app/seller/orders/page.tsx` | Seller order management with shipping labels |
+
+### Shipping Management ⭐ Session 25
+
+| Route              | File                                | Lines | Description                             |
+| ------------------ | ----------------------------------- | ----- | --------------------------------------- |
+| `/seller/shipping` | `/src/app/seller/shipping/page.tsx` | 50    | Shipping profile management (full CRUD) |
+
+**Key Components:**
+
+- `empty-state.tsx` - Empty state with "Create First Profile" button
+- `shipping-profile-list.tsx` - List view with edit/duplicate/delete actions
+- `shipping-profile-form-dialog.tsx` - Full-screen form for creating/editing profiles
+
+**Features:**
+
+- Create multiple shipping profiles per seller
+- Per-profile free shipping thresholds
+- Domestic and international rates
+- Additional item pricing
+- Processing time configuration
+- Product assignment via `shippingProfileId`
+
+**See:** [Shipping Profile System Documentation](../setup/SHIPPING_CALCULATOR.md)
 
 ### Finance & Impact Management
 
@@ -329,8 +353,8 @@ The seller dashboard features a persistent sidebar (240px) with clean, consisten
 **Settings Tabs**
 
 - **File:** `/src/app/seller/settings/settings-tabs.tsx` (140 lines)
-- **Purpose:** 6-tab navigation component
-- **Tabs:** Profile, Branding, Eco-Profile, Nonprofit, Shipping, Account
+- **Purpose:** 5-tab navigation component (Session 25: Removed Shipping tab)
+- **Tabs:** Profile, Branding, Eco-Profile, Nonprofit, Account
 
 **Shop Profile Tab**
 
@@ -375,12 +399,6 @@ The seller dashboard features a persistent sidebar (240px) with clean, consisten
   - Search by name/mission
   - Filter by category
   - View nonprofit profiles
-
-**Shipping Tab**
-
-- **File:** `/src/app/seller/settings/shipping-tab-simple.tsx` (80 lines)
-- **Purpose:** View shipping profiles (read-only for now)
-- **Note:** Full shipping profile CRUD deferred
 
 **Account Tab**
 
@@ -496,13 +514,12 @@ await db.productVariant.createMany({
 
 | Function                           | Purpose                              |
 | ---------------------------------- | ------------------------------------ |
-| `getShopSettings()`                | Get shop with nonprofit and shipping |
+| `getShopSettings()`                | Get shop with nonprofit              |
 | `updateShopProfile(input)`         | Update name, slug, bio, story        |
 | `updateShopBranding(input)`        | Update logo, banner, colors (JSON)   |
 | `updateShopNonprofit(input)`       | Set nonprofit partner and donation % |
 | `getAvailableNonprofits(filters?)` | Browse verified nonprofits           |
 | `searchNonprofits(query)`          | Search nonprofits by name/mission    |
-| `getShippingProfiles()`            | View shipping configurations         |
 
 **Features:**
 
@@ -510,6 +527,36 @@ await db.productVariant.createMany({
 - ✅ Branding customization (uses Shop.colors JSON field)
 - ✅ Nonprofit partnership (search, selection, donation %)
 - ✅ Nonprofit search with category filtering
+
+### Shipping Actions ⭐ Session 25
+
+**File:** `/src/actions/seller-shipping.ts` (360 lines)
+
+| Function                           | Purpose                             |
+| ---------------------------------- | ----------------------------------- |
+| `getShippingProfiles()`            | Get all shipping profiles for shop  |
+| `createShippingProfile(input)`     | Create new shipping profile         |
+| `updateShippingProfile(id, input)` | Update existing profile             |
+| `deleteShippingProfile(id)`        | Delete profile                      |
+| `duplicateShippingProfile(id)`     | Duplicate profile for easy creation |
+
+**File:** `/src/actions/shipping-calculation.ts` (147 lines)
+
+| Function                                              | Purpose                                   |
+| ----------------------------------------------------- | ----------------------------------------- |
+| `calculateShippingForCart(items, destinationCountry)` | Calculate shipping based on profile rates |
+
+**Features:**
+
+- ✅ Full CRUD operations for shipping profiles
+- ✅ Seller-specific free shipping thresholds
+- ✅ Domestic and international rates
+- ✅ Additional item pricing
+- ✅ Profile-based shipping calculation
+- ✅ Integration with cart, checkout, and payment flows
+- ✅ Shop ownership verification on all mutations
+
+**See:** [Shipping Profile System Documentation](../setup/SHIPPING_CALCULATOR.md)
 
 ### Shop Sections Actions
 
@@ -995,6 +1042,7 @@ await db.productVariant.create({
 - Product management (CRUD with variants)
 - Section management (CRUD with assignment)
 - Order management (status updates, shipping labels)
+- **Shipping profile management (full CRUD, product assignment, profile-based calculation) - Session 25**
 - Finance dashboard (balance, payouts, transactions, Stripe Connect) - Session 17
 - Analytics dashboard (revenue, customers, impact)
 - Marketing tools (promotions, discounts)
@@ -1003,7 +1051,6 @@ await db.productVariant.create({
 
 ### 🚧 Partially Implemented
 
-- Shipping profiles (view-only, CRUD deferred)
 - Payout processing (UI complete, actual Stripe payout automation TBD)
 - CSV exports (UI ready, backend implementation TBD)
 

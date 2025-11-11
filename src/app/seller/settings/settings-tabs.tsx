@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Store, Palette, Heart, Package, User, Leaf } from 'lucide-react';
+import { Store, Palette, Heart, User, Leaf } from 'lucide-react';
 import ShopProfileTab from './shop-profile-tab';
 import BrandingTab from './branding-tab';
 import NonprofitTab from './nonprofit-tab';
-import ShippingTab from './shipping-tab-simple';
 import AccountTab from './account-tab';
 import EcoProfileTab from './eco-profile-tab';
 
@@ -27,24 +26,13 @@ interface Shop {
     logo: string | null;
     website: string | null;
   } | null;
-  shippingProfiles: Array<{
-    id: string;
-    name: string;
-    processingTimeMin: number;
-    processingTimeMax: number;
-    shippingOrigin: unknown;
-    shippingRates: unknown;
-    carbonNeutralPrice: number | null;
-    createdAt: Date;
-    updatedAt: Date;
-  }>;
 }
 
 interface SettingsTabsProps {
   shop: Shop;
 }
 
-type TabId = 'profile' | 'branding' | 'eco-profile' | 'nonprofit' | 'shipping' | 'account';
+type TabId = 'profile' | 'branding' | 'eco-profile' | 'nonprofit' | 'account';
 
 const tabs = [
   {
@@ -70,12 +58,6 @@ const tabs = [
     name: 'Nonprofit',
     icon: Heart,
     description: 'Partner with a nonprofit organization',
-  },
-  {
-    id: 'shipping' as TabId,
-    name: 'Shipping',
-    icon: Package,
-    description: 'Shipping profiles and rates',
   },
   {
     id: 'account' as TabId,
@@ -133,7 +115,6 @@ export default function SettingsTabs({ shop }: SettingsTabsProps) {
           {activeTab === 'branding' && <BrandingTab shop={shop} />}
           {activeTab === 'eco-profile' && <EcoProfileTab shopId={shop.id} />}
           {activeTab === 'nonprofit' && <NonprofitTab shop={shop} />}
-          {activeTab === 'shipping' && <ShippingTab shop={shop} />}
           {activeTab === 'account' && <AccountTab />}
         </div>
       </div>

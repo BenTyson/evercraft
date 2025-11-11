@@ -1,523 +1,514 @@
-# Shipping Cost Calculator Documentation
+# Shipping Profile System Documentation
 
-**Last Updated:** 2025-11-10 (Session 24)
+**Last Updated:** 2025-11-11 (Session 25)
 
 ## Overview
 
-The Evercraft shipping calculator provides dynamic, intelligent shipping cost calculations based on multiple factors including cart value, item weight, destination zone, and shipping method.
+The Evercraft shipping system uses seller-managed shipping profiles that allow complete control over shipping rates, free shipping thresholds, processing times, and zones. This profile-based system replaced the hardcoded shipping calculator in Session 25.
 
 ## Features
 
-❌ **Free Shipping Threshold** - REMOVED (Session 24) - Will be implemented per-seller in future session
-✅ **Weight-Based Pricing** - Additional charges for heavier items
-✅ **Zone-Based Rates** - Different rates for domestic and international
-✅ **Multiple Shipping Methods** - Standard, Express, and Overnight options
-✅ **Real-Time Calculations** - Updates as cart changes
-
-> **NOTE (Session 24):** The hardcoded $50 free shipping threshold was removed. Future implementation will allow sellers to set their own free shipping thresholds in seller settings (`/seller/settings`).
+✅ **Seller Shipping Profiles** - Full CRUD system for sellers to manage their shipping configurations
+✅ **Per-Seller Free Shipping** - Each seller sets their own free shipping thresholds (domestic and/or international)
+✅ **Zone-Based Rates** - Separate rates for domestic (US) and international shipping
+✅ **Additional Item Pricing** - Base rate + additional cost per extra item
+✅ **Processing Time Profiles** - Separate from shipping rates (e.g., "Ships in 1-2 business days")
+✅ **Product-Profile Assignment** - Products link to shipping profiles via `shippingProfileId`
+✅ **Real-Time Calculations** - Cart, checkout, and payment use profile-based rates
 
 ---
 
-## Configuration
+## Seller Shipping Profile Management
 
-### Shipping Constants
+### Navigation
 
-Located in `src/lib/shipping.ts`:
+Shipping is a **top-level navigation item** in the seller dashboard (moved from Settings tab in Session 25):
 
-```typescript
-// TODO: Free shipping thresholds will be set per-seller in seller settings
-// const FREE_SHIPPING_THRESHOLD = 50; // REMOVED - to be implemented per-seller
-const DOMESTIC_BASE_RATE = 5.99;
-const INTERNATIONAL_BASE_RATE = 15.99;
-const WEIGHT_RATE_PER_POUND = 0.5; // Additional cost per pound over base
-const BASE_WEIGHT_ALLOWANCE = 5; // pounds included in base rate
+**Route:** `/seller/shipping`
+
+**Navigation Location:** Between "Orders" and "Finance" in seller sidebar
+
+### Shipping Profile CRUD
+
+**Create Profile:**
+
+- Sellers can create multiple shipping profiles (e.g., "Standard Shipping", "Heavy Items", "International Only")
+- Each profile has:
+  - Name and origin location (city, state, country)
+  - Processing time (e.g., "1-2 business days", "Ships same day")
+  - Domestic rates (base rate + additional item rate)
+  - International rates (base rate + additional item rate)
+  - Free shipping configuration (enabled/disabled, threshold amount, which zones)
+
+**Edit/Duplicate/Delete:**
+
+- Edit existing profiles
+- Duplicate profiles for similar configurations
+- Delete unused profiles
+
+**Assign to Products:**
+
+- Products have optional `shippingProfileId` field
+- Assigned during product creation/editing
+- Products without profiles use default fallback rates ($5.99 domestic, $15.99 international)
+
+---
+
+## Database Schema
+
+### ShippingProfile Model
+
+Located in `/prisma/schema.prisma`:
+
+```prisma
+model ShippingProfile {
+  id              String   @id @default(cuid())
+  shopId          String
+  name            String
+  originCity      String?
+  originState     String?
+  originCountry   String   @default("US")
+  processingTime  String?
+  shippingRates   Json     // Contains rate structure (see below)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  shop            Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  products        Product[]
+}
 ```
 
-### Shipping Method Multipliers
+### ShippingRates JSON Structure
 
 ```typescript
-const METHOD_MULTIPLIERS = {
-  standard: 1.0, // 100% of base rate (5-7 business days)
-  express: 1.8, // 180% of base rate (2-3 business days)
-  overnight: 3.0, // 300% of base rate (1 business day)
-};
+interface ShippingRates {
+  type: 'fixed';
+  freeShipping: {
+    enabled: boolean;
+    domestic: boolean;
+    international: boolean;
+    threshold: number | null;
+  };
+  domestic: {
+    baseRate: number;
+    additionalItem: number;
+  };
+  international: {
+    baseRate: number;
+    additionalItem: number;
+  };
+  zones: {
+    domestic: string[]; // ['US', 'USA']
+    international: string[]; // ['CA', 'GB', 'AU', ...]
+    excluded: string[];
+  };
+}
+```
+
+### Product Relation (Added Session 25)
+
+```prisma
+model Product {
+  // ... existing fields
+  shippingProfileId String?
+  shippingProfile   ShippingProfile? @relation(fields: [shippingProfileId], references: [id])
+}
 ```
 
 ---
 
 ## Usage
 
-### Basic Cart Shipping Calculation
+### Calculating Shipping (Server Action)
+
+**File:** `/src/actions/shipping-calculation.ts`
 
 ```typescript
-import { calculateCartShipping } from '@/lib/shipping';
+import { calculateShippingForCart } from '@/actions/shipping-calculation';
 
-const result = calculateCartShipping({
-  items: [
-    { price: 29.99, quantity: 2, weight: 1.5 },
-    { price: 15.0, quantity: 1, weight: 0.5 },
+const result = await calculateShippingForCart(
+  [
+    { productId: 'prod_123', quantity: 2, price: 29.99 },
+    { productId: 'prod_456', quantity: 1, price: 15.0 },
   ],
-  destinationCountry: 'US',
-  method: 'standard',
-});
+  'US' // destination country
+);
 
 console.log(result);
 // {
-//   shippingCost: 0,
-//   isFreeShipping: true,
-//   freeShippingThreshold: 50,
-//   amountToFreeShipping: 0,
-//   availableRates: [...],
-//   selectedMethod: 'standard',
-//   zone: 'domestic'
+//   shippingCost: 66.66, // from product's shipping profile
+//   breakdown: [
+//     { productId: 'prod_123', profileName: 'Standard Shipping', cost: 66.66 },
+//     { productId: 'prod_456', profileName: null, cost: 0 } // free shipping threshold met
+//   ]
 // }
 ```
 
-### Server Action
+### Integration Points
+
+**Cart Page:** `/src/app/cart/page.tsx`
 
 ```typescript
-import { calculateShippingCost } from '@/actions/shipping';
+useEffect(() => {
+  const calculateShipping = async () => {
+    const cartItems = items.map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      price: item.price,
+    }));
+    const result = await calculateShippingForCart(cartItems, 'US');
+    setShipping(result.shippingCost);
+  };
+  calculateShipping();
+}, [items]);
+```
 
-const result = await calculateShippingCost({
-  items: cartItems,
-  destinationCountry: 'CA',
-  method: 'express',
-});
+**Checkout Page:** `/src/app/checkout/page.tsx`
 
-if (result.success) {
-  console.log('Shipping cost:', result.result?.shippingCost);
-}
+```typescript
+useEffect(() => {
+  const calculateShipping = async () => {
+    const cartItems = items.map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      price: item.price,
+    }));
+    const result = await calculateShippingForCart(cartItems, formData.country || 'US');
+    setShippingCost(result.shippingCost);
+  };
+  calculateShipping();
+}, [items, formData.country]);
+```
+
+**Payment Processing:** `/src/actions/payment.ts`
+
+```typescript
+const shippingResult = await calculateShippingForCart(
+  input.items.map((item) => ({
+    productId: item.productId,
+    quantity: item.quantity,
+    price: item.price,
+  })),
+  input.shippingAddress.country
+);
+const shipping = shippingResult.shippingCost;
 ```
 
 ---
 
 ## Calculation Logic
 
-### 1. Zone Determination
+### 1. Product Profile Lookup
+
+For each cart item, fetch the product with its shipping profile:
 
 ```typescript
-function getShippingZone(country?: string): ShippingZone {
-  if (country === 'US' || country === 'USA') {
-    return 'domestic';
+const products = await db.product.findMany({
+  where: { id: { in: productIds } },
+  include: { shippingProfile: true },
+});
+```
+
+### 2. Zone Determination
+
+```typescript
+const isDomestic =
+  !destinationCountry ||
+  destinationCountry.toUpperCase() === 'US' ||
+  destinationCountry.toUpperCase() === 'USA';
+const zone = isDomestic ? 'domestic' : 'international';
+```
+
+### 3. Free Shipping Check
+
+```typescript
+if (product.shippingProfile) {
+  const rates = product.shippingProfile.shippingRates;
+  const freeShipping = rates.freeShipping || {};
+
+  const qualifiesForFree =
+    freeShipping.enabled &&
+    ((zone === 'domestic' && freeShipping.domestic) ||
+      (zone === 'international' && freeShipping.international)) &&
+    (freeShipping.threshold === null || item.price * item.quantity >= freeShipping.threshold);
+
+  if (qualifiesForFree) {
+    return 0; // Free shipping!
   }
-  return 'international';
 }
 ```
 
-**Zones:**
-
-- `domestic`: United States
-- `international`: All other countries
-
-### 2. Free Shipping Check
+### 4. Rate Calculation
 
 ```typescript
-if (subtotal >= FREE_SHIPPING_THRESHOLD) {
-  return { baseRate: 0, isFreeShipping: true };
-}
-```
+const zoneRates = rates[zone]; // domestic or international
+const baseRate = zoneRates.baseRate || 0;
+const additionalItemRate = zoneRates.additionalItem || 0;
 
-Orders over $50 automatically qualify for free standard shipping.
-
-### 3. Weight-Based Calculation
-
-```typescript
-let baseRate = zone === 'domestic' ? DOMESTIC_BASE_RATE : INTERNATIONAL_BASE_RATE;
-
-if (totalWeight > BASE_WEIGHT_ALLOWANCE) {
-  const extraWeight = totalWeight - BASE_WEIGHT_ALLOWANCE;
-  baseRate += extraWeight * WEIGHT_RATE_PER_POUND;
-}
+const itemCost = baseRate + (item.quantity > 1 ? additionalItemRate * (item.quantity - 1) : 0);
 ```
 
 **Example:**
 
-- Cart weight: 8 lbs
-- Base allowance: 5 lbs
-- Extra weight: 3 lbs
-- Additional cost: 3 × $0.50 = $1.50
-- Total base rate: $5.99 + $1.50 = $7.49
+- Product: Handcrafted Mug
+- Profile: "Standard Shipping"
+- Zone: Domestic
+- Base rate: $5.99
+- Additional item rate: $2.00
+- Quantity: 3
+- **Calculation:** $5.99 + ($2.00 × 2) = $9.99
 
-### 4. Method Multiplier
+### 5. Fallback for No Profile
+
+If product has no shipping profile:
 
 ```typescript
-shippingCost = baseRate * METHOD_MULTIPLIERS[method];
+const defaultRate = zone === 'domestic' ? 5.99 : 15.99;
+const additionalRate = zone === 'domestic' ? 2.0 : 5.0;
+const itemCost = defaultRate + (quantity > 1 ? additionalRate * (quantity - 1) : 0);
 ```
-
-**Example (Standard):**
-
-- Base rate: $5.99
-- Method multiplier: 1.0×
-- Final cost: $5.99
-
-**Example (Express):**
-
-- Base rate: $5.99
-- Method multiplier: 1.8×
-- Final cost: $10.78
-
-**Example (Overnight):**
-
-- Base rate: $5.99
-- Method multiplier: 3.0×
-- Final cost: $17.97
 
 ---
 
-## Integration Points
+## Files and Components
 
-### Cart Page (`src/app/cart/page.tsx`)
+### Server Actions
+
+**File:** `/src/actions/seller-shipping.ts` (New in Session 25)
+
+| Function                           | Purpose                             |
+| ---------------------------------- | ----------------------------------- |
+| `getShippingProfiles()`            | Get all shipping profiles for shop  |
+| `createShippingProfile(input)`     | Create new shipping profile         |
+| `updateShippingProfile(id, input)` | Update existing profile             |
+| `deleteShippingProfile(id)`        | Delete profile                      |
+| `duplicateShippingProfile(id)`     | Duplicate profile for easy creation |
+
+**File:** `/src/actions/shipping-calculation.ts` (New in Session 25)
+
+| Function                                              | Purpose                                   |
+| ----------------------------------------------------- | ----------------------------------------- |
+| `calculateShippingForCart(items, destinationCountry)` | Calculate shipping based on profile rates |
+
+### UI Components
+
+**Main Page:** `/src/app/seller/shipping/page.tsx`
+
+- Server component that fetches shop with shipping profiles
+- Shows empty state or list of profiles
+
+**Empty State:** `/src/app/seller/shipping/empty-state.tsx`
+
+- Client component for when no profiles exist
+- "Create First Profile" button opens dialog
+
+**Profile List:** `/src/app/seller/shipping/shipping-profile-list.tsx`
+
+- Displays all profiles as cards
+- Edit, duplicate, delete actions per profile
+- Shows rates, processing time, free shipping badges
+
+**Profile Form Dialog:** `/src/app/seller/shipping/shipping-profile-form-dialog.tsx`
+
+- Full-screen modal for creating/editing profiles
+- All configuration options in one form
+
+**Utility:** `/src/lib/shipping-defaults.ts`
+
+- Client-side default values for forms
+- `getDefaultShippingRates()` function
+
+### Product Form Integration
+
+**File:** `/src/app/seller/products/product-form.tsx`
+
+Added shipping profile selector:
 
 ```typescript
-const shippingResult = calculateCartShipping({
-  items: items.map((item) => ({
-    price: item.price,
-    quantity: item.quantity,
-    weight: 1,
-  })),
-});
-
-const shipping = shippingResult.shippingCost;
-const shippingMessage = getShippingEstimateMessage(shippingResult);
+<select
+  id="shippingProfileId"
+  value={formData.shippingProfileId || ''}
+  onChange={(e) => handleChange('shippingProfileId', e.target.value || undefined)}
+>
+  <option value="">No shipping profile (use default rates)</option>
+  {shippingProfiles.map(profile => (
+    <option key={profile.id} value={profile.id}>
+      {profile.name} ({profile.processingTime})
+    </option>
+  ))}
+</select>
 ```
-
-**Displays:**
-
-- Shipping cost in order summary
-- "Add $X more to qualify for free shipping" message
-
-### Checkout Page (`src/app/checkout/page.tsx`)
-
-```typescript
-const shippingResult = calculateCartShipping({
-  items: cartItems,
-  destinationCountry: formData.country || 'US',
-  destinationState: formData.state,
-});
-```
-
-**Updates:**
-
-- Shipping cost based on destination
-- Real-time updates as address changes
-- Shows free shipping incentive
-
-### Payment Flow (`src/actions/payment.ts`)
-
-```typescript
-const shippingResult = calculateCartShipping({
-  items: input.items.map((item) => ({
-    price: item.price,
-    quantity: item.quantity,
-    weight: 1,
-  })),
-  destinationCountry: input.shippingAddress.country,
-  destinationState: input.shippingAddress.state,
-});
-const shipping = shippingResult.shippingCost;
-```
-
-**Used in:**
-
-- `createPaymentIntent()` - Calculate total for Stripe
-- `createOrder()` - Record accurate shipping cost
 
 ---
 
-## Shipping Methods
+## Migration
 
-### Standard Shipping
+**Migration:** `20251111151144_add_shipping_profile_to_products`
 
-- **Delivery Time:** 5-7 business days
-- **Cost Multiplier:** 1.0× base rate
-- **Description:** Economical ground shipping
-- **Availability:** All zones
+Added `shippingProfileId` field to Product model:
 
-### Express Shipping
-
-- **Delivery Time:** 2-3 business days
-- **Cost Multiplier:** 1.8× base rate
-- **Description:** Faster delivery
-- **Availability:** All zones
-
-### Overnight Shipping
-
-- **Delivery Time:** 1 business day
-- **Cost Multiplier:** 3.0× base rate
-- **Description:** Next day delivery
-- **Availability:** Domestic only
-
----
-
-## API Reference
-
-### `calculateShipping(input: ShippingCalculationInput): ShippingCalculationResult`
-
-Calculate shipping for a given cart configuration.
-
-**Parameters:**
-
-```typescript
-interface ShippingCalculationInput {
-  subtotal: number;
-  itemCount: number;
-  totalWeight?: number; // in pounds
-  destinationCountry?: string;
-  destinationState?: string;
-  method?: ShippingMethod; // 'standard' | 'express' | 'overnight'
-}
+```sql
+ALTER TABLE "Product" ADD COLUMN "shippingProfileId" TEXT;
+ALTER TABLE "Product" ADD CONSTRAINT "Product_shippingProfileId_fkey"
+  FOREIGN KEY ("shippingProfileId") REFERENCES "ShippingProfile"("id")
+  ON DELETE SET NULL ON UPDATE CASCADE;
 ```
-
-**Returns:**
-
-```typescript
-interface ShippingCalculationResult {
-  shippingCost: number;
-  isFreeShipping: boolean;
-  freeShippingThreshold: number;
-  amountToFreeShipping: number;
-  availableRates: ShippingRate[];
-  selectedMethod: ShippingMethod;
-  zone: ShippingZone;
-}
-```
-
-### `calculateCartShipping(input: CartShippingInput): ShippingCalculationResult`
-
-Convenience function for cart items.
-
-**Parameters:**
-
-```typescript
-interface CartShippingInput {
-  items: Array<{
-    price: number;
-    quantity: number;
-    weight?: number; // in pounds per item
-  }>;
-  destinationCountry?: string;
-  destinationState?: string;
-  method?: ShippingMethod;
-}
-```
-
-### `formatShippingCost(cost: number): string`
-
-Format shipping cost for display.
-
-**Example:**
-
-```typescript
-formatShippingCost(5.99); // "$5.99"
-formatShippingCost(0); // "FREE"
-```
-
-### `getShippingEstimateMessage(result: ShippingCalculationResult): string`
-
-Get user-friendly message about shipping status.
-
-**Returns:**
-
-- "🎉 You qualify for free shipping!" (if qualified)
-- "Add $X more to qualify for free shipping" (if close)
-- "" (empty string if far from threshold)
 
 ---
 
 ## Examples
 
-### Example 1: Small Domestic Order
+### Example 1: Create Profile with Free Shipping
 
 ```typescript
-const result = calculateCartShipping({
-  items: [{ price: 25.0, quantity: 1, weight: 0.5 }],
-  destinationCountry: 'US',
+await createShippingProfile({
+  name: 'Standard Shipping',
+  originCity: 'Portland',
+  originState: 'OR',
+  originCountry: 'US',
+  processingTime: '1-2 business days',
+  shippingRates: {
+    type: 'fixed',
+    freeShipping: {
+      enabled: true,
+      domestic: true,
+      international: false,
+      threshold: 50.0,
+    },
+    domestic: {
+      baseRate: 5.99,
+      additionalItem: 2.0,
+    },
+    international: {
+      baseRate: 25.0,
+      additionalItem: 8.0,
+    },
+    zones: {
+      domestic: ['US', 'USA'],
+      international: ['CA', 'GB', 'AU'],
+      excluded: [],
+    },
+  },
 });
-
-// Result:
-// shippingCost: 5.99
-// isFreeShipping: false
-// amountToFreeShipping: 25.00
-// zone: 'domestic'
-// Message: "Add $25.00 more to qualify for free shipping"
 ```
 
-### Example 2: Qualified for Free Shipping
+### Example 2: Calculate Shipping for Cart
 
 ```typescript
-const result = calculateCartShipping({
-  items: [{ price: 60.0, quantity: 1, weight: 2.0 }],
-  destinationCountry: 'US',
-});
+// Cart with 2 products from same shop
+const cart = [
+  { productId: 'prod_1', quantity: 2, price: 29.99 },
+  { productId: 'prod_2', quantity: 1, price: 40.0 },
+];
+
+const result = await calculateShippingForCart(cart, 'US');
 
 // Result:
-// shippingCost: 0
-// isFreeShipping: true
-// amountToFreeShipping: 0
-// zone: 'domestic'
-// Message: "🎉 You qualify for free shipping!"
+// {
+//   shippingCost: 7.99,  // $5.99 base + $2.00 additional item
+//   breakdown: [
+//     { productId: 'prod_1', profileName: 'Standard Shipping', cost: 7.99 },
+//     { productId: 'prod_2', profileName: 'Standard Shipping', cost: 0 } // over $50 threshold
+//   ]
+// }
 ```
 
-### Example 3: Heavy International Order
+### Example 3: International Order
 
 ```typescript
-const result = calculateCartShipping({
-  items: [{ price: 30.0, quantity: 2, weight: 10.0 }],
-  destinationCountry: 'CA',
-});
+const cart = [{ productId: 'prod_1', quantity: 1, price: 35.0 }];
+
+const result = await calculateShippingForCart(cart, 'CA');
 
 // Result:
-// shippingCost: 18.49
-// (base: $15.99 + (10-5) × $0.50 = $18.49)
-// isFreeShipping: false
-// zone: 'international'
-```
-
-### Example 4: Express Shipping
-
-```typescript
-const result = calculateCartShipping({
-  items: [{ price: 40.0, quantity: 1, weight: 2.0 }],
-  destinationCountry: 'US',
-  method: 'express',
-});
-
-// Result:
-// shippingCost: 10.78 ($5.99 × 1.8)
-// selectedMethod: 'express'
-// availableRates: [
-//   { method: 'standard', cost: 5.99, estimatedDays: '5-7 business days' },
-//   { method: 'express', cost: 10.78, estimatedDays: '2-3 business days' },
-//   { method: 'overnight', cost: 17.97, estimatedDays: '1 business day' }
-// ]
+// {
+//   shippingCost: 25.00,  // International base rate
+//   breakdown: [
+//     { productId: 'prod_1', profileName: 'Standard Shipping', cost: 25.00 }
+//   ]
+// }
 ```
 
 ---
 
 ## Future Enhancements
 
-### Product-Specific Weights
+### Calculated Shipping (Shippo Integration)
 
-Currently using default weight of 1 lb per item. Can be enhanced:
+Currently using fixed rates. Future enhancement to integrate with Shippo API:
 
 ```typescript
-// Add weight field to Product model in schema
-model Product {
+interface ShippingRates {
+  type: 'fixed' | 'calculated'; // Add calculated type
+  carrier?: 'usps' | 'ups' | 'fedex';
   // ... existing fields
-  weight Float @default(1.0) // in pounds
-}
-
-// Use actual product weights
-const cartItems = items.map((item) => ({
-  price: item.price,
-  quantity: item.quantity,
-  weight: item.product.weight || 1,
-}));
-```
-
-### Seller-Specific Shipping Profiles
-
-Allow sellers to customize shipping rates:
-
-```typescript
-model ShippingProfile {
-  id          String @id @default(cuid())
-  shopId      String
-  shop        Shop @relation(fields: [shopId], references: [id])
-
-  freeShippingThreshold Float @default(50)
-  baseRate              Float @default(5.99)
-
-  // Per-zone customization
-  zones       ShippingZone[]
 }
 ```
 
-### Real Carrier Integration
+### Multiple Shipping Speeds
 
-Integrate with shipping APIs for real-time rates:
-
-- **Shippo** - Multi-carrier rates
-- **EasyPost** - Shipping labels + tracking
-- **ShipEngine** - Enterprise shipping
-
-### Dynamic Free Shipping Promotions
+Etsy 2025 feature parity - offering Express/Overnight options per profile:
 
 ```typescript
-model Promotion {
-  // ... existing fields
-  freeShippingThreshold Float?
-  freeShippingEnabled   Boolean @default(false)
+interface ShippingRates {
+  speeds: {
+    standard: { baseRate: number; additionalItem: number };
+    express: { baseRate: number; additionalItem: number };
+    overnight: { baseRate: number; additionalItem: number };
+  };
 }
 ```
 
----
+### Weight-Based Tiers
 
-## Testing
-
-### Unit Tests (Example)
+Add weight tiers to profiles:
 
 ```typescript
-describe('calculateCartShipping', () => {
-  it('should apply free shipping over $50', () => {
-    const result = calculateCartShipping({
-      items: [{ price: 60, quantity: 1, weight: 1 }],
-    });
-
-    expect(result.isFreeShipping).toBe(true);
-    expect(result.shippingCost).toBe(0);
-  });
-
-  it('should charge base rate under $50', () => {
-    const result = calculateCartShipping({
-      items: [{ price: 30, quantity: 1, weight: 1 }],
-    });
-
-    expect(result.isFreeShipping).toBe(false);
-    expect(result.shippingCost).toBe(5.99);
-  });
-
-  it('should add weight-based charges', () => {
-    const result = calculateCartShipping({
-      items: [{ price: 30, quantity: 1, weight: 10 }],
-    });
-
-    // $5.99 base + (10-5) × $0.50 = $8.49
-    expect(result.shippingCost).toBe(8.49);
-  });
-});
+interface ShippingRates {
+  weightBased: {
+    enabled: boolean;
+    tiers: Array<{
+      maxWeight: number; // in pounds
+      rate: number;
+    }>;
+  };
+}
 ```
 
 ---
 
 ## Troubleshooting
 
-### Issue: Shipping cost not updating in checkout
+### Issue: Products still showing $5.99 instead of profile rates
 
-**Solution:** Ensure `formData.country` is being passed to `calculateCartShipping()`.
+**Cause:** Product not assigned to shipping profile, or cart/checkout using old calculator
 
-### Issue: Weight calculations seem wrong
+**Solution:**
 
-**Solution:** Check that product weights are in pounds, not ounces or kilograms.
+1. Verify product has `shippingProfileId` set
+2. Check cart/checkout pages use `calculateShippingForCart` from `/src/actions/shipping-calculation.ts`
+3. Restart dev server to clear any caching
 
-### Issue: International shipping not working
+### Issue: Foreign key constraint on shippingProfileId
 
-**Solution:** Verify country code format (use "CA" not "Canada", "GB" not "United Kingdom").
+**Cause:** Trying to assign non-existent profile ID to product
+
+**Solution:** Ensure profile exists before assignment, or use `undefined` for no profile
+
+### Issue: Free shipping not working
+
+**Cause:** Threshold check failing or zone mismatch
+
+**Solution:**
+
+1. Verify `freeShipping.enabled` is true
+2. Check threshold amount matches or is exceeded
+3. Verify domestic/international flag matches destination zone
 
 ---
 
-## Support
+## Related Documentation
 
-For questions or issues with the shipping calculator:
-
-1. Check this documentation
-2. Review `src/lib/shipping.ts` implementation
-3. Test with `src/actions/shipping.ts` server actions
-
-## Related Files
-
-- `src/lib/shipping.ts` - Core calculator logic
-- `src/actions/shipping.ts` - Server actions
-- `src/app/cart/page.tsx` - Cart integration
-- `src/app/checkout/page.tsx` - Checkout integration
-- `src/actions/payment.ts` - Payment integration
+- [Seller Dashboard](../areas/seller-dashboard.md) - Full seller feature documentation
+- [Database Schema](../session-start/database_schema.md#shippingprofile) - ShippingProfile model details
+- [Buyer Experience](../areas/buyer-experience.md) - How shipping displays to buyers

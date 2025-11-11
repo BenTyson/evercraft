@@ -345,6 +345,7 @@ model Payment {
 model Product {
   id                  String               @id @default(cuid())
   shopId              String
+  shippingProfileId   String?
   title               String
   description         String
   price               Float
@@ -371,6 +372,7 @@ model Product {
   orderItems          OrderItem[]
   category            Category?            @relation(fields: [categoryId], references: [id])
   shop                Shop                 @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shippingProfile     ShippingProfile?     @relation(fields: [shippingProfileId], references: [id], onDelete: SetNull)
   images              ProductImage[]
   variants            ProductVariant[]
   reviews             Review[]
@@ -382,6 +384,7 @@ model Product {
   @@index([createdAt])
   @@index([ecoScore])
   @@index([shopId])
+  @@index([shippingProfileId])
   @@index([status])
   @@index([hasVariants])
 }
@@ -534,7 +537,7 @@ model SellerReview {
 }
 
 model ShippingProfile {
-  id                 String   @id @default(cuid())
+  id                 String    @id @default(cuid())
   shopId             String
   name               String
   processingTimeMin  Int
@@ -542,9 +545,10 @@ model ShippingProfile {
   shippingOrigin     Json
   shippingRates      Json
   carbonNeutralPrice Float?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  shop               Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  shop               Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  products           Product[]
 
   @@index([shopId])
 }

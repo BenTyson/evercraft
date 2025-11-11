@@ -69,7 +69,7 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
 - Variant display (size, color, etc.)
 - Quantity updates
 - Remove items
-- Shipping cost estimation
+- Shipping cost estimation (based on seller's shipping profiles - Session 25)
 - Nonprofit donation preview
 - Zustand state management with persistence
 
@@ -593,6 +593,7 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
 - ✅ Order confirmation emails
 - ✅ Transactional order creation
 - ✅ Nonprofit donation calculation
+- ✅ Profile-based shipping calculation (Session 25)
 
 ### Review Actions
 

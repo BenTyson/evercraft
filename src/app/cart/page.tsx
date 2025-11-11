@@ -6,30 +6,52 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/store/cart-store';
 import { SiteHeader } from '@/components/layout/site-header';
-import { calculateCartShipping, getShippingEstimateMessage } from '@/lib/shipping';
+import { calculateShippingForCart } from '@/actions/shipping-calculation';
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, getTotalPrice, getTotalItems } = useCartStore();
+  const [shipping, setShipping] = useState<number>(0);
+  const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
 
-  // Calculate shipping dynamically
-  const shippingResult = calculateCartShipping({
-    items: items.map((item) => ({
-      price: item.price,
-      quantity: item.quantity,
-      weight: 1, // Default weight
-    })),
-  });
+  // Calculate shipping dynamically based on products' shipping profiles
+  useEffect(() => {
+    const calculateShipping = async () => {
+      if (items.length === 0) {
+        setShipping(0);
+        return;
+      }
+
+      setIsCalculatingShipping(true);
+      try {
+        const cartItems = items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.price,
+        }));
+
+        const result = await calculateShippingForCart(cartItems, 'US');
+        setShipping(result.shippingCost);
+      } catch (error) {
+        console.error('Error calculating shipping:', error);
+        // Fall back to default rate
+        setShipping(5.99);
+      } finally {
+        setIsCalculatingShipping(false);
+      }
+    };
+
+    calculateShipping();
+  }, [items]);
 
   const subtotal = getTotalPrice();
-  const shipping = shippingResult.shippingCost;
   const total = subtotal + shipping;
-  const shippingMessage = getShippingEstimateMessage(shippingResult);
 
   if (items.length === 0) {
     return (
@@ -151,20 +173,15 @@ export default function CartPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
                   <span className="font-semibold">
-                    {shipping === 0 ? (
+                    {isCalculatingShipping ? (
+                      <span className="text-muted-foreground text-xs">Calculating...</span>
+                    ) : shipping === 0 ? (
                       <span className="text-eco-dark">Free</span>
                     ) : (
                       `$${shipping.toFixed(2)}`
                     )}
                   </span>
                 </div>
-
-                {/* Shipping Estimate Message */}
-                {shippingMessage && (
-                  <div className="bg-eco-light/10 text-eco-dark rounded-md px-3 py-2 text-xs">
-                    {shippingMessage}
-                  </div>
-                )}
 
                 <div className="border-border border-t pt-3">
                   <div className="flex justify-between text-lg">

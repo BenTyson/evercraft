@@ -24,6 +24,7 @@ export interface CreateProductInput {
   sku?: string;
   categoryId: string;
   shopId: string;
+  shippingProfileId?: string;
   tags?: string[];
   certificationIds?: string[];
   inventoryQuantity?: number;
@@ -70,6 +71,7 @@ export async function createProduct(input: CreateProductInput) {
         sku: input.sku,
         categoryId: input.categoryId,
         shopId: input.shopId,
+        shippingProfileId: input.shippingProfileId,
         tags: input.tags || [],
         status: input.status || ProductStatus.DRAFT,
         inventoryQuantity: input.inventoryQuantity ?? 0,
