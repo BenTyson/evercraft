@@ -17,17 +17,18 @@ export default async function SellerImpactPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Your Impact</h1>
-        <p className="mt-2 text-gray-600">
-          Track your nonprofit contributions and download impact reports
-        </p>
+    <div>
+      {/* Page Header Bar */}
+      <div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+        <div className="container mx-auto">
+          <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">Impact</h1>
+        </div>
       </div>
 
-      {/* Dashboard */}
-      <ImpactDashboard />
+      {/* Page Content */}
+      <div className="container mx-auto px-4 py-8">
+        <ImpactDashboard />
+      </div>
     </div>
   );
 }

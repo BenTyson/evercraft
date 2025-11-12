@@ -17,7 +17,6 @@ export function AdminSidebar() {
   return (
     <aside className="w-64 border-r border-gray-200 bg-white">
       <div className="p-4">
-        <h2 className="mb-4 text-lg font-bold text-gray-900">Admin Panel</h2>
         <nav className="space-y-1">
           <AdminNavLink href="/admin" icon={LayoutDashboard}>
             Dashboard

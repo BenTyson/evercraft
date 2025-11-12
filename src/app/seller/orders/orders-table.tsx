@@ -269,7 +269,7 @@ export function OrdersTable({ orders: initialOrders }: OrdersTableProps) {
                 value={order.status}
                 onChange={(e) => handleStatusChange(order.id, e.target.value)}
                 disabled={updatingStatus === order.id}
-                className="border-input bg-background hover:bg-accent rounded-md border px-3 py-2 text-sm transition-colors disabled:opacity-50"
+                className="border-input bg-background rounded-md border px-3 py-2 text-sm transition-colors hover:border-gray-300 hover:bg-gray-50 disabled:opacity-50"
               >
                 {statusOptions.map((status) => (
                   <option key={status.value} value={status.value}>

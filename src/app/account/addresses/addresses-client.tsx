@@ -58,14 +58,13 @@ export function AddressesClient({ initialAddresses }: AddressesClientProps) {
   const billingAddresses = initialAddresses.filter((a) => a.type === 'BILLING');
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="mb-2 text-3xl font-bold">My Addresses</h1>
-            <p className="text-muted-foreground">Manage your shipping and billing addresses</p>
-          </div>
+    <div>
+      {/* Page Header Bar */}
+      <div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
+          <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">
+            My Addresses
+          </h1>
           <Button onClick={handleAddNew}>
             <Plus className="mr-2 size-4" />
             Add Address
@@ -73,54 +72,57 @@ export function AddressesClient({ initialAddresses }: AddressesClientProps) {
         </div>
       </div>
 
-      {/* Empty State */}
-      {initialAddresses.length === 0 && (
-        <div className="border-muted bg-card mx-auto max-w-md rounded-lg border p-12 text-center">
-          <MapPin className="text-muted-foreground mx-auto mb-4 size-16" />
-          <h2 className="mb-2 text-xl font-bold">No addresses saved</h2>
-          <p className="text-muted-foreground mb-6 text-sm">
-            Add your first shipping or billing address to speed up checkout
-          </p>
-          <Button onClick={handleAddNew} size="lg">
-            <Plus className="mr-2 size-4" />
-            Add Your First Address
-          </Button>
-        </div>
-      )}
-
-      {/* Shipping Addresses */}
-      {shippingAddresses.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-4 text-xl font-semibold">Shipping Addresses</h2>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {shippingAddresses.map((address) => (
-              <AddressCard
-                key={address.id}
-                address={address}
-                onEdit={handleEdit}
-                onUpdate={handleSuccess}
-              />
-            ))}
+      {/* Page Content */}
+      <div className="px-6 py-8">
+        {/* Empty State */}
+        {initialAddresses.length === 0 && (
+          <div className="border-muted bg-card mx-auto max-w-md rounded-lg border p-12 text-center">
+            <MapPin className="text-muted-foreground mx-auto mb-4 size-16" />
+            <h2 className="mb-2 text-xl font-bold">No addresses saved</h2>
+            <p className="text-muted-foreground mb-6 text-sm">
+              Add your first shipping or billing address to speed up checkout
+            </p>
+            <Button onClick={handleAddNew} size="lg">
+              <Plus className="mr-2 size-4" />
+              Add Your First Address
+            </Button>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Billing Addresses */}
-      {billingAddresses.length > 0 && (
-        <div>
-          <h2 className="mb-4 text-xl font-semibold">Billing Addresses</h2>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {billingAddresses.map((address) => (
-              <AddressCard
-                key={address.id}
-                address={address}
-                onEdit={handleEdit}
-                onUpdate={handleSuccess}
-              />
-            ))}
+        {/* Shipping Addresses */}
+        {shippingAddresses.length > 0 && (
+          <div className="mb-8">
+            <h2 className="mb-4 text-xl font-semibold">Shipping Addresses</h2>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {shippingAddresses.map((address) => (
+                <AddressCard
+                  key={address.id}
+                  address={address}
+                  onEdit={handleEdit}
+                  onUpdate={handleSuccess}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Billing Addresses */}
+        {billingAddresses.length > 0 && (
+          <div>
+            <h2 className="mb-4 text-xl font-semibold">Billing Addresses</h2>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {billingAddresses.map((address) => (
+                <AddressCard
+                  key={address.id}
+                  address={address}
+                  onEdit={handleEdit}
+                  onUpdate={handleSuccess}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Add Address Dialog */}
       <AddressFormDialog

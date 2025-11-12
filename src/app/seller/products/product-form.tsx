@@ -216,6 +216,78 @@ export function ProductForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
+      {/* Section Navigation */}
+      <div className="sticky top-0 z-10 -mx-4 border-b border-gray-200 bg-white/95 px-4 py-2 backdrop-blur-sm">
+        <div className="scrollbar-hide flex gap-1 overflow-x-auto">
+          <a
+            href="#basic-info"
+            className="px-3 py-1.5 text-sm whitespace-nowrap text-gray-600 transition-colors hover:text-gray-900"
+          >
+            Basic Info
+          </a>
+          <a
+            href="#images"
+            className="px-3 py-1.5 text-sm whitespace-nowrap text-gray-600 transition-colors hover:text-gray-900"
+          >
+            Images
+          </a>
+          <a
+            href="#options"
+            className="px-3 py-1.5 text-sm whitespace-nowrap text-gray-600 transition-colors hover:text-gray-900"
+          >
+            Options
+          </a>
+          {!hasVariants && (
+            <a
+              href="#pricing"
+              className="px-3 py-1.5 text-sm whitespace-nowrap text-gray-600 transition-colors hover:text-gray-900"
+            >
+              Pricing
+            </a>
+          )}
+          {hasVariants && (
+            <a
+              href="#variants"
+              className="px-3 py-1.5 text-sm whitespace-nowrap text-gray-600 transition-colors hover:text-gray-900"
+            >
+              Variants
+            </a>
+          )}
+          {!hasVariants && (
+            <a
+              href="#inventory"
+              className="px-3 py-1.5 text-sm whitespace-nowrap text-gray-600 transition-colors hover:text-gray-900"
+            >
+              Inventory
+            </a>
+          )}
+          <a
+            href="#eco-profile"
+            className="px-3 py-1.5 text-sm whitespace-nowrap text-gray-600 transition-colors hover:text-gray-900"
+          >
+            Eco-Profile
+          </a>
+          <a
+            href="#shipping"
+            className="px-3 py-1.5 text-sm whitespace-nowrap text-gray-600 transition-colors hover:text-gray-900"
+          >
+            Shipping
+          </a>
+          <a
+            href="#sections"
+            className="px-3 py-1.5 text-sm whitespace-nowrap text-gray-600 transition-colors hover:text-gray-900"
+          >
+            Sections
+          </a>
+          <a
+            href="#publish"
+            className="px-3 py-1.5 text-sm whitespace-nowrap text-gray-600 transition-colors hover:text-gray-900"
+          >
+            Publish
+          </a>
+        </div>
+      </div>
+
       {/* Error Message */}
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
@@ -224,7 +296,7 @@ export function ProductForm({
       )}
 
       {/* Basic Information */}
-      <div className="bg-card space-y-4 rounded-lg border p-6">
+      <div id="basic-info" className="bg-card scroll-mt-20 space-y-4 rounded-lg border p-6">
         <h2 className="text-xl font-bold">Basic Information</h2>
 
         <div>
@@ -279,7 +351,7 @@ export function ProductForm({
       </div>
 
       {/* Product Images */}
-      <div className="bg-card space-y-4 rounded-lg border p-6">
+      <div id="images" className="bg-card scroll-mt-20 space-y-4 rounded-lg border p-6">
         <h2 className="text-xl font-bold">Product Images</h2>
         <p className="text-muted-foreground text-sm">
           Upload up to 10 images. The first image will be used as the primary product image.
@@ -293,7 +365,7 @@ export function ProductForm({
       </div>
 
       {/* Variant Toggle */}
-      <div className="bg-card space-y-4 rounded-lg border p-6">
+      <div id="options" className="bg-card scroll-mt-20 space-y-4 rounded-lg border p-6">
         <div>
           <h2 className="mb-2 text-xl font-bold">Product Options</h2>
           <label className="flex cursor-pointer items-start gap-3">
@@ -316,7 +388,7 @@ export function ProductForm({
 
       {/* Pricing - shown only if NOT using variants */}
       {!hasVariants && (
-        <div className="bg-card space-y-4 rounded-lg border p-6">
+        <div id="pricing" className="bg-card scroll-mt-20 space-y-4 rounded-lg border p-6">
           <h2 className="text-xl font-bold">Pricing</h2>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -366,7 +438,7 @@ export function ProductForm({
 
       {/* Variant Manager - shown only if using variants */}
       {hasVariants && (
-        <div className="bg-card space-y-4 rounded-lg border p-6">
+        <div id="variants" className="bg-card scroll-mt-20 space-y-4 rounded-lg border p-6">
           <h2 className="text-xl font-bold">Variant Manager</h2>
           <p className="text-muted-foreground text-sm">
             Define your variant options (like Size and Color), then generate all combinations. Each
@@ -387,7 +459,7 @@ export function ProductForm({
 
       {/* Inventory Management - shown only if NOT using variants */}
       {!hasVariants && (
-        <div className="bg-card space-y-4 rounded-lg border p-6">
+        <div id="inventory" className="bg-card scroll-mt-20 space-y-4 rounded-lg border p-6">
           <h2 className="text-xl font-bold">Inventory</h2>
 
           <div>
@@ -452,7 +524,7 @@ export function ProductForm({
       )}
 
       {/* Shipping Profile */}
-      <div className="bg-card space-y-4 rounded-lg border p-6">
+      <div id="shipping" className="bg-card scroll-mt-20 space-y-4 rounded-lg border p-6">
         <div>
           <h2 className="text-xl font-bold">Shipping</h2>
           <p className="text-muted-foreground mt-1 text-sm">
@@ -501,7 +573,7 @@ export function ProductForm({
 
       {/* Shop Sections */}
       {sections.length > 0 && (
-        <div className="bg-card space-y-4 rounded-lg border p-6">
+        <div id="sections" className="bg-card scroll-mt-20 space-y-4 rounded-lg border p-6">
           <div>
             <h2 className="text-xl font-bold">Shop Sections</h2>
             <p className="text-muted-foreground mt-1 text-sm">
@@ -513,7 +585,7 @@ export function ProductForm({
             {sections.map((section) => (
               <label
                 key={section.id}
-                className="hover:bg-accent flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition"
+                className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-3 transition hover:border-gray-300 hover:bg-gray-50"
               >
                 <input
                   type="checkbox"
@@ -560,10 +632,15 @@ export function ProductForm({
       )}
 
       {/* Product Eco-Profile */}
-      <ProductEcoProfileForm value={formData.ecoProfile || {}} onChange={handleEcoProfileChange} />
+      <div id="eco-profile" className="scroll-mt-20">
+        <ProductEcoProfileForm
+          value={formData.ecoProfile || {}}
+          onChange={handleEcoProfileChange}
+        />
+      </div>
 
       {/* Publish Status */}
-      <div className="bg-card space-y-4 rounded-lg border p-6">
+      <div id="publish" className="bg-card scroll-mt-20 space-y-4 rounded-lg border p-6">
         <h2 className="text-xl font-bold">Publish Status</h2>
         <p className="text-muted-foreground text-sm">
           Choose whether to save this product as a draft or publish it immediately.

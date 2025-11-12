@@ -104,10 +104,9 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
   };
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Edit Product</h1>
-        <p className="text-muted-foreground mt-1">Update your product information</p>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Edit Product</h1>
       </div>
 
       <ProductForm

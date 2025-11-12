@@ -30,14 +30,16 @@ export default async function SellerSettingsPage() {
   const shop = result.shop!;
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="space-y-8">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Shop Settings</h1>
-          <p className="mt-2 text-gray-600">Manage your shop profile, branding, and preferences</p>
+    <div>
+      {/* Page Header Bar */}
+      <div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+        <div className="container mx-auto">
+          <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">Settings</h1>
         </div>
+      </div>
 
+      {/* Page Content */}
+      <div className="container mx-auto px-4 py-8">
         {/* Settings Tabs */}
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         <SettingsTabs shop={shop as any} />

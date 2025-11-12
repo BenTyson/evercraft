@@ -844,6 +844,88 @@ module.exports = {
 
 ---
 
+## Dashboard Page Header Pattern (Session 26) 📋
+
+**Last Updated:** November 12, 2025
+
+**Context:** All dashboard pages (seller, admin, buyer account) use a consistent compact header pattern for professional appearance and efficient use of vertical space.
+
+### Standard Page Header Structure
+
+**Pattern:**
+
+```tsx
+<div>
+  {/* Page Header Bar */}
+  <div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+    <div className="mx-auto max-w-7xl">
+      <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">PAGE TITLE</h1>
+    </div>
+  </div>
+
+  {/* Page Content */}
+  <div className="px-6 py-8">{/* Page content here */}</div>
+</div>
+```
+
+**Header with Actions (e.g., buttons):**
+
+```tsx
+<div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+  <div className="mx-auto flex max-w-7xl items-center justify-between">
+    <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">PAGE TITLE</h1>
+    <Button>Action</Button>
+  </div>
+</div>
+```
+
+### Key Principles
+
+1. **No Container Constraints on Content**: Content uses `px-6` padding, not `container mx-auto`, to span full width between sidebar and edge
+2. **Compact Headers**: Small uppercase titles with generous letter-spacing, no subtitles or descriptions
+3. **Consistent Spacing**: `py-3` for header, `py-8` for content (down from `py-12`)
+4. **Subtle Background**: `bg-gray-100` for header bar (not white, not too dark)
+5. **Max-Width on Header Title**: `max-w-7xl mx-auto` on inner div to prevent title from spanning too wide
+
+### Examples by Dashboard
+
+**Seller Dashboard:**
+
+- `/seller` - Dashboard
+- `/seller/products` - Products (with ViewToggle and Add Product button in header)
+- `/seller/orders` - Orders
+- `/seller/finance` - Finance
+- `/seller/impact` - Impact
+- All other seller pages
+
+**Admin Dashboard:**
+
+- `/admin` - Admin Dashboard
+- `/admin/users` - User Management
+- `/admin/products` - Product Moderation
+- `/admin/financial` - Financial Dashboard
+- All other admin pages
+
+**Buyer Account:**
+
+- `/account` - Account Dashboard
+- `/account/orders` - Order History
+- `/account/favorites` - Favorites
+- `/account/impact` - Impact
+- All other account pages
+
+### Migration Notes
+
+When updating a page to this pattern:
+
+- Remove large `text-3xl` or `text-2xl` headings
+- Remove subtitle/description paragraphs
+- Change page wrapper from `container mx-auto px-4 py-12` to the two-div pattern above
+- Use `text-sm font-medium uppercase tracking-[0.2em] text-gray-700` for title
+- Action buttons go in header bar on the right side
+
+---
+
 ## Dashboard Color Philosophy (Sessions 22-23) 🎨
 
 **Last Updated:** November 9, 2025
@@ -983,7 +1065,7 @@ bg-red-50 text-red-700        /* Error, cancelled, failed status */
 </span>
 ```
 
-### Layout Structure
+### Layout Structure (Session 26 Updated)
 
 **Dashboard Page:**
 
@@ -992,14 +1074,25 @@ bg-red-50 text-red-700        /* Error, cancelled, failed status */
   {' '}
   {/* Page background */}
   <SiteHeaderWrapper />
-  <div className="container mx-auto px-4 py-8">
-    <div className="grid gap-8 lg:grid-cols-[240px_1fr]">
-      <Navigation /> {/* 240px sidebar */}
-      <main>{children}</main>
-    </div>
+  <div className="flex min-h-screen">
+    <Navigation /> {/* 240px or 264px sidebar */}
+    <main className="flex-1">
+      {/* Page header bar */}
+      <div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+        <div className="mx-auto max-w-7xl">
+          <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">
+            PAGE TITLE
+          </h1>
+        </div>
+      </div>
+      {/* Page content */}
+      <div className="px-6 py-8">{children}</div>
+    </main>
   </div>
 </div>
 ```
+
+**Important:** Content divs use `px-6 py-8`, NOT `container mx-auto`, to eliminate gray gaps between sidebar and content.
 
 **Section Cards:**
 

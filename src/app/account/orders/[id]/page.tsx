@@ -84,7 +84,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
       : null;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="px-6 py-8">
       <Button variant="ghost" asChild className="mb-6">
         <Link href="/account/orders">
           <ArrowLeft className="mr-2 size-4" />

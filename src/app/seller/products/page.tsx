@@ -52,29 +52,31 @@ export default async function SellerProductsPage({ searchParams }: PageProps) {
   ]);
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Products</h1>
-          <p className="text-muted-foreground mt-1">Manage your product listings</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <ViewToggle currentView={viewMode} />
-          <Button asChild>
-            <Link href="/seller/products/new">
-              <Plus className="mr-2 size-5" />
-              Add Product
-            </Link>
-          </Button>
+    <div>
+      {/* Page Header Bar */}
+      <div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+        <div className="container mx-auto flex items-center justify-between">
+          <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">Products</h1>
+          <div className="flex items-center gap-3">
+            <ViewToggle currentView={viewMode} />
+            <Button asChild>
+              <Link href="/seller/products/new">
+                <Plus className="mr-2 size-5" />
+                Add Product
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Status Filter Tabs */}
-      <StatusTabs currentStatus={currentFilter} counts={counts} />
+      {/* Page Content */}
+      <div className="container mx-auto px-4 py-8">
+        {/* Status Filter Tabs */}
+        <StatusTabs currentStatus={currentFilter} counts={counts} />
 
-      {/* Products List */}
-      <ProductsList products={products || []} viewMode={viewMode} />
+        {/* Products List */}
+        <ProductsList products={products || []} viewMode={viewMode} />
+      </div>
     </div>
   );
 }

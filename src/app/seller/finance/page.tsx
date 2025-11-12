@@ -22,13 +22,16 @@ export default async function FinancePage() {
   ]);
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Finance</h1>
-          <p className="mt-2 text-gray-600">Manage your earnings, payouts, and financial settings</p>
+    <div>
+      {/* Page Header Bar */}
+      <div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+        <div className="container mx-auto">
+          <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">Finance</h1>
         </div>
+      </div>
 
+      {/* Page Content */}
+      <div className="container mx-auto px-4 py-8">
         <FinanceTabs
           overview={
             overviewResult.success && overviewResult.overview ? overviewResult.overview : null

@@ -32,7 +32,7 @@ export default async function MessageThreadPage({ params }: MessageThreadPagePro
 
   if (!result.success || !result.conversation) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="px-6 py-8">
         <div className="rounded-lg border border-red-200 bg-red-50 p-6">
           <p className="text-sm text-red-800">{result.error || 'Failed to load conversation'}</p>
         </div>
@@ -49,7 +49,7 @@ export default async function MessageThreadPage({ params }: MessageThreadPagePro
     <>
       {/* Mark conversation as read client-side */}
       {conversation.id && <MarkReadHandler conversationId={conversation.id} />}
-      <div className="container mx-auto px-4 py-6">
+      <div className="px-6 py-6">
         {/* Header */}
         <div className="mb-4 flex items-center gap-4">
           {/* Back Button */}

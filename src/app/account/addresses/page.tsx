@@ -20,7 +20,7 @@ export default async function AddressesPage() {
 
   if (!result.success) {
     return (
-      <div className="container mx-auto px-4 py-16">
+      <div className="px-6 py-16">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-muted-foreground mb-4">Failed to load addresses</p>
           <p className="text-sm text-red-600">{result.error}</p>

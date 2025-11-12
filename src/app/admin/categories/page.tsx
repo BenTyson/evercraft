@@ -24,7 +24,7 @@ export default async function AdminCategoriesPage() {
 
   if (!categoriesResult.success || !categoriesResult.categories) {
     return (
-      <div className="container mx-auto px-4 py-12">
+      <div className="px-6 py-12">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">Categories</h1>
@@ -41,77 +41,81 @@ export default async function AdminCategoriesPage() {
   const stats = statsResult.success ? statsResult.stats : null;
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Categories</h1>
-          <p className="text-muted-foreground mt-1">Manage your product category hierarchy</p>
+    <div>
+      {/* Page Header Bar */}
+      <div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
+          <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">
+            Categories
+          </h1>
+          <CreateCategoryButton />
         </div>
-        <CreateCategoryButton />
       </div>
 
-      {/* Statistics Cards */}
-      {stats && (
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="rounded-lg border bg-white p-4">
-            <div className="flex items-center gap-2">
-              <FolderTree className="text-muted-foreground size-4" />
-              <p className="text-muted-foreground text-sm font-medium">Top-Level</p>
-            </div>
-            <p className="mt-2 text-2xl font-bold">{stats.topLevelCount}</p>
-          </div>
+      {/* Page Content */}
+      <div className="px-6 py-8">
+        <div className="space-y-6">
+          {/* Statistics Cards */}
+          {stats && (
+            <div className="grid gap-4 md:grid-cols-4">
+              <div className="rounded-lg border bg-white p-4">
+                <div className="flex items-center gap-2">
+                  <FolderTree className="text-muted-foreground size-4" />
+                  <p className="text-muted-foreground text-sm font-medium">Top-Level</p>
+                </div>
+                <p className="mt-2 text-2xl font-bold">{stats.topLevelCount}</p>
+              </div>
 
-          <div className="rounded-lg border bg-white p-4">
-            <div className="flex items-center gap-2">
-              <FolderTree className="text-muted-foreground size-4" />
-              <p className="text-muted-foreground text-sm font-medium">Subcategories</p>
-            </div>
-            <p className="mt-2 text-2xl font-bold">{stats.subcategoryCount}</p>
-          </div>
+              <div className="rounded-lg border bg-white p-4">
+                <div className="flex items-center gap-2">
+                  <FolderTree className="text-muted-foreground size-4" />
+                  <p className="text-muted-foreground text-sm font-medium">Subcategories</p>
+                </div>
+                <p className="mt-2 text-2xl font-bold">{stats.subcategoryCount}</p>
+              </div>
 
-          <div className="rounded-lg border bg-white p-4">
-            <div className="flex items-center gap-2">
-              <FolderTree className="text-muted-foreground size-4" />
-              <p className="text-muted-foreground text-sm font-medium">Total Categories</p>
-            </div>
-            <p className="mt-2 text-2xl font-bold">{stats.totalCategories}</p>
-          </div>
+              <div className="rounded-lg border bg-white p-4">
+                <div className="flex items-center gap-2">
+                  <FolderTree className="text-muted-foreground size-4" />
+                  <p className="text-muted-foreground text-sm font-medium">Total Categories</p>
+                </div>
+                <p className="mt-2 text-2xl font-bold">{stats.totalCategories}</p>
+              </div>
 
-          <div className="rounded-lg border bg-white p-4">
-            <div className="flex items-center gap-2">
-              <FolderTree className="text-muted-foreground size-4" />
-              <p className="text-muted-foreground text-sm font-medium">Total Products</p>
-            </div>
-            <p className="mt-2 text-2xl font-bold">{stats.totalProducts}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Category Tree */}
-      <div className="rounded-lg border bg-white">
-        <div className="border-b p-4">
-          <h2 className="font-semibold">Category Hierarchy</h2>
-          <p className="text-muted-foreground text-sm">
-            Organize your categories and subcategories
-          </p>
-        </div>
-        <div className="p-4">
-          {categories.length > 0 ? (
-            <CategoryTreeView categories={categories} />
-          ) : (
-            <div className="py-12 text-center">
-              <FolderTree className="text-muted-foreground mx-auto mb-4 size-12" />
-              <h3 className="mb-2 text-lg font-semibold">No Categories Yet</h3>
-              <p className="text-muted-foreground mb-4 text-sm">
-                Create your first category to get started
-              </p>
-              <CreateCategoryButton variant="default" />
+              <div className="rounded-lg border bg-white p-4">
+                <div className="flex items-center gap-2">
+                  <FolderTree className="text-muted-foreground size-4" />
+                  <p className="text-muted-foreground text-sm font-medium">Total Products</p>
+                </div>
+                <p className="mt-2 text-2xl font-bold">{stats.totalProducts}</p>
+              </div>
             </div>
           )}
+
+          {/* Category Tree */}
+          <div className="rounded-lg border bg-white">
+            <div className="border-b p-4">
+              <h2 className="font-semibold">Category Hierarchy</h2>
+              <p className="text-muted-foreground text-sm">
+                Organize your categories and subcategories
+              </p>
+            </div>
+            <div className="p-4">
+              {categories.length > 0 ? (
+                <CategoryTreeView categories={categories} />
+              ) : (
+                <div className="py-12 text-center">
+                  <FolderTree className="text-muted-foreground mx-auto mb-4 size-12" />
+                  <h3 className="mb-2 text-lg font-semibold">No Categories Yet</h3>
+                  <p className="text-muted-foreground mb-4 text-sm">
+                    Create your first category to get started
+                  </p>
+                  <CreateCategoryButton variant="default" />
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
       </div>
     </div>
   );

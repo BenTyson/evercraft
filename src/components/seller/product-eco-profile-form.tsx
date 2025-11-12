@@ -374,7 +374,9 @@ function ToggleField({ label, checked, onChange }: ToggleFieldProps) {
     <label
       className={cn(
         'flex cursor-pointer items-center gap-2 rounded-md border p-3 transition-colors',
-        checked ? 'border-eco-dark bg-eco-light/20 hover:bg-eco-light/30' : 'hover:bg-accent'
+        checked
+          ? 'border-eco-dark bg-eco-light/20 hover:bg-eco-light/30'
+          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
       )}
     >
       <input

@@ -36,7 +36,7 @@ export default async function FinancialDashboardPage() {
   // Handle errors gracefully
   if (!metricsResult.success) {
     return (
-      <div className="container mx-auto px-4 py-12">
+      <div className="px-6 py-12">
         <h1 className="text-3xl font-bold text-red-600">Error loading financial data</h1>
         <p className="mt-2 text-gray-600">{metricsResult.error}</p>
       </div>
@@ -44,23 +44,27 @@ export default async function FinancialDashboardPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Financial Dashboard</h1>
-        <p className="mt-2 text-gray-600">
-          Platform-wide financial management, seller balances, and payout tracking
-        </p>
+    <div>
+      {/* Page Header Bar */}
+      <div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+        <div className="mx-auto max-w-7xl">
+          <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">
+            Financial Dashboard
+          </h1>
+        </div>
       </div>
 
-      {/* Tabbed Interface */}
-      <AdminFinanceTabs
-        metrics={metricsResult.success ? metricsResult.metrics! : null}
-        sellers={sellersResult.success ? sellersResult.sellers! : []}
-        payouts={payoutsResult.success ? payoutsResult.payouts! : []}
-        transactions={transactionsResult.success ? transactionsResult.transactions! : []}
-        nonprofitBreakdown={nonprofitResult.success ? nonprofitResult.nonprofitBreakdown! : []}
-      />
+      {/* Page Content */}
+      <div className="px-6 py-8">
+        {/* Tabbed Interface */}
+        <AdminFinanceTabs
+          metrics={metricsResult.success ? metricsResult.metrics! : null}
+          sellers={sellersResult.success ? sellersResult.sellers! : []}
+          payouts={payoutsResult.success ? payoutsResult.payouts! : []}
+          transactions={transactionsResult.success ? transactionsResult.transactions! : []}
+          nonprofitBreakdown={nonprofitResult.success ? nonprofitResult.nonprofitBreakdown! : []}
+        />
+      </div>
     </div>
   );
 }

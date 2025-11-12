@@ -19,15 +19,20 @@ export default async function AdminProductsPage() {
   const { products } = await getAdminProducts();
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Product Moderation</h1>
-        <p className="text-muted-foreground mt-2">
-          Review and manage products across the platform
-        </p>
+    <div>
+      {/* Page Header Bar */}
+      <div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+        <div className="mx-auto max-w-7xl">
+          <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">
+            Product Moderation
+          </h1>
+        </div>
       </div>
 
-      <ProductsList products={products || []} />
+      {/* Page Content */}
+      <div className="px-6 py-8">
+        <ProductsList products={products || []} />
+      </div>
     </div>
   );
 }

@@ -31,69 +31,71 @@ export default async function SellerShippingPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-8">
-      <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Shipping</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Manage shipping profiles, rates, and processing times
-          </p>
+    <div>
+      {/* Page Header Bar */}
+      <div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+        <div className="container mx-auto">
+          <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">Shipping</h1>
         </div>
+      </div>
 
-        {/* Empty State or Profile List */}
-        {shop.shippingProfiles.length === 0 ? (
-          <EmptyState shopId={shop.id} />
-        ) : (
-          <ShippingProfileList profiles={shop.shippingProfiles} shopId={shop.id} />
-        )}
+      {/* Page Content */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="space-y-6">
+          {/* Empty State or Profile List */}
+          {shop.shippingProfiles.length === 0 ? (
+            <EmptyState shopId={shop.id} />
+          ) : (
+            <ShippingProfileList profiles={shop.shippingProfiles} shopId={shop.id} />
+          )}
 
-        {/* Info Cards */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Getting Started Guide */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="font-semibold text-gray-900">Getting Started</h3>
-            <ul className="mt-3 space-y-2 text-sm text-gray-600">
-              <li className="flex items-start gap-2">
-                <span className="text-forest-dark mt-0.5">•</span>
-                <span>Create shipping profiles for different product types</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-forest-dark mt-0.5">•</span>
-                <span>Set processing times (how long before you ship)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-forest-dark mt-0.5">•</span>
-                <span>Configure domestic and international rates</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-forest-dark mt-0.5">•</span>
-                <span>Assign profiles to your products</span>
-              </li>
-            </ul>
-          </div>
+          {/* Info Cards */}
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Getting Started Guide */}
+            <div className="rounded-lg border border-gray-200 bg-white p-6">
+              <h3 className="font-semibold text-gray-900">Getting Started</h3>
+              <ul className="mt-3 space-y-2 text-sm text-gray-600">
+                <li className="flex items-start gap-2">
+                  <span className="text-forest-dark mt-0.5">•</span>
+                  <span>Create shipping profiles for different product types</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-forest-dark mt-0.5">•</span>
+                  <span>Set processing times (how long before you ship)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-forest-dark mt-0.5">•</span>
+                  <span>Configure domestic and international rates</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-forest-dark mt-0.5">•</span>
+                  <span>Assign profiles to your products</span>
+                </li>
+              </ul>
+            </div>
 
-          {/* Best Practices */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="font-semibold text-gray-900">Best Practices</h3>
-            <ul className="mt-3 space-y-2 text-sm text-gray-600">
-              <li className="flex items-start gap-2">
-                <span className="text-forest-dark mt-0.5">•</span>
-                <span>Be conservative with processing times to exceed expectations</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-forest-dark mt-0.5">•</span>
-                <span>Consider offering free shipping on orders over a certain amount</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-forest-dark mt-0.5">•</span>
-                <span>Price international shipping to cover actual carrier costs</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-forest-dark mt-0.5">•</span>
-                <span>Use additional item rates to incentivize multi-item purchases</span>
-              </li>
-            </ul>
+            {/* Best Practices */}
+            <div className="rounded-lg border border-gray-200 bg-white p-6">
+              <h3 className="font-semibold text-gray-900">Best Practices</h3>
+              <ul className="mt-3 space-y-2 text-sm text-gray-600">
+                <li className="flex items-start gap-2">
+                  <span className="text-forest-dark mt-0.5">•</span>
+                  <span>Be conservative with processing times to exceed expectations</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-forest-dark mt-0.5">•</span>
+                  <span>Consider offering free shipping on orders over a certain amount</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-forest-dark mt-0.5">•</span>
+                  <span>Price international shipping to cover actual carrier costs</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-forest-dark mt-0.5">•</span>
+                  <span>Use additional item rates to incentivize multi-item purchases</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>

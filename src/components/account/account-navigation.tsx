@@ -47,7 +47,6 @@ export function AccountNavigation() {
       {/* Desktop Sidebar */}
       <aside className="hidden w-64 border-r border-gray-200 bg-white md:block">
         <div className="p-4">
-          <h2 className="mb-4 text-lg font-bold text-gray-900">My Account</h2>
           <nav className="space-y-1">
             {navItems.map((item) => (
               <AccountNavLink
@@ -90,8 +89,7 @@ export function AccountNavigation() {
         )}
       >
         <div className="p-4">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900">My Account</h2>
+          <div className="mb-4 flex justify-end">
             <Button
               variant="ghost"
               size="sm"

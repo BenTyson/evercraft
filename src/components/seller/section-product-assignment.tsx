@@ -164,7 +164,7 @@ export function SectionProductAssignment({
               filteredProducts.map((product) => (
                 <label
                   key={product.id}
-                  className="bg-card hover:bg-accent flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition"
+                  className="bg-card flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-3 transition hover:border-gray-300 hover:bg-gray-50"
                 >
                   <Checkbox
                     checked={selectedProducts.has(product.id)}

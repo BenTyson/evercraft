@@ -14,7 +14,7 @@ export default async function UserReviewsPage() {
 
   if (!result.success) {
     return (
-      <div className="container mx-auto px-4 py-12">
+      <div className="px-6 py-12">
         <h1 className="mb-6 text-3xl font-bold">My Reviews</h1>
         <p className="text-red-600">Failed to load reviews: {result.error}</p>
       </div>
@@ -22,22 +22,29 @@ export default async function UserReviewsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">My Reviews</h1>
-        <p className="text-muted-foreground mt-2">Manage your product reviews and feedback</p>
+    <div>
+      {/* Page Header Bar */}
+      <div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+        <div className="mx-auto max-w-7xl">
+          <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">
+            My Reviews
+          </h1>
+        </div>
       </div>
 
-      {result.reviews && result.reviews.length > 0 ? (
-        <UserReviewsList reviews={result.reviews} />
-      ) : (
-        <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-          <p className="text-muted-foreground mb-4">You haven&apos;t written any reviews yet.</p>
-          <a href="/browse" className="text-forest-dark font-semibold hover:underline">
-            Browse products to review
-          </a>
-        </div>
-      )}
+      {/* Page Content */}
+      <div className="px-6 py-8">
+        {result.reviews && result.reviews.length > 0 ? (
+          <UserReviewsList reviews={result.reviews} />
+        ) : (
+          <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
+            <p className="text-muted-foreground mb-4">You haven&apos;t written any reviews yet.</p>
+            <a href="/browse" className="text-forest-dark font-semibold hover:underline">
+              Browse products to review
+            </a>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

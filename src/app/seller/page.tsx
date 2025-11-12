@@ -43,107 +43,111 @@ export default async function SellerDashboardPage() {
   const totalProducts = products?.length || 0;
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">{shop.name}</h1>
-          <p className="text-muted-foreground mt-1">{shop.bio}</p>
-        </div>
-        <Button asChild>
-          <Link href="/seller/products/new">
-            <Plus className="mr-2 size-5" />
-            Add Product
-          </Link>
-        </Button>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="mb-8 grid gap-6 md:grid-cols-3">
-        {/* Total Products */}
-        <div className="bg-card rounded-lg border p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-muted-foreground text-sm font-medium">Total Products</p>
-              <p className="mt-2 text-3xl font-bold">{totalProducts}</p>
-              <p className="text-muted-foreground mt-1 text-sm">
-                {activeProducts} active, {draftProducts} draft
-              </p>
-            </div>
-            <div className="rounded-full bg-gray-100 p-3 text-gray-600">
-              <Package className="size-6" />
-            </div>
-          </div>
-        </div>
-
-        {/* Donation Percentage */}
-        <div className="bg-card rounded-lg border p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-muted-foreground text-sm font-medium">Donation %</p>
-              <p className="mt-2 text-3xl font-bold">{shop.donationPercentage}%</p>
-              <p className="text-muted-foreground mt-1 text-sm">
-                To {shop.nonprofit?.name || 'nonprofit'}
-              </p>
-            </div>
-            <div className="rounded-full bg-gray-100 p-3 text-gray-600">
-              <DollarSign className="size-6" />
-            </div>
-          </div>
-        </div>
-
-        {/* Status */}
-        <div className="bg-card rounded-lg border p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-muted-foreground text-sm font-medium">Shop Status</p>
-              <p className="mt-2 text-3xl font-bold">
-                {shop.isVerified ? (
-                  <span className="text-green-600">Verified</span>
-                ) : (
-                  <span className="text-yellow-600">Pending</span>
-                )}
-              </p>
-              <p className="text-muted-foreground mt-1 text-sm">
-                {shop.isVerified ? 'Ready to sell' : 'Awaiting verification'}
-              </p>
-            </div>
-            <div className="rounded-full bg-gray-100 p-3 text-gray-600">
-              <TrendingUp className="size-6" />
-            </div>
-          </div>
+    <div>
+      {/* Page Header Bar */}
+      <div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+        <div className="container mx-auto flex items-center justify-between">
+          <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">
+            Dashboard
+          </h1>
+          <Button asChild>
+            <Link href="/seller/products/new">
+              <Plus className="mr-2 size-5" />
+              Add Product
+            </Link>
+          </Button>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-card rounded-lg border p-6">
-        <h2 className="mb-4 text-xl font-bold">Quick Actions</h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          <Link
-            href="/seller/products/new"
-            className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-gray-100"
-          >
-            <div className="rounded-full bg-gray-100 p-2 text-gray-600">
-              <Plus className="size-5" />
+      {/* Page Content */}
+      <div className="container mx-auto px-4 py-8">
+        {/* Stats Grid */}
+        <div className="mb-8 grid gap-6 md:grid-cols-3">
+          {/* Total Products */}
+          <div className="bg-card rounded-lg border p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-muted-foreground text-sm font-medium">Total Products</p>
+                <p className="mt-2 text-3xl font-bold">{totalProducts}</p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  {activeProducts} active, {draftProducts} draft
+                </p>
+              </div>
+              <div className="rounded-full bg-gray-100 p-3 text-gray-600">
+                <Package className="size-6" />
+              </div>
             </div>
-            <div>
-              <p className="font-semibold">Create New Product</p>
-              <p className="text-muted-foreground text-sm">Add a new sustainable product</p>
-            </div>
-          </Link>
+          </div>
 
-          <Link
-            href="/seller/products"
-            className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-gray-100"
-          >
-            <div className="rounded-full bg-gray-100 p-2 text-gray-600">
-              <Package className="size-5" />
+          {/* Donation Percentage */}
+          <div className="bg-card rounded-lg border p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-muted-foreground text-sm font-medium">Donation %</p>
+                <p className="mt-2 text-3xl font-bold">{shop.donationPercentage}%</p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  To {shop.nonprofit?.name || 'nonprofit'}
+                </p>
+              </div>
+              <div className="rounded-full bg-gray-100 p-3 text-gray-600">
+                <DollarSign className="size-6" />
+              </div>
             </div>
-            <div>
-              <p className="font-semibold">Manage Products</p>
-              <p className="text-muted-foreground text-sm">Edit or update your listings</p>
+          </div>
+
+          {/* Status */}
+          <div className="bg-card rounded-lg border p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-muted-foreground text-sm font-medium">Shop Status</p>
+                <p className="mt-2 text-3xl font-bold">
+                  {shop.isVerified ? (
+                    <span className="text-green-600">Verified</span>
+                  ) : (
+                    <span className="text-yellow-600">Pending</span>
+                  )}
+                </p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  {shop.isVerified ? 'Ready to sell' : 'Awaiting verification'}
+                </p>
+              </div>
+              <div className="rounded-full bg-gray-100 p-3 text-gray-600">
+                <TrendingUp className="size-6" />
+              </div>
             </div>
-          </Link>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-card rounded-lg border p-6">
+          <h2 className="mb-4 text-xl font-bold">Quick Actions</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Link
+              href="/seller/products/new"
+              className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-gray-100"
+            >
+              <div className="rounded-full bg-gray-100 p-2 text-gray-600">
+                <Plus className="size-5" />
+              </div>
+              <div>
+                <p className="font-semibold">Create New Product</p>
+                <p className="text-muted-foreground text-sm">Add a new sustainable product</p>
+              </div>
+            </Link>
+
+            <Link
+              href="/seller/products"
+              className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-gray-100"
+            >
+              <div className="rounded-full bg-gray-100 p-2 text-gray-600">
+                <Package className="size-5" />
+              </div>
+              <div>
+                <p className="font-semibold">Manage Products</p>
+                <p className="text-muted-foreground text-sm">Edit or update your listings</p>
+              </div>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

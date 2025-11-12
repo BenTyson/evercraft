@@ -2,7 +2,7 @@
 
 Complete reference for seller-related routes, components, and server actions.
 
-**Last Updated:** November 2025 (Session 22: Dashboard UI Redesign with Clean Gray Color Scheme)
+**Last Updated:** November 2025 (Session 26: Consistent Page Header Pattern & Layout)
 
 ---
 
@@ -29,14 +29,19 @@ The seller dashboard features a persistent sidebar (240px) with clean, consisten
 - **Impact** - Nonprofit contribution tracking and reports
 - Analytics, Settings
 
-**UI Updates (Session 22):**
+**UI Updates (Session 22, Session 26):**
 
 - Clean gray color palette for professional appearance
 - All stat card icons use `bg-gray-100 text-gray-600`
 - Active navigation uses `bg-forest-dark/10 text-forest-dark`
 - Removed bright colored backgrounds (blue, pink, eco-light)
-- Consistent patterns across all dashboard pages
-- See [Dashboard Color Philosophy](../planning/DESIGN_SYSTEM.md#dashboard-color-philosophy-session-22) for details
+- **Session 26:** Consistent compact page headers across all pages
+  - Horizontal bar with `bg-gray-100` background
+  - Uppercase titles with `tracking-[0.2em]` letter spacing
+  - No subtitles or descriptions
+  - Content padding reduced from `py-12` to `py-8`
+  - No `container mx-auto` constraints (eliminates gray gaps)
+- See [Dashboard Page Header Pattern](../planning/DESIGN_SYSTEM.md#dashboard-page-header-pattern-session-26) for implementation details
 
 ---
 
@@ -353,8 +358,9 @@ The seller dashboard features a persistent sidebar (240px) with clean, consisten
 **Settings Tabs**
 
 - **File:** `/src/app/seller/settings/settings-tabs.tsx` (140 lines)
-- **Purpose:** 5-tab navigation component (Session 25: Removed Shipping tab)
-- **Tabs:** Profile, Branding, Eco-Profile, Nonprofit, Account
+- **Purpose:** 4-tab navigation component (Session 26: Removed Nonprofit tab)
+- **Tabs:** Profile, Branding, Eco-Profile, Account
+- **Note:** Nonprofit configuration moved to Impact page in Session 26
 
 **Shop Profile Tab**
 
@@ -382,23 +388,17 @@ The seller dashboard features a persistent sidebar (240px) with clean, consisten
   - Tier badge (starter/verified/certified)
 - **See:** [eco-impact-v2.md#shop-eco-profile](../features/eco-impact-v2.md#shop-eco-profile)
 
-**Nonprofit Tab**
+**Nonprofit Configuration** ⭐ Session 26 - Moved to Impact Page
 
-- **File:** `/src/app/seller/settings/nonprofit-tab.tsx` (240 lines)
-- **Purpose:** Nonprofit partnership configuration
+- **Location:** Integrated into `/src/app/seller/impact/impact-dashboard.tsx`
+- **Purpose:** Nonprofit partnership configuration (formerly in Settings tab)
 - **Features:**
-  - Browse and search nonprofits
+  - Always-visible configuration form
+  - Browse and search nonprofits in modal
   - Set donation percentage (minimum 1%)
-  - View nonprofit details
-
-**Nonprofit Selector Modal**
-
-- **File:** `/src/app/seller/settings/nonprofit-selector-modal.tsx` (180 lines)
-- **Purpose:** Nonprofit search and selection modal
-- **Features:**
-  - Search by name/mission
-  - Filter by category
-  - View nonprofit profiles
+  - View nonprofit details and mission
+  - Inline form validation with react-hook-form and Zod
+- **UX Decision:** Moved from Settings to Impact page for better context and discoverability
 
 **Account Tab**
 

@@ -41,18 +41,25 @@ export default async function NewProductPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Create New Product</h1>
-        <p className="text-muted-foreground mt-1">Add a new sustainable product to your shop</p>
+      {/* Page Header Bar */}
+      <div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+        <div className="container mx-auto">
+          <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">
+            Create Product
+          </h1>
+        </div>
       </div>
 
-      <ProductForm
-        shopId={shop.id}
-        categories={categories}
-        certifications={certifications}
-        sections={sections}
-        shippingProfiles={shippingProfiles}
-      />
+      {/* Page Content */}
+      <div className="container mx-auto px-4 py-8">
+        <ProductForm
+          shopId={shop.id}
+          categories={categories}
+          certifications={certifications}
+          sections={sections}
+          shippingProfiles={shippingProfiles}
+        />
+      </div>
     </div>
   );
 }

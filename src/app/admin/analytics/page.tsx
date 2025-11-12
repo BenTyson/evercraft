@@ -80,7 +80,7 @@ export default async function AnalyticsPage() {
 
   if (!overviewResult.success) {
     return (
-      <div className="container mx-auto px-4 py-12">
+      <div className="px-6 py-12">
         <h1 className="text-3xl font-bold text-red-600">Error loading analytics data</h1>
         <p className="mt-2 text-gray-600">{overviewResult.error}</p>
       </div>
@@ -169,29 +169,35 @@ export default async function AnalyticsPage() {
         };
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Platform Analytics</h1>
-        <p className="mt-2 text-gray-600">Comprehensive insights and business intelligence</p>
+    <div>
+      {/* Page Header Bar */}
+      <div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+        <div className="mx-auto max-w-7xl">
+          <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">
+            Platform Analytics
+          </h1>
+        </div>
       </div>
 
-      {/* Tabbed Analytics */}
-      <AnalyticsTabs
-        overview={overview}
-        revenueAnalytics={revenueAnalytics}
-        revenueForecast={revenueForecast}
-        topSellers={topSellers}
-        userAnalytics={userAnalytics}
-        cohortAnalytics={cohortAnalytics}
-        userBehavior={userBehavior}
-        sellerAnalytics={sellerAnalytics}
-        productAnalytics={productAnalytics}
-        categoryAnalytics={categoryAnalytics}
-        inventoryInsights={inventoryInsights}
-        orderAnalytics={orderAnalytics}
-        paymentAnalytics={paymentAnalytics}
-      />
+      {/* Page Content */}
+      <div className="px-6 py-8">
+        {/* Tabbed Analytics */}
+        <AnalyticsTabs
+          overview={overview}
+          revenueAnalytics={revenueAnalytics}
+          revenueForecast={revenueForecast}
+          topSellers={topSellers}
+          userAnalytics={userAnalytics}
+          cohortAnalytics={cohortAnalytics}
+          userBehavior={userBehavior}
+          sellerAnalytics={sellerAnalytics}
+          productAnalytics={productAnalytics}
+          categoryAnalytics={categoryAnalytics}
+          inventoryInsights={inventoryInsights}
+          orderAnalytics={orderAnalytics}
+          paymentAnalytics={paymentAnalytics}
+        />
+      </div>
     </div>
   );
 }

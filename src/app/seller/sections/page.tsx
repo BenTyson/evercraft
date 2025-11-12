@@ -62,15 +62,18 @@ export default async function SellerSectionsPage() {
   });
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Shop Sections</h1>
-        <p className="text-muted-foreground mt-2">
-          Organize your products into custom sections for easier browsing
-        </p>
+    <div>
+      {/* Page Header Bar */}
+      <div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+        <div className="container mx-auto">
+          <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">Sections</h1>
+        </div>
       </div>
 
-      <SectionManager shopId={shop.id} initialSections={sections} availableProducts={products} />
+      {/* Page Content */}
+      <div className="container mx-auto px-4 py-8">
+        <SectionManager shopId={shop.id} initialSections={sections} availableProducts={products} />
+      </div>
     </div>
   );
 }

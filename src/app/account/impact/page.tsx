@@ -16,15 +16,18 @@ export default async function BuyerImpactPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">My Donation Impact</h1>
-        <p className="text-muted-foreground mt-2">
-          Track your contributions to nonprofits through Evercraft
-        </p>
+    <div>
+      {/* Page Header Bar */}
+      <div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+        <div className="mx-auto max-w-7xl">
+          <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">Impact</h1>
+        </div>
       </div>
 
-      <ImpactDashboard />
+      {/* Page Content */}
+      <div className="px-6 py-8">
+        <ImpactDashboard />
+      </div>
     </div>
   );
 }

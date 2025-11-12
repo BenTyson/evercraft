@@ -26,26 +26,32 @@ export default async function EditNonprofitPage({ params }: { params: Promise<{ 
   const { nonprofit } = result;
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Edit Nonprofit</h1>
-        <p className="mt-2 text-gray-600">Update nonprofit information</p>
+    <div>
+      {/* Page Header Bar */}
+      <div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+        <div className="mx-auto max-w-7xl">
+          <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">
+            Edit Nonprofit
+          </h1>
+        </div>
       </div>
 
-      {/* Form */}
-      <NonprofitForm
-        nonprofit={{
-          id: nonprofit.id,
-          name: nonprofit.name,
-          ein: nonprofit.ein,
-          mission: nonprofit.mission,
-          description: nonprofit.description,
-          website: nonprofit.website,
-          logo: nonprofit.logo,
-          isVerified: nonprofit.isVerified,
-        }}
-      />
+      {/* Page Content */}
+      <div className="px-6 py-8">
+        {/* Form */}
+        <NonprofitForm
+          nonprofit={{
+            id: nonprofit.id,
+            name: nonprofit.name,
+            ein: nonprofit.ein,
+            mission: nonprofit.mission,
+            description: nonprofit.description,
+            website: nonprofit.website,
+            logo: nonprofit.logo,
+            isVerified: nonprofit.isVerified,
+          }}
+        />
+      </div>
     </div>
   );
 }

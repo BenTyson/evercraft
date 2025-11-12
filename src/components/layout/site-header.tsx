@@ -16,7 +16,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { ShoppingCart, User, Menu, X, Leaf, Heart, MessageCircle } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Leaf, Heart, MessageCircle, Store } from 'lucide-react';
 import { UserButton, useUser } from '@clerk/nextjs';
 
 import { cn } from '@/lib/utils';
@@ -106,14 +106,6 @@ export function SiteHeader({ databaseRole, unreadMessageCount = 0 }: SiteHeaderP
               Become a Seller
             </Link>
           )}
-          {isSeller && (
-            <Link
-              href="/seller"
-              className="text-forest-dark hover:text-forest-darker text-sm font-semibold transition-colors"
-            >
-              Seller Dashboard
-            </Link>
-          )}
           {isAdmin && (
             <Link
               href="/admin"
@@ -136,6 +128,14 @@ export function SiteHeader({ databaseRole, unreadMessageCount = 0 }: SiteHeaderP
                       Account
                     </Link>
                   </Button>
+                  {isSeller && (
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link href="/seller">
+                        <Store className="mr-2 size-4" />
+                        Seller Dashboard
+                      </Link>
+                    </Button>
+                  )}
                   <UserButton
                     appearance={{
                       elements: {
@@ -236,15 +236,6 @@ export function SiteHeader({ databaseRole, unreadMessageCount = 0 }: SiteHeaderP
                   Become a Seller
                 </Link>
               )}
-              {isSeller && (
-                <Link
-                  href="/seller"
-                  className="text-forest-dark hover:text-forest-darker text-base font-semibold transition-colors"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Seller Dashboard
-                </Link>
-              )}
               {isAdmin && (
                 <Link
                   href="/admin"
@@ -275,6 +266,16 @@ export function SiteHeader({ databaseRole, unreadMessageCount = 0 }: SiteHeaderP
                     <User className="size-5" />
                     Account
                   </Link>
+                  {isSeller && (
+                    <Link
+                      href="/seller"
+                      className="text-foreground hover:text-forest-dark flex items-center gap-2 text-base font-medium transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Store className="size-5" />
+                      Seller Dashboard
+                    </Link>
+                  )}
                   <Link
                     href="/orders"
                     className="text-foreground hover:text-forest-dark flex items-center gap-2 text-base font-medium transition-colors"

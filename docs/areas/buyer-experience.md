@@ -91,7 +91,7 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
 - Cart clearing on successful order (prevents redirect to empty cart)
 - Links to orders page and continue shopping
 
-### Buyer Account (Auth Required) ⭐ Session 22
+### Buyer Account (Auth Required) ⭐ Session 22, Session 26
 
 **Last Updated:** November 2025
 
@@ -109,13 +109,17 @@ The buyer experience encompasses product discovery, shopping, checkout, and orde
 | `/account/settings`      | `/src/app/account/settings/page.tsx`    | -     | Account settings               |
 | `/account/impact`        | `/src/app/account/impact/page.tsx`      | ~250  | Buyer donation impact tracking |
 
-**Layout Features (Session 22):**
+**Layout Features (Session 22, Session 26):**
 
-- Persistent sidebar navigation (desktop: 240px)
+- Persistent sidebar navigation (desktop: 240px) without "My Account" title
 - Mobile-responsive drawer (slide-out from right)
-- Clean gray color scheme matching admin dashboards
+- Clean gray color scheme matching seller and admin dashboards
 - Active state uses forest-dark accent
 - Redirects from old routes (`/orders` → `/account/orders`, `/favorites` → `/account/favorites`, `/messages` → `/account/messages`)
+- **Session 26:** Consistent compact page headers
+  - Horizontal bar with `bg-gray-100` and uppercase titles
+  - Content uses `px-6 py-8` without `container mx-auto`
+  - See [Dashboard Page Header Pattern](../planning/DESIGN_SYSTEM.md#dashboard-page-header-pattern-session-26)
 
 **Account Dashboard Features:**
 

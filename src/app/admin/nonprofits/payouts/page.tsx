@@ -16,17 +16,21 @@ export default async function NonprofitPayoutsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Nonprofit Payouts</h1>
-        <p className="mt-2 text-gray-600">
-          Manage pending donations and process payouts to nonprofits
-        </p>
+    <div>
+      {/* Page Header Bar */}
+      <div className="border-b border-gray-200 bg-gray-100 px-4 py-3">
+        <div className="mx-auto max-w-7xl">
+          <h1 className="text-sm font-medium tracking-[0.2em] text-gray-700 uppercase">
+            Nonprofit Payouts
+          </h1>
+        </div>
       </div>
 
-      {/* Dashboard Component */}
-      <PayoutsDashboard />
+      {/* Page Content */}
+      <div className="px-6 py-8">
+        {/* Dashboard Component */}
+        <PayoutsDashboard />
+      </div>
     </div>
   );
 }
