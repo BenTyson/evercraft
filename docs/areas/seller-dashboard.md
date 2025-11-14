@@ -236,15 +236,27 @@ The seller dashboard features a persistent sidebar (240px) with clean, consisten
   - Order search and sorting
   - Print packing slips
 
-**Shipping Label Manager**
+**Shipping Label Manager** ⭐ Session 27
 
 - **File:** `/src/app/seller/orders/shipping-label-manager.tsx` (219 lines)
-- **Purpose:** Shippo integration for label generation
+- **Purpose:** Shippo integration for label generation with comprehensive validation
 - **Features:**
-  - Generate shipping labels
-  - Select carrier and service
-  - Track label costs
-  - Auto-update tracking numbers
+  - Generate shipping labels with real seller origin addresses
+  - Live carrier rates (USPS, UPS, FedEx) from Shippo API
+  - Origin address preview before purchasing label
+  - Void labels before shipment
+  - Auto-update tracking numbers and order status
+  - Comprehensive validation (profiles, addresses, multi-origin)
+- **Validation:**
+  - All products must have shipping profiles
+  - All products must share same profile (multi-origin blocked)
+  - Origin address must be complete (street, city, state, zip)
+- **UI Enhancements:**
+  - Blue info box showing origin address preview
+  - Actionable error messages with product names
+  - Shipping profile indicators on order items (✓ has profile, ⚠️ no profile)
+  - Shipping address display with completeness validation
+- **See:** [Session 27 Documentation](../sessions/session-27-shipping-labels.md)
 
 ### Analytics Components
 

@@ -4,12 +4,11 @@
  * Shipping label generation and tracking via Shippo API
  */
 
-import Shippo from 'shippo';
+import { Shippo } from 'shippo';
 
 // Initialize Shippo client (returns null if API key not configured)
 const shippoClient = process.env.SHIPPO_API_KEY
-  ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    new (Shippo as any)({ apiKeyHeader: process.env.SHIPPO_API_KEY })
+  ? new Shippo({ apiKeyHeader: process.env.SHIPPO_API_KEY })
   : null;
 
 /**

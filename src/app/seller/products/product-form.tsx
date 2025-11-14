@@ -541,7 +541,9 @@ export function ProductForm({
               id="shippingProfileId"
               value={formData.shippingProfileId || ''}
               onChange={(e) => handleChange('shippingProfileId', e.target.value || undefined)}
-              className="focus:border-forest-dark focus:ring-forest-dark block w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-1 focus:outline-none"
+              className={`focus:border-forest-dark focus:ring-forest-dark block w-full rounded-lg border px-4 py-2 focus:ring-1 focus:outline-none ${
+                !formData.shippingProfileId ? 'border-orange-400' : 'border-gray-300'
+              }`}
             >
               <option value="">No shipping profile (use default rates)</option>
               {shippingProfiles.map((profile) => (
@@ -550,6 +552,15 @@ export function ProductForm({
                 </option>
               ))}
             </select>
+            {!formData.shippingProfileId && (
+              <div className="rounded-lg border border-orange-300 bg-orange-50 p-3 text-sm">
+                <p className="font-medium text-orange-900">⚠️ No shipping profile selected</p>
+                <p className="mt-1 text-xs text-orange-700">
+                  Without a shipping profile, you won&apos;t be able to generate shipping labels for
+                  orders containing this product. Default rates will be used at checkout.
+                </p>
+              </div>
+            )}
             <p className="text-muted-foreground text-xs">
               Shipping profiles define rates, processing times, and shipping origins. You can{' '}
               <Link href="/seller/shipping" className="text-forest underline">

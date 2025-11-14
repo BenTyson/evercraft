@@ -1,6 +1,6 @@
 # Shipping Profile System Documentation
 
-**Last Updated:** 2025-11-11 (Session 25)
+**Last Updated:** 2025-11-13 (Session 27)
 
 ## Overview
 
@@ -431,6 +431,321 @@ const result = await calculateShippingForCart(cart, 'CA');
 
 ---
 
+## Shipping Label Generation (Session 27)
+
+### Overview
+
+Sellers can generate real shipping labels via Shippo API using their shipping profile origin addresses. Labels include tracking numbers and can be printed as PDF.
+
+### Prerequisites
+
+**Environment Setup:**
+
+```bash
+# .env file
+SHIPPO_API_KEY=shippo_test_your_key_here
+```
+
+**Setup Steps:**
+
+1. Sign up at https://goshippo.com
+2. Choose API plan (free up to 30 labels/month)
+3. Get Test API Key from dashboard
+4. Add to `.env` file
+5. Restart dev server
+
+### Label Generation Flow
+
+**Location:** `/seller/orders` → Expand order → "Create Shipping Label"
+
+#### Step 1: Get Shipping Rates
+
+**Action:** `/src/actions/shipping.ts` - `getShippingRates(orderId)`
+
+**Process:**
+
+1. Validates all products have shipping profiles
+2. Validates all products use same profile (multi-origin blocked)
+3. Validates origin address completeness
+4. Calls Shippo API with:
+   - `addressFrom`: Seller's origin address from shipping profile
+   - `addressTo`: Buyer's shipping address from order
+   - `parcels`: Default parcel dimensions (10x8x6, 2lb)
+5. Returns live rates from carriers (USPS, UPS, FedEx)
+
+**Response:**
+
+```typescript
+{
+  success: true,
+  rates: [
+    {
+      objectId: "rate_abc123",
+      provider: "USPS",
+      servicelevel: { name: "Priority Mail" },
+      amount: 8.50,
+      currency: "USD",
+      estimatedDays: 2
+    },
+    // ... more rates
+  ],
+  shippingProfile: {
+    name: "Standard Shipping",
+    originAddress: {
+      street: "123 Main St",
+      city: "Portland",
+      state: "OR",
+      zip: "97201",
+      country: "US"
+    }
+  }
+}
+```
+
+#### Step 2: Select Rate & Create Label
+
+**Action:** `/src/actions/shipping.ts` - `createShippingLabel({ orderId, rateId })`
+
+**Process:**
+
+1. Runs same validation as Step 1 (safety check)
+2. Purchases label via Shippo transaction API
+3. Updates order with:
+   - `trackingNumber`
+   - `trackingCarrier`
+   - `shippingLabelUrl` (PDF download link)
+   - `shippoTransactionId`
+   - `status: SHIPPED`
+
+**Response:**
+
+```typescript
+{
+  success: true,
+  transaction: {
+    objectId: "trans_xyz789",
+    trackingNumber: "9400111899562537845644",
+    trackingUrl: "usps",
+    labelUrl: "https://shippo-delivery.s3.amazonaws.com/...",
+    carrier: "usps"
+  }
+}
+```
+
+### Validation Rules
+
+#### All Products Must Have Shipping Profiles
+
+**Error:** "Cannot create shipping label. The following products do not have a shipping profile assigned: [Product Names]. Please assign shipping profiles in your product settings."
+
+**Solution:** Assign shipping profiles to all products in the order.
+
+#### All Products Must Share Same Profile
+
+**Error:** "This order contains items from multiple shipping profiles. Currently, all items must ship from the same location to create a single label."
+
+**Reason:** Shippo API requires one origin address per shipment.
+
+**Solution:**
+
+- Current: Order can't be shipped (multi-origin not supported)
+- Future: Split into multiple labels (Phase 3)
+
+#### Origin Address Must Be Complete
+
+**Error:** "Shipping profile '[Name]' has an incomplete origin address. Please update your shipping profile with a complete address including street, city, state, and postal code."
+
+**Required Fields:**
+
+- `street` or `address1`
+- `city`
+- `state` (2-letter code)
+- `zip` or `postalCode`
+- `country` (defaults to 'US')
+
+**Solution:** Edit shipping profile at `/seller/shipping` and complete address.
+
+### UI Features
+
+#### Origin Address Preview
+
+Shows before rate selection:
+
+```
+Label will ship from:
+Standard Shipping
+123 Main St
+Portland, OR 97201
+```
+
+Helps sellers verify correct address before purchasing.
+
+#### Product Form Warnings
+
+Orange warning banner when creating/editing products without shipping profiles:
+
+```
+⚠️ No shipping profile selected
+
+Without a shipping profile, you won't be able to generate shipping labels for orders
+containing this product. Default rates will be used at checkout.
+```
+
+**Location:** `/seller/products/new` or `/seller/products/[id]/edit`
+
+#### Shipping Profile Indicators
+
+In order details, each product shows:
+
+- ✅ ✓ Standard Shipping (has profile)
+- ⚠️ No shipping profile (missing profile)
+
+**Location:** `/seller/orders` → Expand order → Order Items
+
+#### Shipping Address Display
+
+Shows buyer's complete shipping address in order details with validation:
+
+- ✅ Complete address: Full display
+- ⚠️ Incomplete address: Warning message
+
+**Location:** `/seller/orders` → Expand order → Shipping Address
+
+### Void Labels
+
+**Action:** `/src/actions/shipping.ts` - `voidShippingLabel(orderId)`
+
+**Use Case:** Cancel label before shipment (e.g., wrong rate selected)
+
+**Process:**
+
+1. Calls Shippo refund API
+2. Removes tracking data from order:
+   - Sets `trackingNumber` to null
+   - Sets `trackingCarrier` to null
+   - Sets `shippingLabelUrl` to null
+   - Sets `shippoTransactionId` to null
+   - Changes `status` back to `PROCESSING`
+
+**Confirmation:** Requires confirmation dialog ("This cannot be undone")
+
+### Address Mapping
+
+**Helper:** `mapShippingOriginToShippoAddress()`
+
+Maps ShippingProfile JSON format to Shippo API format:
+
+**Input (ShippingOrigin):**
+
+```typescript
+{
+  street: "123 Main St",      // or address1
+  street2: "Suite 100",       // optional
+  city: "Portland",
+  state: "OR",
+  zip: "97201",               // or postalCode
+  country: "US"
+}
+```
+
+**Output (Shippo Address):**
+
+```typescript
+{
+  name: "Shop Name",
+  street1: "123 Main St",
+  street2: "Suite 100",
+  city: "Portland",
+  state: "OR",
+  zip: "97201",
+  country: "US"
+}
+```
+
+### Default Parcel Configuration
+
+**File:** `/src/lib/shippo.ts`
+
+```typescript
+export const DEFAULT_PARCEL: Parcel = {
+  length: '10', // inches
+  width: '8', // inches
+  height: '6', // inches
+  weight: '2', // pounds
+  distanceUnit: 'in',
+  massUnit: 'lb',
+};
+```
+
+**Future:** Per-product dimensions (Phase 3)
+
+### Error Handling
+
+#### Shippo API Errors
+
+Enhanced error messages include Shippo validation details:
+
+**Example:**
+
+```
+No shipping rates available. Attribute "address_to.street1" must not be empty.,
+Hard: Invalid Destination.
+```
+
+**Common Issues:**
+
+- Incomplete buyer address (old test orders)
+- Invalid ZIP code
+- State not 2-letter code
+- Missing required address fields
+
+#### Buyer Name Fallback
+
+If buyer name missing from shipping address, uses fallback chain:
+
+```typescript
+name: shippingAddr.fullName || order.buyer?.name || order.buyer?.email || 'Customer';
+```
+
+Prevents "name must not be empty" errors.
+
+### Files & Functions
+
+**Server Actions:** `/src/actions/shipping.ts`
+
+| Function                                         | Purpose                          |
+| ------------------------------------------------ | -------------------------------- |
+| `getShippingRates(orderId)`                      | Get live carrier rates for order |
+| `createShippingLabel({ orderId, rateId })`       | Purchase shipping label          |
+| `voidShippingLabel(orderId)`                     | Cancel/refund label              |
+| `getTrackingInfo(orderId)`                       | Get tracking status from Shippo  |
+| `mapShippingOriginToShippoAddress(origin, name)` | Convert address format           |
+
+**UI Components:** `/src/app/seller/orders/shipping-label-manager.tsx`
+
+Client component that handles:
+
+- Rate fetching
+- Rate selection UI
+- Label creation
+- Label voiding
+- Origin address preview
+- Tracking display
+
+**Shippo Client:** `/src/lib/shippo.ts`
+
+```typescript
+import { Shippo } from 'shippo';
+
+const shippoClient = process.env.SHIPPO_API_KEY
+  ? new Shippo({ apiKeyHeader: process.env.SHIPPO_API_KEY })
+  : null;
+```
+
+**Important:** Shippo v2.x uses named export, not default export.
+
+---
+
 ## Future Enhancements
 
 ### Calculated Shipping (Shippo Integration)
@@ -509,6 +824,8 @@ interface ShippingRates {
 
 ## Related Documentation
 
+- [Session 27 - Shipping Labels](../sessions/session-27-shipping-labels.md) - Label generation implementation
+- [Session 25 - Shipping Profiles](../sessions/session-25-shipping-profiles.md) - Shipping profile system
 - [Seller Dashboard](../areas/seller-dashboard.md) - Full seller feature documentation
 - [Database Schema](../session-start/database_schema.md#shippingprofile) - ShippingProfile model details
 - [Buyer Experience](../areas/buyer-experience.md) - How shipping displays to buyers

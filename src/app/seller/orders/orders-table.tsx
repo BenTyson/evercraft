@@ -11,6 +11,17 @@ import { updateOrderStatus, bulkUpdateOrderStatus } from '@/actions/orders';
 import { cn } from '@/lib/utils';
 import { ShippingLabelManager } from './shipping-label-manager';
 import { OrderStatus } from '@/generated/prisma';
+import { type JsonValue } from '@prisma/client/runtime/library';
+
+interface ShippingAddress {
+  fullName?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+}
 
 interface Order {
   id: string;
@@ -20,6 +31,7 @@ interface Order {
   trackingNumber?: string | null;
   trackingCarrier?: string | null;
   shippingLabelUrl?: string | null;
+  shippingAddress?: JsonValue; // JSON field from Prisma
   buyer: { name: string | null; email: string | null };
   items: Array<{
     id: string;
@@ -28,6 +40,11 @@ interface Order {
     product: {
       id: string;
       title: string;
+      shippingProfileId?: string | null;
+      shippingProfile?: {
+        id: string;
+        name: string;
+      } | null;
       images: Array<{ url: string; altText: string | null }>;
     };
     variant?: {
@@ -317,6 +334,15 @@ export function OrdersTable({ orders: initialOrders }: OrdersTableProps) {
                                   {item.variant.name}
                                 </p>
                               )}
+                              <div className="mt-1 flex items-center gap-1">
+                                {item.product.shippingProfile ? (
+                                  <p className="text-xs text-green-700">
+                                    ✓ {item.product.shippingProfile.name}
+                                  </p>
+                                ) : (
+                                  <p className="text-xs text-orange-600">⚠️ No shipping profile</p>
+                                )}
+                              </div>
                               <p className="text-muted-foreground text-sm">
                                 Qty: {item.quantity} × ${(item.subtotal / item.quantity).toFixed(2)}
                               </p>
@@ -328,16 +354,52 @@ export function OrdersTable({ orders: initialOrders }: OrdersTableProps) {
                     </div>
                   </div>
 
-                  {/* Shipping Label */}
-                  <div>
-                    <h4 className="mb-3 text-sm font-semibold">Shipping</h4>
-                    <ShippingLabelManager
-                      orderId={order.id}
-                      trackingNumber={order.trackingNumber}
-                      trackingCarrier={order.trackingCarrier}
-                      shippingLabelUrl={order.shippingLabelUrl}
-                      onLabelCreated={() => router.refresh()}
-                    />
+                  {/* Shipping */}
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="mb-3 text-sm font-semibold">Shipping Address</h4>
+                      {order.shippingAddress ? (
+                        (() => {
+                          const addr = order.shippingAddress as ShippingAddress;
+                          return (
+                            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm">
+                              {addr.fullName && (
+                                <p className="font-medium text-gray-900">{addr.fullName}</p>
+                              )}
+                              {addr.addressLine1 ? (
+                                <>
+                                  <p className="text-gray-700">{addr.addressLine1}</p>
+                                  {addr.addressLine2 && (
+                                    <p className="text-gray-700">{addr.addressLine2}</p>
+                                  )}
+                                  <p className="text-gray-700">
+                                    {addr.city}, {addr.state} {addr.postalCode}
+                                  </p>
+                                  {addr.country && <p className="text-gray-700">{addr.country}</p>}
+                                </>
+                              ) : (
+                                <p className="text-xs text-orange-600">
+                                  ⚠️ Incomplete shipping address - missing street address
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })()
+                      ) : (
+                        <p className="text-sm text-gray-500">No shipping address</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <h4 className="mb-3 text-sm font-semibold">Shipping Label</h4>
+                      <ShippingLabelManager
+                        orderId={order.id}
+                        trackingNumber={order.trackingNumber}
+                        trackingCarrier={order.trackingCarrier}
+                        shippingLabelUrl={order.shippingLabelUrl}
+                        onLabelCreated={() => router.refresh()}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

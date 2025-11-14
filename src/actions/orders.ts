@@ -192,6 +192,7 @@ export async function getSellerOrders() {
         trackingNumber: true,
         trackingCarrier: true,
         shippingLabelUrl: true,
+        shippingAddress: true,
         items: {
           where: {
             shopId: shop.id, // Only include items from this shop
@@ -201,6 +202,13 @@ export async function getSellerOrders() {
               select: {
                 id: true,
                 title: true,
+                shippingProfileId: true,
+                shippingProfile: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
                 images: {
                   select: {
                     url: true,

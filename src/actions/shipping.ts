@@ -82,6 +82,46 @@ export async function getAvailableShippingMethods(
 // ============================================================================
 
 /**
+ * Shipping origin address from ShippingProfile
+ */
+interface ShippingOrigin {
+  street?: string;
+  address1?: string;
+  street2?: string;
+  city: string;
+  state: string;
+  zip?: string;
+  postalCode?: string;
+  country?: string;
+}
+
+/**
+ * Map ShippingOrigin format to Shippo address format
+ */
+function mapShippingOriginToShippoAddress(
+  origin: ShippingOrigin,
+  sellerName: string
+): {
+  name: string;
+  street1: string;
+  street2?: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+} {
+  return {
+    name: sellerName,
+    street1: origin.street || origin.address1 || '',
+    street2: origin.street2 || '',
+    city: origin.city,
+    state: origin.state,
+    zip: origin.zip || origin.postalCode || '',
+    country: origin.country || 'US',
+  };
+}
+
+/**
  * Get shipping rates for an order
  */
 export async function getShippingRates(orderId: string) {
@@ -107,6 +147,20 @@ export async function getShippingRates(orderId: string) {
       include: {
         items: {
           include: {
+            product: {
+              select: {
+                id: true,
+                title: true,
+                shippingProfileId: true,
+                shippingProfile: {
+                  select: {
+                    id: true,
+                    name: true,
+                    shippingOrigin: true,
+                  },
+                },
+              },
+            },
             shop: {
               select: {
                 id: true,
@@ -114,6 +168,12 @@ export async function getShippingRates(orderId: string) {
                 name: true,
               },
             },
+          },
+        },
+        buyer: {
+          select: {
+            name: true,
+            email: true,
           },
         },
       },
@@ -135,6 +195,51 @@ export async function getShippingRates(orderId: string) {
       return { success: false, error: 'Shipping client not initialized' };
     }
 
+    // Validate shipping profiles for seller's items
+    const sellerItems = order.items.filter((item) => item.shop.userId === userId);
+
+    // Check 1: All items must have shipping profiles
+    const itemsWithoutProfile = sellerItems.filter((item) => !item.product.shippingProfile);
+    if (itemsWithoutProfile.length > 0) {
+      const productNames = itemsWithoutProfile.map((item) => item.product.title).join(', ');
+      return {
+        success: false,
+        error: `Cannot create shipping label. The following products do not have a shipping profile assigned: ${productNames}. Please assign shipping profiles in your product settings.`,
+      };
+    }
+
+    // Check 2: All items must share the same shipping profile
+    const profileIds = sellerItems.map((item) => item.product.shippingProfileId);
+    const uniqueProfiles = new Set(profileIds.filter((id) => id !== null));
+    if (uniqueProfiles.size > 1) {
+      return {
+        success: false,
+        error:
+          'This order contains items from multiple shipping profiles. Currently, all items must ship from the same location to create a single label.',
+      };
+    }
+
+    // Extract shipping profile (we've validated all items share the same one)
+    const shippingProfile = sellerItems[0].product.shippingProfile;
+    if (!shippingProfile) {
+      return {
+        success: false,
+        error: 'Shipping profile not found for order items',
+      };
+    }
+
+    // Check 3: Validate origin address completeness
+    const origin = shippingProfile.shippingOrigin as unknown as ShippingOrigin;
+    if (!origin || !origin.city || !origin.state || !(origin.street || origin.address1)) {
+      return {
+        success: false,
+        error: `Shipping profile "${shippingProfile.name}" has an incomplete origin address. Please update your shipping profile with a complete address including street, city, state, and postal code.`,
+      };
+    }
+
+    // Map origin address to Shippo format
+    const originAddress = mapShippingOriginToShippoAddress(origin, sellerShop.name);
+
     // Parse shipping address
     const shippingAddr = order.shippingAddress as {
       fullName: string;
@@ -146,20 +251,11 @@ export async function getShippingRates(orderId: string) {
       country?: string;
     };
 
-    // TODO: Shop model needs address fields for shipping
-    // For now, using placeholder address - sellers should configure their shipping address
-    // Create shipment to get rates
+    // Create shipment to get rates using real origin address from shipping profile
     const shipment = await shippo.shipments.create({
-      addressFrom: {
-        name: sellerShop.name,
-        street1: '123 Seller St', // TODO: Add seller address to Shop model
-        city: 'City',
-        state: 'CA',
-        zip: '90210',
-        country: 'US',
-      },
+      addressFrom: originAddress,
       addressTo: {
-        name: shippingAddr.fullName,
+        name: shippingAddr.fullName || order.buyer?.name || order.buyer?.email || 'Customer',
         street1: shippingAddr.addressLine1,
         street2: shippingAddr.addressLine2 || '',
         city: shippingAddr.city,
@@ -172,7 +268,19 @@ export async function getShippingRates(orderId: string) {
     });
 
     if (!shipment.rates || shipment.rates.length === 0) {
-      return { success: false, error: 'No shipping rates available' };
+      // Check for validation errors from Shippo
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const messages = (shipment as any).messages || [];
+      const errorDetails =
+        messages.length > 0
+          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            messages.map((m: any) => m.text || m.message).join(', ')
+          : 'Please verify both origin and destination addresses are complete and valid.';
+
+      return {
+        success: false,
+        error: `No shipping rates available. ${errorDetails}`,
+      };
     }
 
     // Format rates for display
@@ -190,6 +298,16 @@ export async function getShippingRates(orderId: string) {
       success: true,
       rates,
       shipmentId: shipment.objectId,
+      shippingProfile: {
+        name: shippingProfile.name,
+        originAddress: {
+          street: origin.street || origin.address1 || '',
+          city: origin.city,
+          state: origin.state,
+          zip: origin.zip || origin.postalCode || '',
+          country: origin.country || 'US',
+        },
+      },
     };
   } catch (error) {
     console.error('Error fetching shipping rates:', error);
@@ -232,12 +350,32 @@ export async function createShippingLabel(input: {
       include: {
         items: {
           include: {
+            product: {
+              select: {
+                id: true,
+                title: true,
+                shippingProfileId: true,
+                shippingProfile: {
+                  select: {
+                    id: true,
+                    name: true,
+                    shippingOrigin: true,
+                  },
+                },
+              },
+            },
             shop: {
               select: {
                 id: true,
                 userId: true,
               },
             },
+          },
+        },
+        buyer: {
+          select: {
+            name: true,
+            email: true,
           },
         },
       },
@@ -257,6 +395,48 @@ export async function createShippingLabel(input: {
     const shippo = getShippoClient();
     if (!shippo) {
       return { success: false, error: 'Shipping client not initialized' };
+    }
+
+    // Validate shipping profiles for seller's items (safety check before purchasing label)
+    const sellerItems = order.items.filter((item) => item.shop.userId === userId);
+
+    // Check 1: All items must have shipping profiles
+    const itemsWithoutProfile = sellerItems.filter((item) => !item.product.shippingProfile);
+    if (itemsWithoutProfile.length > 0) {
+      const productNames = itemsWithoutProfile.map((item) => item.product.title).join(', ');
+      return {
+        success: false,
+        error: `Cannot create shipping label. The following products do not have a shipping profile assigned: ${productNames}. Please assign shipping profiles in your product settings.`,
+      };
+    }
+
+    // Check 2: All items must share the same shipping profile
+    const profileIds = sellerItems.map((item) => item.product.shippingProfileId);
+    const uniqueProfiles = new Set(profileIds.filter((id) => id !== null));
+    if (uniqueProfiles.size > 1) {
+      return {
+        success: false,
+        error:
+          'This order contains items from multiple shipping profiles. Currently, all items must ship from the same location to create a single label.',
+      };
+    }
+
+    // Extract shipping profile (we've validated all items share the same one)
+    const shippingProfile = sellerItems[0].product.shippingProfile;
+    if (!shippingProfile) {
+      return {
+        success: false,
+        error: 'Shipping profile not found for order items',
+      };
+    }
+
+    // Check 3: Validate origin address completeness
+    const origin = shippingProfile.shippingOrigin as unknown as ShippingOrigin;
+    if (!origin || !origin.city || !origin.state || !(origin.street || origin.address1)) {
+      return {
+        success: false,
+        error: `Shipping profile "${shippingProfile.name}" has an incomplete origin address. Please update your shipping profile with a complete address including street, city, state, and postal code.`,
+      };
     }
 
     // Create transaction (purchase label)

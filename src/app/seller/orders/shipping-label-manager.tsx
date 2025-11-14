@@ -22,6 +22,17 @@ interface ShippingRate {
   estimatedDays: number;
 }
 
+interface ShippingProfile {
+  name: string;
+  originAddress: {
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
+    country: string;
+  };
+}
+
 export function ShippingLabelManager({
   orderId,
   trackingNumber,
@@ -31,6 +42,7 @@ export function ShippingLabelManager({
 }: ShippingLabelManagerProps) {
   const [showRates, setShowRates] = useState(false);
   const [rates, setRates] = useState<ShippingRate[]>([]);
+  const [shippingProfile, setShippingProfile] = useState<ShippingProfile | null>(null);
   const [selectedRate, setSelectedRate] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +53,7 @@ export function ShippingLabelManager({
       const result = await getShippingRates(orderId);
       if (result.success && result.rates) {
         setRates(result.rates);
+        setShippingProfile(result.shippingProfile || null);
         setShowRates(true);
       } else {
         setError(result.error || 'Failed to fetch shipping rates');
@@ -149,6 +162,21 @@ export function ShippingLabelManager({
             Cancel
           </Button>
         </div>
+        {shippingProfile && (
+          <div className="mb-3 rounded border border-blue-300 bg-white p-3">
+            <div className="mb-1 text-xs font-medium text-blue-700">Label will ship from:</div>
+            <div className="text-sm font-semibold text-gray-900">{shippingProfile.name}</div>
+            <div className="text-xs text-gray-600">
+              {shippingProfile.originAddress.street && (
+                <div>{shippingProfile.originAddress.street}</div>
+              )}
+              <div>
+                {shippingProfile.originAddress.city}, {shippingProfile.originAddress.state}{' '}
+                {shippingProfile.originAddress.zip}
+              </div>
+            </div>
+          </div>
+        )}
         <div className="mb-3 space-y-2">
           {rates.map((rate) => (
             <label

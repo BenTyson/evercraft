@@ -1,7 +1,7 @@
 # Evercraft Documentation Router
 
-**Last Updated:** November 9, 2025
-**Total Models:** 38 | **Total Routes:** 31 | **Status:** Session 23 Complete
+**Last Updated:** November 13, 2025
+**Total Models:** 38 | **Total Routes:** 31 | **Status:** Session 27 Complete
 
 > **DOCUMENTATION POLICY:**
 >
@@ -198,6 +198,11 @@ See [TECH_STACK.md](../reference/TECH_STACK.md) for full details and decision lo
 - Buyer-seller messaging (text + images, order context, unread counts) - Session 19
 - UI improvements and Faire-inspired design refinements - Session 20
 - Nonprofit donation system - Flows 1 & 2 (seller contributions, buyer donations, admin payouts) - Session 21-22
+- Dashboard UX consistency and nonprofit config consolidation - Session 23
+- Platform donation system (Flow 3) and browse page improvements - Session 24
+- Seller shipping profiles with CRUD and profile-based calculation - Session 25
+- Dashboard UI redesign with clean gray color scheme - Session 26
+- Shipping label generation with Shippo integration and comprehensive validation - Session 27
 
 ### 🚧 In Progress (Phase 8)
 
