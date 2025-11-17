@@ -8,7 +8,6 @@ import { redirect } from 'next/navigation';
 import {
   DollarSign,
   TrendingUp,
-  TrendingDown,
   ShoppingBag,
   Heart,
   Leaf,
@@ -28,6 +27,7 @@ import {
 import RevenueChart from './revenue-chart';
 import BestSellersTable from './best-sellers-table';
 import { Button } from '@/components/ui/button';
+import { MetricCard } from '@/components/ui/metric-card';
 
 export default async function SellerAnalyticsPage() {
   const seller = await isSeller();
@@ -109,6 +109,7 @@ export default async function SellerAnalyticsPage() {
               subtitle={`${analytics.revenueGrowth >= 0 ? '+' : ''}${analytics.revenueGrowth.toFixed(1)}% from last month`}
               icon={DollarSign}
               trend={analytics.revenueGrowth >= 0 ? 'up' : 'down'}
+              layout="seller"
             />
 
             <MetricCard
@@ -117,6 +118,7 @@ export default async function SellerAnalyticsPage() {
               subtitle={`${analytics.ordersGrowth >= 0 ? '+' : ''}${analytics.ordersGrowth.toFixed(1)}% from last month`}
               icon={ShoppingBag}
               trend={analytics.ordersGrowth >= 0 ? 'up' : 'down'}
+              layout="seller"
             />
 
             <MetricCard
@@ -124,6 +126,7 @@ export default async function SellerAnalyticsPage() {
               value={`$${analytics.averageOrderValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               subtitle="Per order average"
               icon={TrendingUp}
+              layout="seller"
             />
 
             <MetricCard
@@ -131,6 +134,7 @@ export default async function SellerAnalyticsPage() {
               value={`$${analytics.totalDonations.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               subtitle="To selected nonprofit"
               icon={Heart}
+              layout="seller"
             />
           </div>
 
@@ -313,46 +317,6 @@ export default async function SellerAnalyticsPage() {
               </div>
             )}
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-interface MetricCardProps {
-  title: string;
-  value: string;
-  subtitle: string;
-  icon: React.ElementType;
-  trend?: 'up' | 'down';
-}
-
-function MetricCard({ title, value, subtitle, icon: Icon, trend }: MetricCardProps) {
-  return (
-    <div className="rounded-lg border bg-white p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="mt-2 text-3xl font-bold text-gray-900">{value}</p>
-          <div className="mt-2 flex items-center gap-1">
-            {trend && (
-              <>
-                {trend === 'up' ? (
-                  <TrendingUp className="size-4 text-green-600" />
-                ) : (
-                  <TrendingDown className="size-4 text-red-600" />
-                )}
-              </>
-            )}
-            <p
-              className={`text-sm ${trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-600'}`}
-            >
-              {subtitle}
-            </p>
-          </div>
-        </div>
-        <div className="rounded-full bg-gray-100 p-3">
-          <Icon className="size-6 text-gray-600" />
         </div>
       </div>
     </div>

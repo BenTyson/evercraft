@@ -19,6 +19,7 @@ import {
 import { isAdmin } from '@/lib/auth';
 import { getAdminStats, getAdminActivityFeed } from '@/actions/admin';
 import { formatDistanceToNow } from 'date-fns';
+import { MetricCard } from '@/components/ui/metric-card';
 
 export default async function AdminDashboardPage() {
   const admin = await isAdmin();
@@ -65,7 +66,7 @@ export default async function AdminDashboardPage() {
             subtitle={`$${stats.revenueThisMonth.toLocaleString('en-US', { minimumFractionDigits: 2 })} this month`}
             icon={DollarSign}
             iconColor="text-gray-600"
-            bgColor="bg-gray-100"
+            iconBgColor="bg-gray-100"
           />
 
           <MetricCard
@@ -74,7 +75,7 @@ export default async function AdminDashboardPage() {
             subtitle={`${stats.ordersThisMonth} this month`}
             icon={ShoppingBag}
             iconColor="text-gray-600"
-            bgColor="bg-gray-100"
+            iconBgColor="bg-gray-100"
           />
 
           <MetricCard
@@ -83,7 +84,7 @@ export default async function AdminDashboardPage() {
             subtitle={`${stats.newSellersThisMonth} new this month`}
             icon={Store}
             iconColor="text-gray-600"
-            bgColor="bg-gray-100"
+            iconBgColor="bg-gray-100"
           />
 
           <MetricCard
@@ -92,7 +93,7 @@ export default async function AdminDashboardPage() {
             subtitle="Total contributed"
             icon={Heart}
             iconColor="text-gray-600"
-            bgColor="bg-gray-100"
+            iconBgColor="bg-gray-100"
           />
 
           <MetricCard
@@ -101,7 +102,7 @@ export default async function AdminDashboardPage() {
             subtitle="Listed for sale"
             icon={Package}
             iconColor="text-gray-600"
-            bgColor="bg-gray-100"
+            iconBgColor="bg-gray-100"
           />
 
           <MetricCard
@@ -110,7 +111,7 @@ export default async function AdminDashboardPage() {
             subtitle="Have placed orders"
             icon={Users}
             iconColor="text-gray-600"
-            bgColor="bg-gray-100"
+            iconBgColor="bg-gray-100"
           />
 
           <Link href="/admin/applications" className="block">
@@ -120,7 +121,7 @@ export default async function AdminDashboardPage() {
               subtitle="Needs review"
               icon={TrendingUp}
               iconColor="text-gray-600"
-              bgColor="bg-gray-100"
+              iconBgColor="bg-gray-100"
               clickable
             />
           </Link>
@@ -192,41 +193,6 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-interface MetricCardProps {
-  title: string;
-  value: string;
-  subtitle: string;
-  icon: React.ComponentType<{ className?: string }>;
-  iconColor: string;
-  bgColor: string;
-  clickable?: boolean;
-}
-
-function MetricCard({
-  title,
-  value,
-  subtitle,
-  icon: Icon,
-  iconColor,
-  bgColor,
-  clickable = false,
-}: MetricCardProps) {
-  return (
-    <div
-      className={`rounded-lg border border-gray-200 bg-white p-6 ${clickable ? 'cursor-pointer transition-shadow hover:shadow-md' : ''}`}
-    >
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-semibold tracking-wide text-gray-600 uppercase">{title}</h3>
-        <div className={`rounded-lg p-2 ${bgColor}`}>
-          <Icon className={`size-5 ${iconColor}`} />
-        </div>
-      </div>
-      <p className="mb-1 text-3xl font-bold text-gray-900">{value}</p>
-      <p className="text-sm text-gray-600">{subtitle}</p>
     </div>
   );
 }
