@@ -42,10 +42,7 @@ export type ValidationErrors<T> = {
  * const errors = validateForm(formData, schema);
  * ```
  */
-export function validateForm<T extends Record<string, unknown>>(
-  data: T,
-  schema: ValidationSchema<T>
-): ValidationErrors<T> {
+export function validateForm<T>(data: T, schema: ValidationSchema<T>): ValidationErrors<T> {
   const errors: ValidationErrors<T> = {};
 
   for (const field in schema) {

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
@@ -13,7 +12,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { FormField } from '@/components/forms/form-field';
+import { useFormSubmission } from '@/hooks/use-form-submission';
+import { validateForm, hasErrors, ValidationSchema } from '@/lib/validation';
 import { createSection, updateSection } from '@/actions/shop-sections';
+
+interface FormData {
+  name: string;
+  description: string;
+}
+
+const validationSchema: ValidationSchema<FormData> = {
+  name: {
+    required: 'Section name is required',
+    minLength: { value: 1, message: 'Section name cannot be empty' },
+  },
+};
 
 interface Section {
   id: string;
@@ -42,77 +56,82 @@ export function SectionFormDialog({
   onOpenChange,
   onSuccess,
 }: SectionFormDialogProps) {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
   const isEditing = !!section;
+
+  const { isSubmitting, error, handleSubmit } = useFormSubmission({
+    onSuccess: () => {
+      // onSuccess will be called in the submit handler with the section data
+    },
+  });
+
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    description: '',
+  });
+
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
   // Load section data when editing
   useEffect(() => {
     if (section) {
-      setName(section.name);
-      setDescription(section.description || '');
+      setFormData({
+        name: section.name,
+        description: section.description || '',
+      });
     } else {
-      setName('');
-      setDescription('');
+      setFormData({
+        name: '',
+        description: '',
+      });
     }
-    setError('');
+    setFieldErrors({});
   }, [section, open]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
-    if (!name.trim()) {
-      setError('Section name is required');
+    // Validate form
+    const errors = validateForm(formData, validationSchema);
+    setFieldErrors(errors);
+
+    if (hasErrors(errors)) {
       return;
     }
 
-    setLoading(true);
+    // Submit form
+    await handleSubmit(async () => {
+      let result;
 
-    try {
       if (isEditing) {
-        const result = await updateSection(section.id, {
-          name: name.trim(),
-          description: description.trim() || undefined,
+        result = await updateSection(section.id, {
+          name: formData.name.trim(),
+          description: formData.description.trim() || undefined,
         });
-
-        if (result.success && result.section) {
-          onSuccess({
-            ...result.section,
-            _count: { products: section._count.products },
-          } as Section);
-        } else {
-          setError(result.error || 'Failed to update section');
-        }
       } else {
-        const result = await createSection(shopId, {
-          name: name.trim(),
-          description: description.trim() || undefined,
+        result = await createSection(shopId, {
+          name: formData.name.trim(),
+          description: formData.description.trim() || undefined,
         });
-
-        if (result.success && result.section) {
-          onSuccess({
-            ...result.section,
-            _count: { products: 0 },
-          } as Section);
-        } else {
-          setError(result.error || 'Failed to create section');
-        }
       }
-    } catch {
-      setError('An unexpected error occurred');
-    } finally {
-      setLoading(false);
-    }
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to save section');
+      }
+
+      // Call parent's onSuccess with the section data
+      if (result.section) {
+        onSuccess({
+          ...result.section,
+          _count: { products: isEditing ? section._count.products : 0 },
+        } as Section);
+      }
+    });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={onSubmit}>
           <DialogHeader>
             <DialogTitle>{isEditing ? 'Edit Section' : 'Create Section'}</DialogTitle>
             <DialogDescription>
@@ -124,42 +143,45 @@ export function SectionFormDialog({
 
           <div className="space-y-4 py-4">
             {/* Name Input */}
-            <div className="space-y-2">
-              <Label htmlFor="name">
-                Section Name <span className="text-destructive">*</span>
-              </Label>
+            <FormField
+              label="Section Name"
+              name="name"
+              required
+              error={fieldErrors.name}
+              description="This will be displayed on your shop page"
+            >
               <Input
                 id="name"
                 placeholder="e.g., Bestsellers, Spring Collection"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={loading}
+                value={formData.name}
+                onChange={(e) => {
+                  setFormData({ ...formData, name: e.target.value });
+                  setFieldErrors({ ...fieldErrors, name: undefined });
+                }}
+                disabled={isSubmitting}
                 autoFocus
+                aria-invalid={!!fieldErrors.name}
               />
-              <p className="text-muted-foreground text-xs">
-                This will be displayed on your shop page
-              </p>
-            </div>
+            </FormField>
 
             {/* Description Input */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Description (Optional)</Label>
+            <FormField label="Description" name="description">
               <Textarea
                 id="description"
                 placeholder="Describe this section..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                disabled={loading}
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                disabled={isSubmitting}
                 rows={3}
               />
-            </div>
+            </FormField>
 
             {/* Slug Preview */}
-            {name && (
+            {formData.name && (
               <div className="bg-muted rounded-lg p-3">
                 <p className="text-xs font-medium">URL Slug Preview:</p>
                 <p className="text-muted-foreground mt-1 font-mono text-xs">
-                  {name
+                  {formData.name
                     .toLowerCase()
                     .replace(/[^a-z0-9]+/g, '-')
                     .replace(/^-+|-+$/g, '')}
@@ -180,12 +202,12 @@ export function SectionFormDialog({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={loading}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !name.trim()}>
-              {loading
+            <Button type="submit" disabled={isSubmitting || !formData.name.trim()}>
+              {isSubmitting
                 ? isEditing
                   ? 'Updating...'
                   : 'Creating...'

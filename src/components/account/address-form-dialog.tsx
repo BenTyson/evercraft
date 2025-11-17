@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -19,7 +18,46 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { FormField } from '@/components/forms/form-field';
+import { useFormSubmission } from '@/hooks/use-form-submission';
+import { validateForm, hasErrors, ValidationSchema } from '@/lib/validation';
 import { createAddress, updateAddress, type AddressInput } from '@/actions/addresses';
+
+interface FormData {
+  type: 'SHIPPING' | 'BILLING';
+  firstName: string;
+  lastName: string;
+  company: string;
+  address1: string;
+  address2: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  phone: string;
+  isDefault: boolean;
+}
+
+const validationSchema: ValidationSchema<FormData> = {
+  firstName: {
+    required: 'First name is required',
+  },
+  lastName: {
+    required: 'Last name is required',
+  },
+  address1: {
+    required: 'Street address is required',
+  },
+  city: {
+    required: 'City is required',
+  },
+  state: {
+    required: 'State is required',
+  },
+  postalCode: {
+    required: 'Postal code is required',
+  },
+};
 
 interface Address {
   id: string;
@@ -103,120 +141,105 @@ export function AddressFormDialog({
   onOpenChange,
   onSuccess,
 }: AddressFormDialogProps) {
-  const [type, setType] = useState<'SHIPPING' | 'BILLING'>('SHIPPING');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [company, setCompany] = useState('');
-  const [address1, setAddress1] = useState('');
-  const [address2, setAddress2] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [postalCode, setPostalCode] = useState('');
-  const [country, setCountry] = useState('US');
-  const [phone, setPhone] = useState('');
-  const [isDefault, setIsDefault] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
   const isEditing = !!address;
+
+  const { isSubmitting, error, handleSubmit } = useFormSubmission({
+    onSuccess: () => {
+      onSuccess();
+      onOpenChange(false);
+    },
+  });
+
+  const [formData, setFormData] = useState<FormData>({
+    type: 'SHIPPING',
+    firstName: '',
+    lastName: '',
+    company: '',
+    address1: '',
+    address2: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: 'US',
+    phone: '',
+    isDefault: false,
+  });
+
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
   // Load address data when editing
   useEffect(() => {
     if (address) {
-      setType(address.type as 'SHIPPING' | 'BILLING');
-      setFirstName(address.firstName);
-      setLastName(address.lastName);
-      setCompany(address.company || '');
-      setAddress1(address.address1);
-      setAddress2(address.address2 || '');
-      setCity(address.city);
-      setState(address.state);
-      setPostalCode(address.postalCode);
-      setCountry(address.country);
-      setPhone(address.phone || '');
-      setIsDefault(address.isDefault);
+      setFormData({
+        type: address.type as 'SHIPPING' | 'BILLING',
+        firstName: address.firstName,
+        lastName: address.lastName,
+        company: address.company || '',
+        address1: address.address1,
+        address2: address.address2 || '',
+        city: address.city,
+        state: address.state,
+        postalCode: address.postalCode,
+        country: address.country,
+        phone: address.phone || '',
+        isDefault: address.isDefault,
+      });
     } else {
       // Reset form
-      setType('SHIPPING');
-      setFirstName('');
-      setLastName('');
-      setCompany('');
-      setAddress1('');
-      setAddress2('');
-      setCity('');
-      setState('');
-      setPostalCode('');
-      setCountry('US');
-      setPhone('');
-      setIsDefault(false);
+      setFormData({
+        type: 'SHIPPING',
+        firstName: '',
+        lastName: '',
+        company: '',
+        address1: '',
+        address2: '',
+        city: '',
+        state: '',
+        postalCode: '',
+        country: 'US',
+        phone: '',
+        isDefault: false,
+      });
     }
-    setError('');
+    setFieldErrors({});
   }, [address, open]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
-    // Validation
-    if (!firstName.trim()) {
-      setError('First name is required');
-      return;
-    }
-    if (!lastName.trim()) {
-      setError('Last name is required');
-      return;
-    }
-    if (!address1.trim()) {
-      setError('Street address is required');
-      return;
-    }
-    if (!city.trim()) {
-      setError('City is required');
-      return;
-    }
-    if (!state) {
-      setError('State is required');
-      return;
-    }
-    if (!postalCode.trim()) {
-      setError('Postal code is required');
+    // Validate form
+    const errors = validateForm(formData, validationSchema);
+    setFieldErrors(errors);
+
+    if (hasErrors(errors)) {
       return;
     }
 
-    setLoading(true);
-
-    try {
+    // Submit form
+    await handleSubmit(async () => {
       const input: AddressInput = {
-        type,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        company: company.trim() || undefined,
-        address1: address1.trim(),
-        address2: address2.trim() || undefined,
-        city: city.trim(),
-        state,
-        postalCode: postalCode.trim(),
-        country,
-        phone: phone.trim() || undefined,
-        isDefault,
+        type: formData.type,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        company: formData.company.trim() || undefined,
+        address1: formData.address1.trim(),
+        address2: formData.address2.trim() || undefined,
+        city: formData.city.trim(),
+        state: formData.state,
+        postalCode: formData.postalCode.trim(),
+        country: formData.country,
+        phone: formData.phone.trim() || undefined,
+        isDefault: formData.isDefault,
       };
 
       const result = isEditing
         ? await updateAddress(address.id, input)
         : await createAddress(input);
 
-      if (result.success) {
-        onSuccess();
-        onOpenChange(false);
-      } else {
-        setError(result.error || 'Failed to save address');
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to save address');
       }
-    } catch (err) {
-      setError('An unexpected error occurred');
-      console.error('Address form error:', err);
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   return (
@@ -231,14 +254,15 @@ export function AddressFormDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={onSubmit}>
           <div className="space-y-4 py-4">
             {/* Address Type */}
-            <div className="space-y-2">
-              <Label htmlFor="type">Address Type</Label>
+            <FormField label="Address Type" name="type">
               <Select
-                value={type}
-                onValueChange={(value) => setType(value as 'SHIPPING' | 'BILLING')}
+                value={formData.type}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, type: value as 'SHIPPING' | 'BILLING' })
+                }
               >
                 <SelectTrigger id="type">
                   <SelectValue placeholder="Select type" />
@@ -248,142 +272,158 @@ export function AddressFormDialog({
                   <SelectItem value="BILLING">Billing Address</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
 
             {/* First Name & Last Name */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">
-                  First Name <span className="text-red-500">*</span>
-                </Label>
+              <FormField label="First Name" name="firstName" required error={fieldErrors.firstName}>
                 <Input
                   id="firstName"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                  value={formData.firstName}
+                  onChange={(e) => {
+                    setFormData({ ...formData, firstName: e.target.value });
+                    setFieldErrors({ ...fieldErrors, firstName: undefined });
+                  }}
                   placeholder="John"
-                  required
+                  aria-invalid={!!fieldErrors.firstName}
+                  disabled={isSubmitting}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">
-                  Last Name <span className="text-red-500">*</span>
-                </Label>
+              </FormField>
+              <FormField label="Last Name" name="lastName" required error={fieldErrors.lastName}>
                 <Input
                   id="lastName"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
+                  value={formData.lastName}
+                  onChange={(e) => {
+                    setFormData({ ...formData, lastName: e.target.value });
+                    setFieldErrors({ ...fieldErrors, lastName: undefined });
+                  }}
                   placeholder="Doe"
-                  required
+                  aria-invalid={!!fieldErrors.lastName}
+                  disabled={isSubmitting}
                 />
-              </div>
+              </FormField>
             </div>
 
             {/* Company (Optional) */}
-            <div className="space-y-2">
-              <Label htmlFor="company">Company (Optional)</Label>
+            <FormField label="Company" name="company">
               <Input
                 id="company"
-                value={company}
-                onChange={(e) => setCompany(e.target.value)}
+                value={formData.company}
+                onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                 placeholder="Company name"
+                disabled={isSubmitting}
               />
-            </div>
+            </FormField>
 
             {/* Address Line 1 */}
-            <div className="space-y-2">
-              <Label htmlFor="address1">
-                Street Address <span className="text-red-500">*</span>
-              </Label>
+            <FormField label="Street Address" name="address1" required error={fieldErrors.address1}>
               <Input
                 id="address1"
-                value={address1}
-                onChange={(e) => setAddress1(e.target.value)}
+                value={formData.address1}
+                onChange={(e) => {
+                  setFormData({ ...formData, address1: e.target.value });
+                  setFieldErrors({ ...fieldErrors, address1: undefined });
+                }}
                 placeholder="123 Main St"
-                required
+                aria-invalid={!!fieldErrors.address1}
+                disabled={isSubmitting}
               />
-            </div>
+            </FormField>
 
             {/* Address Line 2 (Optional) */}
-            <div className="space-y-2">
-              <Label htmlFor="address2">Apartment, Suite, etc. (Optional)</Label>
+            <FormField label="Apartment, Suite, etc." name="address2">
               <Input
                 id="address2"
-                value={address2}
-                onChange={(e) => setAddress2(e.target.value)}
+                value={formData.address2}
+                onChange={(e) => setFormData({ ...formData, address2: e.target.value })}
                 placeholder="Apt 4B"
+                disabled={isSubmitting}
               />
-            </div>
+            </FormField>
 
             {/* City, State, Zip */}
             <div className="grid grid-cols-6 gap-4">
-              <div className="col-span-3 space-y-2">
-                <Label htmlFor="city">
-                  City <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="city"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="San Francisco"
-                  required
-                />
+              <div className="col-span-3">
+                <FormField label="City" name="city" required error={fieldErrors.city}>
+                  <Input
+                    id="city"
+                    value={formData.city}
+                    onChange={(e) => {
+                      setFormData({ ...formData, city: e.target.value });
+                      setFieldErrors({ ...fieldErrors, city: undefined });
+                    }}
+                    placeholder="San Francisco"
+                    aria-invalid={!!fieldErrors.city}
+                    disabled={isSubmitting}
+                  />
+                </FormField>
               </div>
-              <div className="col-span-2 space-y-2">
-                <Label htmlFor="state">
-                  State <span className="text-red-500">*</span>
-                </Label>
-                <Select value={state} onValueChange={setState}>
-                  <SelectTrigger id="state">
-                    <SelectValue placeholder="State" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {US_STATES.map((s) => (
-                      <SelectItem key={s.value} value={s.value}>
-                        {s.value}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="col-span-2">
+                <FormField label="State" name="state" required error={fieldErrors.state}>
+                  <Select
+                    value={formData.state}
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, state: value });
+                      setFieldErrors({ ...fieldErrors, state: undefined });
+                    }}
+                    disabled={isSubmitting}
+                  >
+                    <SelectTrigger id="state">
+                      <SelectValue placeholder="State" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {US_STATES.map((s) => (
+                        <SelectItem key={s.value} value={s.value}>
+                          {s.value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormField>
               </div>
-              <div className="col-span-1 space-y-2">
-                <Label htmlFor="postalCode">
-                  Zip <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="postalCode"
-                  value={postalCode}
-                  onChange={(e) => setPostalCode(e.target.value)}
-                  placeholder="94102"
-                  required
-                  maxLength={10}
-                />
+              <div className="col-span-1">
+                <FormField label="Zip" name="postalCode" required error={fieldErrors.postalCode}>
+                  <Input
+                    id="postalCode"
+                    value={formData.postalCode}
+                    onChange={(e) => {
+                      setFormData({ ...formData, postalCode: e.target.value });
+                      setFieldErrors({ ...fieldErrors, postalCode: undefined });
+                    }}
+                    placeholder="94102"
+                    aria-invalid={!!fieldErrors.postalCode}
+                    disabled={isSubmitting}
+                    maxLength={10}
+                  />
+                </FormField>
               </div>
             </div>
 
             {/* Phone (Optional) */}
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone (Optional)</Label>
+            <FormField label="Phone" name="phone">
               <Input
                 id="phone"
                 type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="(555) 123-4567"
+                disabled={isSubmitting}
               />
-            </div>
+            </FormField>
 
             {/* Set as Default */}
             <div className="flex items-center space-x-2">
               <input
                 type="checkbox"
                 id="isDefault"
-                checked={isDefault}
-                onChange={(e) => setIsDefault(e.target.checked)}
+                checked={formData.isDefault}
+                onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
                 className="size-4 rounded border-gray-300"
+                disabled={isSubmitting}
               />
-              <Label htmlFor="isDefault" className="cursor-pointer font-normal">
-                Set as default {type.toLowerCase()} address
-              </Label>
+              <label htmlFor="isDefault" className="cursor-pointer text-sm font-normal">
+                Set as default {formData.type.toLowerCase()} address
+              </label>
             </div>
 
             {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">{error}</div>}
@@ -394,12 +434,12 @@ export function AddressFormDialog({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={loading}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Saving...' : isEditing ? 'Update Address' : 'Add Address'}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : isEditing ? 'Update Address' : 'Add Address'}
             </Button>
           </DialogFooter>
         </form>
