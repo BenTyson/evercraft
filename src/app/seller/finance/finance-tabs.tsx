@@ -6,6 +6,7 @@ import OverviewTab from './overview-tab';
 import PayoutsTab from './payouts-tab';
 import TransactionsTab from './transactions-tab';
 import SettingsTabContent from './settings-tab';
+import { TabsNavigation, Tab } from '@/components/ui/tabs-navigation';
 
 type TabId = 'overview' | 'payouts' | 'transactions' | 'settings';
 
@@ -57,27 +58,27 @@ interface FinanceTabsProps {
   transactions: Transaction[];
 }
 
-const tabs = [
+const tabs: Tab<TabId>[] = [
   {
-    id: 'overview' as TabId,
+    id: 'overview',
     name: 'Overview',
     icon: DollarSign,
     description: 'Balance and stats',
   },
   {
-    id: 'payouts' as TabId,
+    id: 'payouts',
     name: 'Payouts',
     icon: Receipt,
     description: 'Payout history',
   },
   {
-    id: 'transactions' as TabId,
+    id: 'transactions',
     name: 'Transactions',
     icon: CreditCard,
     description: 'Transaction details',
   },
   {
-    id: 'settings' as TabId,
+    id: 'settings',
     name: 'Settings',
     icon: Settings,
     description: 'Bank account & preferences',
@@ -90,29 +91,12 @@ export default function FinanceTabs({ overview, payouts, transactions }: Finance
   return (
     <div className="space-y-6">
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`group inline-flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium ${
-                  isActive
-                    ? 'border-forest-dark text-forest-dark'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                } `}
-              >
-                <Icon className="h-5 w-5" />
-                {tab.name}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
+      <TabsNavigation
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        variant="horizontal"
+      />
 
       {/* Tab Content */}
       <div className="py-6">

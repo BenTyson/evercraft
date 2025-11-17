@@ -6,6 +6,7 @@ import AdminOverviewTab from './admin-overview-tab';
 import AdminPayoutsTab from './admin-payouts-tab';
 import AdminSellersTab from './admin-sellers-tab';
 import AdminTransactionsTab from './admin-transactions-tab';
+import { TabsNavigation, Tab } from '@/components/ui/tabs-navigation';
 
 type TabId = 'overview' | 'payouts' | 'sellers' | 'transactions';
 
@@ -100,27 +101,27 @@ interface AdminFinanceTabsProps {
   nonprofitBreakdown: NonprofitBreakdown[];
 }
 
-const tabs = [
+const tabs: Tab<TabId>[] = [
   {
-    id: 'overview' as TabId,
+    id: 'overview',
     name: 'Overview',
     icon: DollarSign,
     description: 'Platform metrics',
   },
   {
-    id: 'payouts' as TabId,
+    id: 'payouts',
     name: 'Payouts',
     icon: Receipt,
     description: 'All seller payouts',
   },
   {
-    id: 'sellers' as TabId,
+    id: 'sellers',
     name: 'Sellers',
     icon: Users,
     description: 'Seller balances',
   },
   {
-    id: 'transactions' as TabId,
+    id: 'transactions',
     name: 'Transactions',
     icon: CreditCard,
     description: 'Transaction history',
@@ -139,29 +140,12 @@ export default function AdminFinanceTabs({
   return (
     <div className="space-y-6">
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`group inline-flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium ${
-                  isActive
-                    ? 'border-forest-dark text-forest-dark'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                } `}
-              >
-                <Icon className="h-5 w-5" />
-                {tab.name}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
+      <TabsNavigation
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        variant="horizontal"
+      />
 
       {/* Tab Content */}
       <div className="py-6">

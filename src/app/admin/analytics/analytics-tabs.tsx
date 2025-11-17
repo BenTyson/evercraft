@@ -8,6 +8,7 @@ import { UsersTab } from './tabs/users-tab';
 import { SellersTab } from './tabs/sellers-tab';
 import { ProductsTab } from './tabs/products-tab';
 import { OrdersTab } from './tabs/orders-tab';
+import { TabsNavigation, Tab } from '@/components/ui/tabs-navigation';
 
 type TabId = 'overview' | 'revenue' | 'users' | 'sellers' | 'products' | 'orders';
 
@@ -120,39 +121,39 @@ interface AnalyticsTabsProps {
   paymentAnalytics: PaymentAnalytics;
 }
 
-const tabs = [
+const tabs: Tab<TabId>[] = [
   {
-    id: 'overview' as TabId,
+    id: 'overview',
     name: 'Overview',
     icon: BarChart3,
     description: 'High-level KPIs',
   },
   {
-    id: 'revenue' as TabId,
+    id: 'revenue',
     name: 'Revenue',
     icon: DollarSign,
     description: 'Revenue analytics',
   },
   {
-    id: 'users' as TabId,
+    id: 'users',
     name: 'Users',
     icon: Users,
     description: 'User behavior',
   },
   {
-    id: 'sellers' as TabId,
+    id: 'sellers',
     name: 'Sellers',
     icon: Store,
     description: 'Seller performance',
   },
   {
-    id: 'products' as TabId,
+    id: 'products',
     name: 'Products',
     icon: Package,
     description: 'Product insights',
   },
   {
-    id: 'orders' as TabId,
+    id: 'orders',
     name: 'Orders',
     icon: ShoppingCart,
     description: 'Order analytics',
@@ -179,29 +180,12 @@ export default function AnalyticsTabs({
   return (
     <div className="space-y-6">
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8 overflow-x-auto">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium whitespace-nowrap transition-colors ${
-                  isActive
-                    ? 'border-forest-dark text-forest-dark'
-                    : 'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900'
-                }`}
-              >
-                <Icon className="size-5" />
-                {tab.name}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
+      <TabsNavigation
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        variant="horizontal"
+      />
 
       {/* Tab Content */}
       <div className="min-h-[500px]">

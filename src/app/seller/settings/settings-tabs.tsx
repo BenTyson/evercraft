@@ -6,6 +6,7 @@ import ShopProfileTab from './shop-profile-tab';
 import BrandingTab from './branding-tab';
 import AccountTab from './account-tab';
 import EcoProfileTab from './eco-profile-tab';
+import { TabsNavigation, Tab } from '@/components/ui/tabs-navigation';
 
 interface Shop {
   id: string;
@@ -24,27 +25,27 @@ interface SettingsTabsProps {
 
 type TabId = 'profile' | 'branding' | 'eco-profile' | 'account';
 
-const tabs = [
+const tabs: Tab<TabId>[] = [
   {
-    id: 'profile' as TabId,
+    id: 'profile',
     name: 'Shop Profile',
     icon: Store,
     description: 'Basic information about your shop',
   },
   {
-    id: 'branding' as TabId,
+    id: 'branding',
     name: 'Branding',
     icon: Palette,
     description: 'Logo, colors, and visual identity',
   },
   {
-    id: 'eco-profile' as TabId,
+    id: 'eco-profile',
     name: 'Eco-Profile',
     icon: Leaf,
     description: 'Sustainability practices and credentials',
   },
   {
-    id: 'account' as TabId,
+    id: 'account',
     name: 'Account',
     icon: User,
     description: 'Account settings and preferences',
@@ -58,38 +59,12 @@ export default function SettingsTabs({ shop }: SettingsTabsProps) {
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
       {/* Tab Navigation */}
       <div className="lg:col-span-1">
-        <nav className="space-y-1">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex w-full items-start gap-3 rounded-lg px-4 py-3 text-left transition-colors ${
-                  isActive
-                    ? 'bg-forest-dark/10 text-forest-dark'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <Icon
-                  className={`mt-0.5 size-5 flex-shrink-0 ${
-                    isActive ? 'text-forest-dark' : 'text-gray-400'
-                  }`}
-                />
-                <div className="flex-1">
-                  <p
-                    className={`text-sm font-medium ${isActive ? 'text-forest-dark' : 'text-gray-900'}`}
-                  >
-                    {tab.name}
-                  </p>
-                  <p className="mt-0.5 text-xs text-gray-600">{tab.description}</p>
-                </div>
-              </button>
-            );
-          })}
-        </nav>
+        <TabsNavigation
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          variant="vertical"
+        />
       </div>
 
       {/* Tab Content */}
