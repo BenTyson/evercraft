@@ -16,6 +16,40 @@ const platformFeeRate = 0.065;
 // Enable automatic transfers (false in test mode to avoid balance issues)
 const ENABLE_AUTO_TRANSFERS = process.env.ENABLE_AUTO_TRANSFERS === 'true';
 
+/**
+ * Transform shipping address from checkout format to database format
+ * Checkout uses: address1, address2, zipCode, firstName, lastName
+ * Database expects: addressLine1, addressLine2, postalCode, fullName
+ */
+function transformShippingAddress(address: ShippingAddress): DatabaseAddress {
+  return {
+    fullName: `${address.firstName} ${address.lastName}`.trim(),
+    addressLine1: address.address1,
+    addressLine2: address.address2 || '',
+    city: address.city,
+    state: address.state,
+    postalCode: address.zipCode,
+    country: address.country,
+    email: address.email,
+    phone: address.phone,
+  };
+}
+
+/**
+ * Database address format (used by seller orders and shipping label generation)
+ */
+export interface DatabaseAddress {
+  fullName: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  email: string;
+  phone: string;
+}
+
 interface CartItem {
   id: string;
   productId: string;
@@ -267,6 +301,9 @@ export async function createOrder(input: CreateOrderInput) {
       }
     }
 
+    // Transform shipping address to database format
+    const transformedAddress = transformShippingAddress(input.shippingAddress);
+
     // Create order with transaction to ensure atomicity
     const order = await db.$transaction(async (tx) => {
       // Create the order
@@ -280,8 +317,8 @@ export async function createOrder(input: CreateOrderInput) {
           tax: 0,
           total,
           nonprofitDonation: 0, // Will be sum of all shop donations
-          shippingAddress: input.shippingAddress as unknown as Prisma.InputJsonValue,
-          billingAddress: input.shippingAddress as unknown as Prisma.InputJsonValue,
+          shippingAddress: transformedAddress as unknown as Prisma.InputJsonValue,
+          billingAddress: transformedAddress as unknown as Prisma.InputJsonValue,
           paymentStatus: 'PAID',
           paymentIntentId: input.paymentIntentId,
           updatedAt: new Date(),

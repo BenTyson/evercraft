@@ -13,7 +13,29 @@ import { X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { FormField } from '@/components/forms/form-field';
+import { useFormSubmission } from '@/hooks/use-form-submission';
+import { validateForm, hasErrors, patterns, ValidationSchema } from '@/lib/validation';
 import { createCategory, updateCategory } from '@/actions/admin-categories';
+
+interface FormData {
+  name: string;
+  slug: string;
+  description: string;
+  parentId: string;
+}
+
+const validationSchema: ValidationSchema<FormData> = {
+  name: {
+    required: 'Category name is required',
+    minLength: { value: 2, message: 'Name must be at least 2 characters' },
+    maxLength: { value: 100, message: 'Name must not exceed 100 characters' },
+  },
+  slug: {
+    required: 'Slug is required',
+    pattern: patterns.slug,
+  },
+};
 
 interface CategoryFormDialogProps {
   open: boolean;
@@ -38,15 +60,21 @@ export function CategoryFormDialog({
 }: CategoryFormDialogProps) {
   const router = useRouter();
   const isEditing = !!category;
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { isSubmitting, error, handleSubmit } = useFormSubmission({
+    onSuccess: () => {
+      router.refresh();
+      onClose();
+    },
+  });
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: category?.name || '',
     slug: category?.slug || '',
     description: category?.description || '',
     parentId: category?.parentId || parentId || '',
   });
+
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
   // Auto-generate slug from name
   useEffect(() => {
@@ -59,12 +87,19 @@ export function CategoryFormDialog({
     }
   }, [formData.name, formData.slug, isEditing]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
 
-    try {
+    // Validate form
+    const errors = validateForm(formData, validationSchema);
+    setFieldErrors(errors);
+
+    if (hasErrors(errors)) {
+      return;
+    }
+
+    // Submit form
+    await handleSubmit(async () => {
       let result;
 
       if (isEditing) {
@@ -82,17 +117,10 @@ export function CategoryFormDialog({
         });
       }
 
-      if (result.success) {
-        router.refresh();
-        onClose();
-      } else {
-        setError(result.error || 'Failed to save category');
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to save category');
       }
-    } catch {
-      setError('An unexpected error occurred');
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   };
 
   if (!open) return null;
@@ -122,55 +150,54 @@ export function CategoryFormDialog({
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-4">
           {/* Parent Category (for subcategories) */}
           {parentId && (
-            <div>
-              <label className="mb-2 block text-sm font-medium">Parent Category</label>
+            <FormField label="Parent Category" name="parentCategory">
               <Input
                 value={parentCategories.find((p) => p.id === parentId)?.name || ''}
                 disabled
                 className="bg-neutral-50"
               />
-            </div>
+            </FormField>
           )}
 
           {/* Name */}
-          <div>
-            <label htmlFor="name" className="mb-2 block text-sm font-medium">
-              Name <span className="text-red-500">*</span>
-            </label>
+          <FormField label="Name" name="name" required error={fieldErrors.name}>
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, name: e.target.value });
+                setFieldErrors({ ...fieldErrors, name: undefined });
+              }}
               placeholder="e.g., Home & Living"
-              required
+              aria-invalid={!!fieldErrors.name}
             />
-          </div>
+          </FormField>
 
           {/* Slug */}
-          <div>
-            <label htmlFor="slug" className="mb-2 block text-sm font-medium">
-              Slug <span className="text-red-500">*</span>
-            </label>
+          <FormField
+            label="Slug"
+            name="slug"
+            required
+            error={fieldErrors.slug}
+            description="URL-friendly identifier (lowercase, hyphens only)"
+          >
             <Input
               id="slug"
               value={formData.slug}
-              onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, slug: e.target.value });
+                setFieldErrors({ ...fieldErrors, slug: undefined });
+              }}
               placeholder="e.g., home-living"
-              required
+              aria-invalid={!!fieldErrors.slug}
             />
-            <p className="text-muted-foreground mt-1 text-xs">
-              URL-friendly identifier (lowercase, hyphens only)
-            </p>
-          </div>
+          </FormField>
 
           {/* Description */}
-          <div>
-            <label htmlFor="description" className="mb-2 block text-sm font-medium">
-              Description
-            </label>
+          <FormField label="Description" name="description">
             <Textarea
               id="description"
               value={formData.description}
@@ -178,7 +205,7 @@ export function CategoryFormDialog({
               placeholder="Brief description of this category..."
               rows={3}
             />
-          </div>
+          </FormField>
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-4">
