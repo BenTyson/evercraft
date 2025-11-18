@@ -1,7 +1,7 @@
 # Evercraft Documentation Router
 
-**Last Updated:** November 13, 2025
-**Total Models:** 38 | **Total Routes:** 31 | **Status:** Session 27 Complete
+**Last Updated:** November 18, 2025
+**Total Models:** 38 | **Total Routes:** 31 | **Status:** Session 32 Complete
 
 > **DOCUMENTATION POLICY:**
 >
@@ -99,6 +99,14 @@
 - Database uses UUIDs ("clx7k8p2q...")
 - **Must map before creating variants!**
 - See: [product-variants.md#image-id-mapping-pattern](../features/product-variants.md#image-id-mapping-pattern)
+
+**Shared Components (Sessions 28-32):**
+
+- ✅ Use `TabsNavigation` for tab UI (horizontal/vertical variants)
+- ✅ Use `MetricCard` / `StatCard` for dashboard metrics
+- ✅ Use `FormField` + `useFormSubmission` + validation schema for new forms
+- ❌ DON'T create inline tabs, metric cards, or manual form state management
+- See: [session-28-32-componentization.md](../sessions/session-28-32-componentization.md)
 
 **Shop Order Access:**
 
