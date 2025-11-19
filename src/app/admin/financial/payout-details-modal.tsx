@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import {
   Dialog,
   DialogContent,
@@ -9,8 +8,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { AvatarWithFallback } from '@/components/ui/avatar-with-fallback';
+import { formatCurrency } from '@/lib/format';
 import { format } from 'date-fns';
 import { ExternalLink, Receipt, Calendar, TrendingUp } from 'lucide-react';
 
@@ -48,21 +49,6 @@ interface PayoutDetailsModalProps {
 export default function PayoutDetailsModal({ isOpen, onClose, payout }: PayoutDetailsModalProps) {
   if (!payout) return null;
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'paid':
-        return <Badge variant="default">Paid</Badge>;
-      case 'pending':
-        return <Badge variant="secondary">Pending</Badge>;
-      case 'processing':
-        return <Badge variant="outline">Processing</Badge>;
-      case 'failed':
-        return <Badge variant="destructive">Failed</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
   // Calculate payment totals
   const totals = payout.payments.reduce(
     (acc, payment) => ({
@@ -79,17 +65,12 @@ export default function PayoutDetailsModal({ isOpen, onClose, payout }: PayoutDe
       <DialogContent className="max-h-[85vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            {payout.shopLogo ? (
-              <div className="relative h-12 w-12 overflow-hidden rounded-full">
-                <Image src={payout.shopLogo} alt={payout.shopName} fill className="object-cover" />
-              </div>
-            ) : (
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200">
-                <span className="text-lg font-medium text-gray-600">
-                  {payout.shopName.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
+            <AvatarWithFallback
+              src={payout.shopLogo}
+              alt={payout.shopName}
+              name={payout.shopName}
+              size="md"
+            />
             <div>
               <DialogTitle>Payout Details - {payout.shopName}</DialogTitle>
               <DialogDescription>
@@ -109,8 +90,8 @@ export default function PayoutDetailsModal({ isOpen, onClose, payout }: PayoutDe
                 <Receipt className="text-muted-foreground h-4 w-4" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${payout.amount.toFixed(2)}</div>
-                {getStatusBadge(payout.status)}
+                <div className="text-2xl font-bold">{formatCurrency(payout.amount)}</div>
+                <StatusBadge status={payout.status} />
               </CardContent>
             </Card>
 
@@ -199,21 +180,23 @@ export default function PayoutDetailsModal({ isOpen, onClose, payout }: PayoutDe
                 <div className="grid gap-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total Gross Revenue:</span>
-                    <span className="font-medium">${totals.gross.toFixed(2)}</span>
+                    <span className="font-medium">{formatCurrency(totals.gross)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Platform Fees (6.5%):</span>
-                    <span className="text-forest-dark font-medium">-${totals.fees.toFixed(2)}</span>
+                    <span className="text-forest-dark font-medium">
+                      -{formatCurrency(totals.fees)}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Nonprofit Donations:</span>
                     <span className="font-medium text-green-600">
-                      -${totals.donations.toFixed(2)}
+                      -{formatCurrency(totals.donations)}
                     </span>
                   </div>
                   <div className="flex justify-between border-t pt-2 font-semibold">
                     <span>Net Payout:</span>
-                    <span className="text-lg">${totals.net.toFixed(2)}</span>
+                    <span className="text-lg">{formatCurrency(totals.net)}</span>
                   </div>
                 </div>
               </div>
@@ -232,9 +215,9 @@ export default function PayoutDetailsModal({ isOpen, onClose, payout }: PayoutDe
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">${payment.amount.toFixed(2)}</p>
+                      <p className="font-semibold">{formatCurrency(payment.amount)}</p>
                       <p className="text-xs text-gray-500">
-                        Net: ${payment.sellerPayout.toFixed(2)}
+                        Net: {formatCurrency(payment.sellerPayout)}
                       </p>
                     </div>
                   </div>

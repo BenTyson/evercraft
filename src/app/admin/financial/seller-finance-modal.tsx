@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { useState } from 'react';
 import {
   Dialog,
@@ -10,7 +9,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { AvatarWithFallback } from '@/components/ui/avatar-with-fallback';
+import { formatCurrency } from '@/lib/format';
 import { format } from 'date-fns';
 import { DollarSign, Receipt, TrendingUp } from 'lucide-react';
 
@@ -70,45 +71,17 @@ export default function SellerFinanceModal({ isOpen, onClose, details }: SellerF
 
   if (!details) return null;
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'paid':
-      case 'PAID':
-        return <Badge variant="default">Paid</Badge>;
-      case 'pending':
-      case 'PENDING':
-        return <Badge variant="secondary">Pending</Badge>;
-      case 'processing':
-        return <Badge variant="outline">Processing</Badge>;
-      case 'failed':
-      case 'FAILED':
-        return <Badge variant="destructive">Failed</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-h-[85vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            {details.shop.logo ? (
-              <div className="relative h-12 w-12 overflow-hidden rounded-full">
-                <Image
-                  src={details.shop.logo}
-                  alt={details.shop.name}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            ) : (
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200">
-                <span className="text-lg font-medium text-gray-600">
-                  {details.shop.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
+            <AvatarWithFallback
+              src={details.shop.logo}
+              alt={details.shop.name}
+              name={details.shop.name}
+              size="md"
+            />
             <div>
               <DialogTitle>{details.shop.name}</DialogTitle>
               <DialogDescription>
@@ -169,7 +142,7 @@ export default function SellerFinanceModal({ isOpen, onClose, details }: SellerF
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      ${details.balance.availableBalance.toFixed(2)}
+                      {formatCurrency(details.balance.availableBalance)}
                     </div>
                   </CardContent>
                 </Card>
@@ -181,7 +154,7 @@ export default function SellerFinanceModal({ isOpen, onClose, details }: SellerF
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      ${details.balance.pendingBalance.toFixed(2)}
+                      {formatCurrency(details.balance.pendingBalance)}
                     </div>
                   </CardContent>
                 </Card>
@@ -193,7 +166,7 @@ export default function SellerFinanceModal({ isOpen, onClose, details }: SellerF
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      ${details.balance.totalEarned.toFixed(2)}
+                      {formatCurrency(details.balance.totalEarned)}
                     </div>
                   </CardContent>
                 </Card>
@@ -205,7 +178,7 @@ export default function SellerFinanceModal({ isOpen, onClose, details }: SellerF
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      ${details.balance.totalPaidOut.toFixed(2)}
+                      {formatCurrency(details.balance.totalPaidOut)}
                     </div>
                   </CardContent>
                 </Card>
@@ -228,7 +201,7 @@ export default function SellerFinanceModal({ isOpen, onClose, details }: SellerF
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      ${details.stats.thisMonthEarnings.toFixed(2)}
+                      {formatCurrency(details.stats.thisMonthEarnings)}
                     </div>
                   </CardContent>
                 </Card>
@@ -271,8 +244,8 @@ export default function SellerFinanceModal({ isOpen, onClose, details }: SellerF
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold">${payout.amount.toFixed(2)}</p>
-                          {getStatusBadge(payout.status)}
+                          <p className="font-semibold">{formatCurrency(payout.amount)}</p>
+                          <StatusBadge status={payout.status} />
                         </div>
                       </div>
                     ))}
@@ -306,9 +279,9 @@ export default function SellerFinanceModal({ isOpen, onClose, details }: SellerF
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold">${transaction.amount.toFixed(2)}</p>
+                          <p className="font-semibold">{formatCurrency(transaction.amount)}</p>
                           <p className="text-xs text-gray-500">
-                            Net: ${transaction.sellerPayout.toFixed(2)}
+                            Net: {formatCurrency(transaction.sellerPayout)}
                           </p>
                         </div>
                       </div>

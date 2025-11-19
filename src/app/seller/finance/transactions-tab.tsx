@@ -3,6 +3,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { formatCurrency } from '@/lib/format';
 import { format } from 'date-fns';
 import { Download } from 'lucide-react';
 
@@ -25,21 +27,6 @@ interface TransactionsTabProps {
 }
 
 export default function TransactionsTab({ transactions }: TransactionsTabProps) {
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'PAID':
-        return <Badge variant="default">Paid</Badge>;
-      case 'PENDING':
-        return <Badge variant="secondary">Pending</Badge>;
-      case 'FAILED':
-        return <Badge variant="destructive">Failed</Badge>;
-      case 'REFUNDED':
-        return <Badge variant="outline">Refunded</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
   const getPayoutStatusBadge = (payoutId: string | null) => {
     if (!payoutId) {
       return <Badge variant="outline">Upcoming</Badge>;
@@ -113,17 +100,21 @@ export default function TransactionsTab({ transactions }: TransactionsTabProps) 
                           <span className="text-xs text-gray-500">{transaction.buyerEmail}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 font-medium">${transaction.amount.toFixed(2)}</td>
+                      <td className="px-4 py-3 font-medium">
+                        {formatCurrency(transaction.amount)}
+                      </td>
                       <td className="px-4 py-3 text-red-600">
-                        -${transaction.platformFee.toFixed(2)}
+                        -{formatCurrency(transaction.platformFee)}
                       </td>
                       <td className="px-4 py-3 text-green-600">
-                        -${transaction.nonprofitDonation.toFixed(2)}
+                        -{formatCurrency(transaction.nonprofitDonation)}
                       </td>
                       <td className="px-4 py-3 font-semibold">
-                        ${transaction.sellerPayout.toFixed(2)}
+                        {formatCurrency(transaction.sellerPayout)}
                       </td>
-                      <td className="px-4 py-3">{getStatusBadge(transaction.status)}</td>
+                      <td className="px-4 py-3">
+                        <StatusBadge status={transaction.status} />
+                      </td>
                       <td className="px-4 py-3">{getPayoutStatusBadge(transaction.payoutId)}</td>
                     </tr>
                   ))}
@@ -148,27 +139,25 @@ export default function TransactionsTab({ transactions }: TransactionsTabProps) 
             <div className="flex items-center justify-between border-b pb-2">
               <span className="text-muted-foreground">Total Gross Revenue:</span>
               <span className="font-medium">
-                ${transactions.reduce((sum, t) => sum + t.amount, 0).toFixed(2)}
+                {formatCurrency(transactions.reduce((sum, t) => sum + t.amount, 0))}
               </span>
             </div>
             <div className="flex items-center justify-between border-b pb-2">
               <span className="text-muted-foreground">Total Platform Fees:</span>
               <span className="font-medium text-red-600">
-                -$
-                {transactions.reduce((sum, t) => sum + t.platformFee, 0).toFixed(2)}
+                -{formatCurrency(transactions.reduce((sum, t) => sum + t.platformFee, 0))}
               </span>
             </div>
             <div className="flex items-center justify-between border-b pb-2">
               <span className="text-muted-foreground">Total Nonprofit Donations:</span>
               <span className="font-medium text-green-600">
-                -$
-                {transactions.reduce((sum, t) => sum + t.nonprofitDonation, 0).toFixed(2)}
+                -{formatCurrency(transactions.reduce((sum, t) => sum + t.nonprofitDonation, 0))}
               </span>
             </div>
             <div className="flex items-center justify-between pt-2">
               <span className="font-semibold">Total Net Earnings:</span>
               <span className="text-lg font-bold">
-                ${transactions.reduce((sum, t) => sum + t.sellerPayout, 0).toFixed(2)}
+                {formatCurrency(transactions.reduce((sum, t) => sum + t.sellerPayout, 0))}
               </span>
             </div>
           </CardContent>
