@@ -4,6 +4,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { getTopProducts } from '@/actions/admin-analytics';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import {
+  TableContainer,
+  TableHeader,
+  TableHeaderCell,
+  TableBody,
+  TableRow,
+  TableCell,
+  EmptyState,
+} from '@/components/ui/table';
+import { formatCurrency, formatNumber } from '@/lib/format';
 
 interface TopProduct {
   productId: string;
@@ -78,27 +88,36 @@ export default function TopProductsTable({
         </div>
       ) : products.length > 0 ? (
         <>
-          <div className="overflow-x-auto">
+          <TableContainer className="border-0">
             <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200 text-left">
-                  <th className="pb-3 text-sm font-semibold text-gray-700">Rank</th>
-                  <th className="pb-3 text-sm font-semibold text-gray-700">Product</th>
-                  <th className="pb-3 text-sm font-semibold text-gray-700">Shop</th>
-                  <th className="pb-3 text-right text-sm font-semibold text-gray-700">Price</th>
-                  <th className="pb-3 text-right text-sm font-semibold text-gray-700">Revenue</th>
-                  <th className="pb-3 text-right text-sm font-semibold text-gray-700">Units</th>
+              <TableHeader className="border-b border-gray-200 bg-transparent">
+                <tr className="text-left">
+                  <TableHeaderCell className="px-0 pb-3 font-semibold">Rank</TableHeaderCell>
+                  <TableHeaderCell className="px-0 pb-3 font-semibold">Product</TableHeaderCell>
+                  <TableHeaderCell className="px-0 pb-3 font-semibold">Shop</TableHeaderCell>
+                  <TableHeaderCell align="right" className="px-0 pb-3 font-semibold">
+                    Price
+                  </TableHeaderCell>
+                  <TableHeaderCell align="right" className="px-0 pb-3 font-semibold">
+                    Revenue
+                  </TableHeaderCell>
+                  <TableHeaderCell align="right" className="px-0 pb-3 font-semibold">
+                    Units
+                  </TableHeaderCell>
                 </tr>
-              </thead>
-              <tbody>
+              </TableHeader>
+              <TableBody className="divide-y-0">
                 {displayedProducts.map((product, index) => (
-                  <tr key={product.productId} className="border-b border-gray-100 last:border-0">
-                    <td className="py-3">
+                  <TableRow
+                    key={product.productId}
+                    className="border-b border-gray-100 last:border-0"
+                  >
+                    <TableCell className="px-0">
                       <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
                         {index + 1}
                       </div>
-                    </td>
-                    <td className="py-3">
+                    </TableCell>
+                    <TableCell className="px-0">
                       <div className="flex items-center gap-3">
                         {product.image ? (
                           <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-md">
@@ -118,27 +137,26 @@ export default function TopProductsTable({
                           {product.title}
                         </p>
                       </div>
-                    </td>
-                    <td className="py-3">
+                    </TableCell>
+                    <TableCell className="px-0">
                       <p className="text-sm text-gray-600">{product.shopName}</p>
-                    </td>
-                    <td className="py-3 text-right">
-                      <p className="text-sm text-gray-900">${product.price.toFixed(2)}</p>
-                    </td>
-                    <td className="py-3 text-right">
+                    </TableCell>
+                    <TableCell align="right" className="px-0">
+                      <p className="text-sm text-gray-900">{formatCurrency(product.price)}</p>
+                    </TableCell>
+                    <TableCell align="right" className="px-0">
                       <p className="font-semibold text-gray-900">
-                        $
-                        {product.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        {formatCurrency(product.totalRevenue, { useLocale: true })}
                       </p>
-                    </td>
-                    <td className="py-3 text-right">
-                      <p className="text-sm text-gray-600">{product.unitsSold.toLocaleString()}</p>
-                    </td>
-                  </tr>
+                    </TableCell>
+                    <TableCell align="right" className="px-0">
+                      <p className="text-sm text-gray-600">{formatNumber(product.unitsSold)}</p>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
+              </TableBody>
             </table>
-          </div>
+          </TableContainer>
 
           {/* Load More Button */}
           {displayLimit < products.length && (
@@ -153,7 +171,7 @@ export default function TopProductsTable({
           )}
         </>
       ) : (
-        <p className="py-8 text-center text-gray-500">No products data yet</p>
+        <EmptyState title="No products data yet" />
       )}
     </div>
   );

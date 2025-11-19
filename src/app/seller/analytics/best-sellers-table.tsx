@@ -3,6 +3,17 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Package } from 'lucide-react';
+import {
+  TableContainer,
+  TableHeader,
+  TableHeaderCell,
+  TableBody,
+  TableRow,
+  TableCell,
+  EmptyState,
+} from '@/components/ui/table';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { formatCurrency, formatNumber } from '@/lib/format';
 
 interface BestSeller {
   id: string;
@@ -23,34 +34,37 @@ interface BestSellersTableProps {
 export default function BestSellersTable({ data, sortBy }: BestSellersTableProps) {
   if (data.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center text-gray-500">
-        <div className="text-center">
-          <Package className="mx-auto mb-2 size-12 text-gray-400" />
-          <p>No sales data available</p>
-        </div>
-      </div>
+      <EmptyState
+        icon={Package}
+        title="No sales data available"
+        className="flex h-64 items-center justify-center"
+      />
     );
   }
 
   return (
-    <div className="overflow-x-auto">
+    <TableContainer>
       <table className="w-full">
-        <thead>
-          <tr className="border-b border-gray-200">
-            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Rank</th>
-            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Product</th>
-            <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+        <TableHeader className="border-b border-gray-200 bg-transparent">
+          <tr>
+            <TableHeaderCell className="font-semibold">Rank</TableHeaderCell>
+            <TableHeaderCell className="font-semibold">Product</TableHeaderCell>
+            <TableHeaderCell align="right" className="font-semibold">
               {sortBy === 'revenue' ? 'Revenue' : 'Units Sold'}
-            </th>
-            <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Orders</th>
-            <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Status</th>
+            </TableHeaderCell>
+            <TableHeaderCell align="right" className="font-semibold">
+              Orders
+            </TableHeaderCell>
+            <TableHeaderCell align="right" className="font-semibold">
+              Status
+            </TableHeaderCell>
           </tr>
-        </thead>
-        <tbody>
+        </TableHeader>
+        <TableBody className="divide-y-0">
           {data.map((product, index) => (
-            <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
-              <td className="px-4 py-4 text-sm text-gray-600">#{index + 1}</td>
-              <td className="px-4 py-4">
+            <TableRow key={product.id} className="border-b border-gray-100">
+              <TableCell className="py-4 text-sm text-gray-600">#{index + 1}</TableCell>
+              <TableCell className="py-4">
                 <Link
                   href={`/seller/products/${product.id}/edit`}
                   className="flex items-center gap-3 hover:opacity-80"
@@ -71,41 +85,31 @@ export default function BestSellersTable({ data, sortBy }: BestSellersTableProps
                   </div>
                   <div className="min-w-0">
                     <p className="truncate font-medium text-gray-900">{product.title}</p>
-                    <p className="text-sm text-gray-500">${product.price.toFixed(2)}</p>
+                    <p className="text-sm text-gray-500">{formatCurrency(product.price)}</p>
                   </div>
                 </Link>
-              </td>
-              <td className="px-4 py-4 text-right text-sm">
+              </TableCell>
+              <TableCell align="right" className="py-4 text-sm">
                 {sortBy === 'revenue' ? (
                   <span className="font-semibold text-gray-900">
-                    $
-                    {product.revenue.toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    {formatCurrency(product.revenue, { useLocale: true })}
                   </span>
                 ) : (
-                  <span className="font-semibold text-gray-900">{product.unitsSold} units</span>
+                  <span className="font-semibold text-gray-900">
+                    {formatNumber(product.unitsSold)} units
+                  </span>
                 )}
-              </td>
-              <td className="px-4 py-4 text-right text-sm text-gray-600">{product.orderCount}</td>
-              <td className="px-4 py-4 text-right">
-                <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    product.status === 'ACTIVE'
-                      ? 'bg-green-100 text-green-800'
-                      : product.status === 'DRAFT'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-gray-100 text-gray-800'
-                  }`}
-                >
-                  {product.status}
-                </span>
-              </td>
-            </tr>
+              </TableCell>
+              <TableCell align="right" className="py-4 text-sm text-gray-600">
+                {product.orderCount}
+              </TableCell>
+              <TableCell align="right" className="py-4">
+                <StatusBadge status={product.status} />
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
+        </TableBody>
       </table>
-    </div>
+    </TableContainer>
   );
 }
