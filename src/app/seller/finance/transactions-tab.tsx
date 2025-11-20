@@ -4,6 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/status-badge';
+import {
+  TableContainer,
+  TableHeader,
+  TableHeaderCell,
+  TableBody,
+  TableRow,
+  TableCell,
+  EmptyState,
+} from '@/components/ui/table';
 import { formatCurrency } from '@/lib/format';
 import { format } from 'date-fns';
 import { Download } from 'lucide-react';
@@ -51,76 +60,60 @@ export default function TransactionsTab({ transactions }: TransactionsTabProps) 
         </CardHeader>
         <CardContent>
           {transactions.length === 0 ? (
-            <div className="py-12 text-center">
-              <p className="text-gray-500">No transactions yet</p>
-              <p className="mt-2 text-sm text-gray-400">
-                Transactions will appear here when customers purchase from your shop
-              </p>
-            </div>
+            <EmptyState
+              title="No transactions yet"
+              description="Transactions will appear here when customers purchase from your shop"
+            />
           ) : (
-            <div className="overflow-x-auto rounded-md border">
+            <TableContainer>
               <table className="w-full">
-                <thead className="border-b bg-gray-50">
+                <TableHeader>
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Order #
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Date</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Customer
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Gross</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Platform Fee
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Donation
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Net Payout
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Status
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Payout Status
-                    </th>
+                    <TableHeaderCell>Order #</TableHeaderCell>
+                    <TableHeaderCell>Date</TableHeaderCell>
+                    <TableHeaderCell>Customer</TableHeaderCell>
+                    <TableHeaderCell>Gross</TableHeaderCell>
+                    <TableHeaderCell>Platform Fee</TableHeaderCell>
+                    <TableHeaderCell>Donation</TableHeaderCell>
+                    <TableHeaderCell>Net Payout</TableHeaderCell>
+                    <TableHeaderCell>Status</TableHeaderCell>
+                    <TableHeaderCell>Payout Status</TableHeaderCell>
                   </tr>
-                </thead>
-                <tbody className="divide-y">
+                </TableHeader>
+                <TableBody>
                   {transactions.map((transaction) => (
-                    <tr key={transaction.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium">{transaction.orderNumber}</td>
-                      <td className="px-4 py-3 text-sm">
+                    <TableRow key={transaction.id}>
+                      <TableCell className="font-medium">{transaction.orderNumber}</TableCell>
+                      <TableCell className="text-sm">
                         {format(new Date(transaction.orderDate), 'MMM d, yyyy')}
-                      </td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell>
                         <div className="flex flex-col">
                           <span className="text-sm">{transaction.buyerName}</span>
                           <span className="text-xs text-gray-500">{transaction.buyerEmail}</span>
                         </div>
-                      </td>
-                      <td className="px-4 py-3 font-medium">
+                      </TableCell>
+                      <TableCell className="font-medium">
                         {formatCurrency(transaction.amount)}
-                      </td>
-                      <td className="px-4 py-3 text-red-600">
+                      </TableCell>
+                      <TableCell className="text-red-600">
                         -{formatCurrency(transaction.platformFee)}
-                      </td>
-                      <td className="px-4 py-3 text-green-600">
+                      </TableCell>
+                      <TableCell className="text-green-600">
                         -{formatCurrency(transaction.nonprofitDonation)}
-                      </td>
-                      <td className="px-4 py-3 font-semibold">
+                      </TableCell>
+                      <TableCell className="font-semibold">
                         {formatCurrency(transaction.sellerPayout)}
-                      </td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell>
                         <StatusBadge status={transaction.status} />
-                      </td>
-                      <td className="px-4 py-3">{getPayoutStatusBadge(transaction.payoutId)}</td>
-                    </tr>
+                      </TableCell>
+                      <TableCell>{getPayoutStatusBadge(transaction.payoutId)}</TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
+                </TableBody>
               </table>
-            </div>
+            </TableContainer>
           )}
         </CardContent>
       </Card>
