@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useTransition, useCallback } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import Image from 'next/image';
 import Link from 'next/link';
 import {
   Search,
@@ -12,8 +11,6 @@ import {
   DollarSign,
   Store,
   Calendar,
-  ChevronLeft,
-  ChevronRight,
   Plus,
   Pencil,
   Trash2,
@@ -28,6 +25,17 @@ import {
 } from '@/actions/admin-nonprofits';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { AvatarWithFallback } from '@/components/ui/avatar-with-fallback';
+import {
+  TableContainer,
+  TableHeader,
+  TableHeaderCell,
+  TableBody,
+  TableRow,
+  TableCell,
+  TablePagination,
+} from '@/components/ui/table';
+import { formatCurrency } from '@/lib/format';
 import {
   Select,
   SelectContent,
@@ -235,62 +243,56 @@ export function NonprofitsList() {
         ) : nonprofits.length === 0 ? (
           <div className="p-12 text-center text-gray-500">No nonprofits found</div>
         ) : (
-          <div className="overflow-x-auto">
+          <TableContainer className="border-0">
             <table className="w-full">
-              <thead className="border-b border-gray-200 bg-gray-50">
+              <TableHeader className="border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                  <TableHeaderCell className="px-6 py-3 text-xs font-semibold tracking-wider uppercase">
                     Nonprofit
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                  </TableHeaderCell>
+                  <TableHeaderCell className="px-6 py-3 text-xs font-semibold tracking-wider uppercase">
                     Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                  </TableHeaderCell>
+                  <TableHeaderCell className="px-6 py-3 text-xs font-semibold tracking-wider uppercase">
                     Total Donations
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                  </TableHeaderCell>
+                  <TableHeaderCell className="px-6 py-3 text-xs font-semibold tracking-wider uppercase">
                     Donations Count
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                  </TableHeaderCell>
+                  <TableHeaderCell className="px-6 py-3 text-xs font-semibold tracking-wider uppercase">
                     Shops Supporting
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                  </TableHeaderCell>
+                  <TableHeaderCell className="px-6 py-3 text-xs font-semibold tracking-wider uppercase">
                     Added
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                  </TableHeaderCell>
+                  <TableHeaderCell className="px-6 py-3 text-xs font-semibold tracking-wider uppercase">
                     Actions
-                  </th>
+                  </TableHeaderCell>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
+              </TableHeader>
+              <TableBody className="divide-y divide-gray-200">
                 {nonprofits.map((nonprofit) => (
-                  <tr key={nonprofit.id} className="hover:bg-gray-50">
+                  <TableRow key={nonprofit.id}>
                     {/* Nonprofit Info */}
-                    <td className="px-6 py-4">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        {nonprofit.logo ? (
-                          <Image
-                            src={nonprofit.logo}
-                            alt={nonprofit.name}
-                            width={40}
-                            height={40}
-                            className="size-10 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex size-10 items-center justify-center rounded-full bg-gray-100">
-                            <Heart className="size-5 text-gray-600" />
-                          </div>
-                        )}
+                        <AvatarWithFallback
+                          src={nonprofit.logo}
+                          alt={nonprofit.name}
+                          name={nonprofit.name}
+                          size="md"
+                          icon={Heart}
+                        />
                         <div className="max-w-xs">
                           <p className="font-medium text-gray-900">{nonprofit.name}</p>
                           <p className="truncate text-sm text-gray-600">{nonprofit.mission}</p>
                           <p className="text-xs text-gray-500">EIN: {nonprofit.ein}</p>
                         </div>
                       </div>
-                    </td>
+                    </TableCell>
 
                     {/* Verification Status */}
-                    <td className="px-6 py-4">
+                    <TableCell className="px-6 py-4">
                       {nonprofit.isVerified ? (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-800">
                           <CheckCircle className="size-3.5" />
@@ -302,40 +304,37 @@ export function NonprofitsList() {
                           Unverified
                         </span>
                       )}
-                    </td>
+                    </TableCell>
 
                     {/* Total Donations */}
-                    <td className="px-6 py-4">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-2 text-sm">
                         <DollarSign className="size-4 text-gray-400" />
                         <span className="font-semibold text-gray-900">
-                          $
-                          {nonprofit.totalDonations.toLocaleString('en-US', {
-                            minimumFractionDigits: 2,
-                          })}
+                          {formatCurrency(nonprofit.totalDonations)}
                         </span>
                       </div>
-                    </td>
+                    </TableCell>
 
                     {/* Donation Count */}
-                    <td className="px-6 py-4">
+                    <TableCell className="px-6 py-4">
                       <div className="text-sm">
                         <span className="font-semibold text-gray-900">
                           {nonprofit.donationCount}
                         </span>
                       </div>
-                    </td>
+                    </TableCell>
 
                     {/* Shops Supporting */}
-                    <td className="px-6 py-4">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-2 text-sm">
                         <Store className="size-4 text-gray-400" />
                         <span className="text-gray-900">{nonprofit.shopsSupporting}</span>
                       </div>
-                    </td>
+                    </TableCell>
 
                     {/* Added Date */}
-                    <td className="px-6 py-4">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Calendar className="size-4 text-gray-400" />
                         <span>
@@ -344,10 +343,10 @@ export function NonprofitsList() {
                           })}
                         </span>
                       </div>
-                    </td>
+                    </TableCell>
 
                     {/* Actions */}
-                    <td className="px-6 py-4">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         {/* Toggle Verification */}
                         <Button
@@ -384,42 +383,25 @@ export function NonprofitsList() {
                           <Trash2 className="size-4 text-red-600" />
                         </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
+              </TableBody>
             </table>
-          </div>
+          </TableContainer>
         )}
       </div>
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-6 py-4">
-          <div className="text-sm text-gray-600">
-            Page {pagination.page} of {pagination.totalPages}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1 || loading}
-            >
-              <ChevronLeft className="mr-1 size-4" />
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-              disabled={page === pagination.totalPages || loading}
-            >
-              Next
-              <ChevronRight className="ml-1 size-4" />
-            </Button>
-          </div>
-        </div>
+        <TablePagination
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          totalCount={pagination.totalCount}
+          pageSize={pagination.pageSize}
+          onPageChange={setPage}
+          loading={loading}
+        />
       )}
     </div>
   );

@@ -2,22 +2,22 @@
 
 import { useEffect, useState, useTransition, useCallback } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import Image from 'next/image';
-import {
-  Search,
-  User,
-  Store,
-  ShieldCheck,
-  Calendar,
-  ShoppingBag,
-  DollarSign,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
+import { Search, User, Store, ShieldCheck, Calendar, ShoppingBag, DollarSign } from 'lucide-react';
 import { getAllUsers, updateUserRole, type UserWithStats } from '@/actions/admin-users';
 import { Role } from '@/generated/prisma';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { AvatarWithFallback } from '@/components/ui/avatar-with-fallback';
+import {
+  TableContainer,
+  TableHeader,
+  TableHeaderCell,
+  TableBody,
+  TableRow,
+  TableCell,
+  TablePagination,
+} from '@/components/ui/table';
+import { formatCurrency } from '@/lib/format';
 import {
   Select,
   SelectContent,
@@ -193,66 +193,60 @@ export function UsersList() {
         ) : users.length === 0 ? (
           <div className="p-12 text-center text-gray-500">No users found</div>
         ) : (
-          <div className="overflow-x-auto">
+          <TableContainer className="border-0">
             <table className="w-full">
-              <thead className="border-b border-gray-200 bg-gray-50">
+              <TableHeader className="border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                  <TableHeaderCell className="px-6 py-3 text-xs font-semibold tracking-wider uppercase">
                     User
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                  </TableHeaderCell>
+                  <TableHeaderCell className="px-6 py-3 text-xs font-semibold tracking-wider uppercase">
                     Role
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                  </TableHeaderCell>
+                  <TableHeaderCell className="px-6 py-3 text-xs font-semibold tracking-wider uppercase">
                     Shop
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                  </TableHeaderCell>
+                  <TableHeaderCell className="px-6 py-3 text-xs font-semibold tracking-wider uppercase">
                     Orders
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                  </TableHeaderCell>
+                  <TableHeaderCell className="px-6 py-3 text-xs font-semibold tracking-wider uppercase">
                     Total Spent
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                  </TableHeaderCell>
+                  <TableHeaderCell className="px-6 py-3 text-xs font-semibold tracking-wider uppercase">
                     Joined
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                  </TableHeaderCell>
+                  <TableHeaderCell className="px-6 py-3 text-xs font-semibold tracking-wider uppercase">
                     Actions
-                  </th>
+                  </TableHeaderCell>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
+              </TableHeader>
+              <TableBody className="divide-y divide-gray-200">
                 {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                  <TableRow key={user.id}>
                     {/* User Info */}
-                    <td className="px-6 py-4">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        {user.avatar ? (
-                          <Image
-                            src={user.avatar}
-                            alt={user.name || user.email}
-                            width={40}
-                            height={40}
-                            className="size-10 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex size-10 items-center justify-center rounded-full bg-gray-200">
-                            <User className="size-5 text-gray-500" />
-                          </div>
-                        )}
+                        <AvatarWithFallback
+                          src={user.avatar}
+                          alt={user.name || user.email}
+                          name={user.name || user.email}
+                          size="md"
+                          icon={User}
+                        />
                         <div>
                           <p className="font-medium text-gray-900">{user.name || 'No name'}</p>
                           <p className="text-sm text-gray-600">{user.email}</p>
                         </div>
                       </div>
-                    </td>
+                    </TableCell>
 
                     {/* Role */}
-                    <td className="px-6 py-4">
+                    <TableCell className="px-6 py-4">
                       <RoleBadge role={user.role} />
-                    </td>
+                    </TableCell>
 
                     {/* Shop */}
-                    <td className="px-6 py-4">
+                    <TableCell className="px-6 py-4">
                       {user.shopName ? (
                         <div className="flex items-center gap-2 text-sm">
                           <Store className="size-4 text-gray-400" />
@@ -261,38 +255,36 @@ export function UsersList() {
                       ) : (
                         <span className="text-sm text-gray-400">—</span>
                       )}
-                    </td>
+                    </TableCell>
 
                     {/* Orders */}
-                    <td className="px-6 py-4">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-2 text-sm">
                         <ShoppingBag className="size-4 text-gray-400" />
                         <span className="text-gray-900">{user.ordersCount}</span>
                       </div>
-                    </td>
+                    </TableCell>
 
                     {/* Total Spent */}
-                    <td className="px-6 py-4">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-2 text-sm">
                         <DollarSign className="size-4 text-gray-400" />
-                        <span className="text-gray-900">
-                          ${user.totalSpent.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </span>
+                        <span className="text-gray-900">{formatCurrency(user.totalSpent)}</span>
                       </div>
-                    </td>
+                    </TableCell>
 
                     {/* Joined Date */}
-                    <td className="px-6 py-4">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Calendar className="size-4 text-gray-400" />
                         <span>
                           {formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
                         </span>
                       </div>
-                    </td>
+                    </TableCell>
 
                     {/* Actions */}
-                    <td className="px-6 py-4">
+                    <TableCell className="px-6 py-4">
                       <Select
                         value={user.role}
                         onValueChange={(value) => handleRoleChange(user.id, value as Role)}
@@ -307,42 +299,25 @@ export function UsersList() {
                           <SelectItem value="ADMIN">Admin</SelectItem>
                         </SelectContent>
                       </Select>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
+              </TableBody>
             </table>
-          </div>
+          </TableContainer>
         )}
       </div>
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-6 py-4">
-          <div className="text-sm text-gray-600">
-            Page {pagination.page} of {pagination.totalPages}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1 || loading}
-            >
-              <ChevronLeft className="mr-1 size-4" />
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-              disabled={page === pagination.totalPages || loading}
-            >
-              Next
-              <ChevronRight className="ml-1 size-4" />
-            </Button>
-          </div>
-        </div>
+        <TablePagination
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          totalCount={pagination.totalCount}
+          pageSize={pagination.pageSize}
+          onPageChange={setPage}
+          loading={loading}
+        />
       )}
     </div>
   );
