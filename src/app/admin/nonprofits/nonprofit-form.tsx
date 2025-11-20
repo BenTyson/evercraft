@@ -67,7 +67,7 @@ const validationSchema: ValidationSchema<FormData> = {
 
 export function NonprofitForm({ nonprofit }: NonprofitFormProps) {
   const router = useRouter();
-  const { isSubmitting, error, setError, handleSubmit } = useFormSubmission({
+  const { isSubmitting, error, handleSubmit } = useFormSubmission({
     onSuccess: () => {
       router.push('/admin/nonprofits');
       router.refresh();

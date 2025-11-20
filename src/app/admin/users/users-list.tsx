@@ -5,7 +5,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { Search, User, Store, ShieldCheck, Calendar, ShoppingBag, DollarSign } from 'lucide-react';
 import { getAllUsers, updateUserRole, type UserWithStats } from '@/actions/admin-users';
 import { Role } from '@/generated/prisma';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AvatarWithFallback } from '@/components/ui/avatar-with-fallback';
 import {

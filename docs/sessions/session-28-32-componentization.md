@@ -572,3 +572,11 @@ const tabs: Tab<TabId>[] = [
 - Session 30: `feat: Form Components & Validation System - Reusable Form Infrastructure`
 - Session 31: `feat: Form Migration - Section & Address Forms`
 - Session 32: `feat: Form Migration - Review & Promotion Forms`
+
+---
+
+## Next Steps
+
+**Continued in:** [Session 33 - Table Componentization](./session-33-table-componentization.md)
+
+Session 33 completes the componentization effort by creating 8 table utility components and migrating 11 tables, eliminating an additional ~500 lines of duplicate code.

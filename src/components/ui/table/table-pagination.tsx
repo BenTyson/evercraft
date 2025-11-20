@@ -42,8 +42,6 @@ interface TablePaginationProps {
 export function TablePagination({
   currentPage,
   totalPages,
-  totalCount,
-  pageSize,
   onPageChange,
   loading = false,
   className,
