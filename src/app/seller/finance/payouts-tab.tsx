@@ -1,10 +1,20 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { StatusBadge } from '@/components/ui/status-badge';
+import {
+  TableContainer,
+  TableHeader,
+  TableHeaderCell,
+  TableBody,
+  TableRow,
+  TableCell,
+  EmptyState,
+} from '@/components/ui/table';
+import { formatCurrency } from '@/lib/format';
 import { format } from 'date-fns';
 import { Download, ExternalLink } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 interface Payout {
   id: string;
@@ -22,21 +32,6 @@ interface PayoutsTabProps {
 }
 
 export default function PayoutsTab({ payouts }: PayoutsTabProps) {
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'paid':
-        return <Badge variant="default">Paid</Badge>;
-      case 'pending':
-        return <Badge variant="secondary">Pending</Badge>;
-      case 'processing':
-        return <Badge variant="outline">Processing</Badge>;
-      case 'failed':
-        return <Badge variant="destructive">Failed</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
   return (
     <div className="space-y-6">
       <Card>
@@ -54,64 +49,52 @@ export default function PayoutsTab({ payouts }: PayoutsTabProps) {
         </CardHeader>
         <CardContent>
           {payouts.length === 0 ? (
-            <div className="py-12 text-center">
-              <p className="text-gray-500">No payouts yet</p>
-              <p className="mt-2 text-sm text-gray-400">
-                Payouts are processed weekly every Monday
-              </p>
-            </div>
+            <EmptyState
+              title="No payouts yet"
+              description="Payouts are processed weekly every Monday"
+            />
           ) : (
-            <div className="overflow-x-auto">
+            <TableContainer>
               <table className="w-full">
-                <thead className="border-b">
+                <TableHeader>
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Date</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Period
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Orders
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Amount
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Status
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Paid On
-                    </th>
-                    <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
-                      Actions
-                    </th>
+                    <TableHeaderCell>Date</TableHeaderCell>
+                    <TableHeaderCell>Period</TableHeaderCell>
+                    <TableHeaderCell>Orders</TableHeaderCell>
+                    <TableHeaderCell>Amount</TableHeaderCell>
+                    <TableHeaderCell>Status</TableHeaderCell>
+                    <TableHeaderCell>Paid On</TableHeaderCell>
+                    <TableHeaderCell align="right">Actions</TableHeaderCell>
                   </tr>
-                </thead>
-                <tbody className="divide-y">
+                </TableHeader>
+                <TableBody>
                   {payouts.map((payout) => (
-                    <tr key={payout.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium">
+                    <TableRow key={payout.id}>
+                      <TableCell className="font-medium">
                         {format(new Date(payout.createdAt), 'MMM d, yyyy')}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">
                         {format(new Date(payout.periodStart), 'MMM d')} -{' '}
                         {format(new Date(payout.periodEnd), 'MMM d, yyyy')}
-                      </td>
-                      <td className="px-4 py-3">{payout.transactionCount}</td>
-                      <td className="px-4 py-3 font-medium">${payout.amount.toFixed(2)}</td>
-                      <td className="px-4 py-3">{getStatusBadge(payout.status)}</td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell>{payout.transactionCount}</TableCell>
+                      <TableCell className="font-medium">{formatCurrency(payout.amount)}</TableCell>
+                      <TableCell>
+                        <StatusBadge status={payout.status} />
+                      </TableCell>
+                      <TableCell>
                         {payout.paidAt ? format(new Date(payout.paidAt), 'MMM d, yyyy') : '-'}
-                      </td>
-                      <td className="px-4 py-3 text-right">
+                      </TableCell>
+                      <TableCell align="right">
                         <Button variant="ghost" size="sm">
                           <ExternalLink className="h-4 w-4" />
                         </Button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
+                </TableBody>
               </table>
-            </div>
+            </TableContainer>
           )}
         </CardContent>
       </Card>

@@ -1,9 +1,19 @@
 'use client';
 
-import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { AvatarWithFallback } from '@/components/ui/avatar-with-fallback';
+import {
+  TableContainer,
+  TableHeader,
+  TableHeaderCell,
+  TableBody,
+  TableRow,
+  TableCell,
+  EmptyState,
+} from '@/components/ui/table';
+import { formatCurrency } from '@/lib/format';
 import { ExternalLink, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 
@@ -77,7 +87,9 @@ export default function AdminSellersTab({ sellers }: AdminSellersTabProps) {
             <CardTitle className="text-sm font-medium">Total Available</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${platformTotals.totalAvailable.toFixed(2)}</div>
+            <div className="text-2xl font-bold">
+              {formatCurrency(platformTotals.totalAvailable)}
+            </div>
             <p className="text-muted-foreground mt-1 text-xs">Across all sellers</p>
           </CardContent>
         </Card>
@@ -87,7 +99,7 @@ export default function AdminSellersTab({ sellers }: AdminSellersTabProps) {
             <CardTitle className="text-sm font-medium">Total Earned</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${platformTotals.totalEarned.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(platformTotals.totalEarned)}</div>
             <p className="text-muted-foreground mt-1 text-xs">All time platform-wide</p>
           </CardContent>
         </Card>
@@ -97,7 +109,7 @@ export default function AdminSellersTab({ sellers }: AdminSellersTabProps) {
             <CardTitle className="text-sm font-medium">Total Paid Out</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${platformTotals.totalPaidOut.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(platformTotals.totalPaidOut)}</div>
             <p className="text-muted-foreground mt-1 text-xs">To seller accounts</p>
           </CardContent>
         </Card>
@@ -132,103 +144,81 @@ export default function AdminSellersTab({ sellers }: AdminSellersTabProps) {
         </CardHeader>
         <CardContent>
           {sellers.length === 0 ? (
-            <div className="py-12 text-center">
-              <p className="text-gray-500">No sellers yet</p>
-              <p className="mt-2 text-sm text-gray-400">
-                Sellers will appear here once they complete onboarding
-              </p>
-            </div>
+            <EmptyState
+              title="No sellers yet"
+              description="Sellers will appear here once they complete onboarding"
+            />
           ) : (
-            <div className="overflow-x-auto rounded-md border">
+            <TableContainer>
               <table className="w-full">
-                <thead className="border-b bg-gray-50">
+                <TableHeader>
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Shop</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Available
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Pending
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Total Earned
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Paid Out
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Payouts
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Stripe Status
-                    </th>
-                    <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
-                      Actions
-                    </th>
+                    <TableHeaderCell>Shop</TableHeaderCell>
+                    <TableHeaderCell>Available</TableHeaderCell>
+                    <TableHeaderCell>Pending</TableHeaderCell>
+                    <TableHeaderCell>Total Earned</TableHeaderCell>
+                    <TableHeaderCell>Paid Out</TableHeaderCell>
+                    <TableHeaderCell>Payouts</TableHeaderCell>
+                    <TableHeaderCell>Stripe Status</TableHeaderCell>
+                    <TableHeaderCell align="right">Actions</TableHeaderCell>
                   </tr>
-                </thead>
-                <tbody className="divide-y">
+                </TableHeader>
+                <TableBody>
                   {sortedSellers.map((seller) => (
-                    <tr key={seller.shopId} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">
+                    <TableRow key={seller.shopId}>
+                      <TableCell>
                         <div className="flex items-center gap-3">
-                          {seller.shopLogo ? (
-                            <div className="relative h-10 w-10 overflow-hidden rounded-full">
-                              <Image
-                                src={seller.shopLogo}
-                                alt={seller.shopName}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                          ) : (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
-                              <span className="text-sm font-medium text-gray-600">
-                                {seller.shopName.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                          )}
+                          <AvatarWithFallback
+                            src={seller.shopLogo}
+                            alt={seller.shopName}
+                            name={seller.shopName}
+                            size="md"
+                          />
                           <div>
                             <p className="font-medium text-gray-900">{seller.shopName}</p>
                             <p className="text-xs text-gray-500">{seller.ownerEmail}</p>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell>
                         <span className="font-semibold text-green-600">
-                          ${seller.availableBalance.toFixed(2)}
+                          {formatCurrency(seller.availableBalance)}
                         </span>
-                      </td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell>
                         <span className="font-medium text-yellow-600">
-                          ${seller.pendingBalance.toFixed(2)}
+                          {formatCurrency(seller.pendingBalance)}
                         </span>
-                      </td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell>
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold">${seller.totalEarned.toFixed(2)}</span>
+                          <span className="font-semibold">
+                            {formatCurrency(seller.totalEarned)}
+                          </span>
                           {seller.totalEarned > 0 && (
                             <TrendingUp className="h-4 w-4 text-green-600" />
                           )}
                         </div>
-                      </td>
-                      <td className="px-4 py-3 text-gray-600">${seller.totalPaidOut.toFixed(2)}</td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell className="text-gray-600">
+                        {formatCurrency(seller.totalPaidOut)}
+                      </TableCell>
+                      <TableCell>
                         <Badge variant="outline">{seller.payoutCount}</Badge>
-                      </td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell>
                         {getStripeStatusBadge(seller.stripeStatus, seller.payoutsEnabled)}
-                      </td>
-                      <td className="px-4 py-3 text-right">
+                      </TableCell>
+                      <TableCell align="right">
                         <Button variant="ghost" size="sm" title="View seller details">
                           <ExternalLink className="h-4 w-4" />
                         </Button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
+                </TableBody>
               </table>
-            </div>
+            </TableContainer>
           )}
         </CardContent>
       </Card>

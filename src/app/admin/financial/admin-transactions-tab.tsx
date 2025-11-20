@@ -1,9 +1,20 @@
 'use client';
 
-import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { AvatarWithFallback } from '@/components/ui/avatar-with-fallback';
+import {
+  TableContainer,
+  TableHeader,
+  TableHeaderCell,
+  TableBody,
+  TableRow,
+  TableCell,
+  EmptyState,
+} from '@/components/ui/table';
+import { formatCurrency } from '@/lib/format';
 import { format } from 'date-fns';
 import { Download } from 'lucide-react';
 
@@ -31,21 +42,6 @@ interface AdminTransactionsTabProps {
 }
 
 export default function AdminTransactionsTab({ transactions }: AdminTransactionsTabProps) {
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'PAID':
-        return <Badge variant="default">Paid</Badge>;
-      case 'PENDING':
-        return <Badge variant="secondary">Pending</Badge>;
-      case 'FAILED':
-        return <Badge variant="destructive">Failed</Badge>;
-      case 'REFUNDED':
-        return <Badge variant="outline">Refunded</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
   const getPayoutBadge = (payoutId: string | null, payoutStatus?: string) => {
     if (!payoutId) {
       return <Badge variant="outline">Upcoming</Badge>;
@@ -82,19 +78,23 @@ export default function AdminTransactionsTab({ transactions }: AdminTransactions
           </div>
           <div className="flex items-center justify-between border-b pb-2">
             <span className="text-muted-foreground">Total Gross Revenue:</span>
-            <span className="font-medium">${summary.totalGross.toFixed(2)}</span>
+            <span className="font-medium">{formatCurrency(summary.totalGross)}</span>
           </div>
           <div className="flex items-center justify-between border-b pb-2">
             <span className="text-muted-foreground">Total Platform Fees:</span>
-            <span className="text-forest-dark font-medium">${summary.totalFees.toFixed(2)}</span>
+            <span className="text-forest-dark font-medium">
+              {formatCurrency(summary.totalFees)}
+            </span>
           </div>
           <div className="flex items-center justify-between border-b pb-2">
             <span className="text-muted-foreground">Total Nonprofit Donations:</span>
-            <span className="font-medium text-green-600">${summary.totalDonations.toFixed(2)}</span>
+            <span className="font-medium text-green-600">
+              {formatCurrency(summary.totalDonations)}
+            </span>
           </div>
           <div className="flex items-center justify-between pt-2">
             <span className="font-semibold">Total Seller Payouts:</span>
-            <span className="text-lg font-bold">${summary.totalNet.toFixed(2)}</span>
+            <span className="text-lg font-bold">{formatCurrency(summary.totalNet)}</span>
           </div>
         </CardContent>
       </Card>
@@ -117,96 +117,74 @@ export default function AdminTransactionsTab({ transactions }: AdminTransactions
         </CardHeader>
         <CardContent>
           {transactions.length === 0 ? (
-            <div className="py-12 text-center">
-              <p className="text-gray-500">No transactions yet</p>
-              <p className="mt-2 text-sm text-gray-400">
-                Transactions will appear here when customers make purchases
-              </p>
-            </div>
+            <EmptyState
+              title="No transactions yet"
+              description="Transactions will appear here when customers make purchases"
+            />
           ) : (
-            <div className="overflow-x-auto rounded-md border">
+            <TableContainer>
               <table className="w-full">
-                <thead className="border-b bg-gray-50">
+                <TableHeader>
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Order #
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Date</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Shop</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Customer
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Gross</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Platform Fee
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Donation
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Seller Net
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Status
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Payout Status
-                    </th>
+                    <TableHeaderCell>Order #</TableHeaderCell>
+                    <TableHeaderCell>Date</TableHeaderCell>
+                    <TableHeaderCell>Shop</TableHeaderCell>
+                    <TableHeaderCell>Customer</TableHeaderCell>
+                    <TableHeaderCell>Gross</TableHeaderCell>
+                    <TableHeaderCell>Platform Fee</TableHeaderCell>
+                    <TableHeaderCell>Donation</TableHeaderCell>
+                    <TableHeaderCell>Seller Net</TableHeaderCell>
+                    <TableHeaderCell>Status</TableHeaderCell>
+                    <TableHeaderCell>Payout Status</TableHeaderCell>
                   </tr>
-                </thead>
-                <tbody className="divide-y">
+                </TableHeader>
+                <TableBody>
                   {transactions.map((transaction) => (
-                    <tr key={transaction.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium">{transaction.orderNumber}</td>
-                      <td className="px-4 py-3 text-sm">
+                    <TableRow key={transaction.id}>
+                      <TableCell className="font-medium">{transaction.orderNumber}</TableCell>
+                      <TableCell className="text-sm">
                         {format(new Date(transaction.createdAt), 'MMM d, yyyy')}
-                      </td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell>
                         <div className="flex items-center gap-2">
-                          {transaction.shopLogo ? (
-                            <div className="relative h-6 w-6 overflow-hidden rounded-full">
-                              <Image
-                                src={transaction.shopLogo}
-                                alt={transaction.shopName}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                          ) : (
-                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200">
-                              <span className="text-xs font-medium text-gray-600">
-                                {transaction.shopName.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                          )}
+                          <AvatarWithFallback
+                            src={transaction.shopLogo}
+                            alt={transaction.shopName}
+                            name={transaction.shopName}
+                            size="sm"
+                          />
                           <span className="text-sm">{transaction.shopName}</span>
                         </div>
-                      </td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell>
                         <div className="flex flex-col">
                           <span className="text-sm">{transaction.buyerName}</span>
                           <span className="text-xs text-gray-500">{transaction.buyerEmail}</span>
                         </div>
-                      </td>
-                      <td className="px-4 py-3 font-medium">${transaction.amount.toFixed(2)}</td>
-                      <td className="text-forest-dark px-4 py-3">
-                        ${transaction.platformFee.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-3 text-green-600">
-                        ${transaction.nonprofitDonation.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-3 font-semibold">
-                        ${transaction.sellerPayout.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-3">{getStatusBadge(transaction.status)}</td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {formatCurrency(transaction.amount)}
+                      </TableCell>
+                      <TableCell className="text-forest-dark">
+                        {formatCurrency(transaction.platformFee)}
+                      </TableCell>
+                      <TableCell className="text-green-600">
+                        {formatCurrency(transaction.nonprofitDonation)}
+                      </TableCell>
+                      <TableCell className="font-semibold">
+                        {formatCurrency(transaction.sellerPayout)}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge status={transaction.status} />
+                      </TableCell>
+                      <TableCell>
                         {getPayoutBadge(transaction.payoutId, transaction.payoutStatus)}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
+                </TableBody>
               </table>
-            </div>
+            </TableContainer>
           )}
         </CardContent>
       </Card>

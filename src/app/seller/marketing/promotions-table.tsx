@@ -5,6 +5,16 @@ import { format } from 'date-fns';
 import { MoreVertical, Edit, Trash2, Power, PowerOff } from 'lucide-react';
 import { togglePromotionStatus, deletePromotion } from '@/actions/seller-promotions';
 import { useRouter } from 'next/navigation';
+import {
+  TableContainer,
+  TableHeader,
+  TableHeaderCell,
+  TableBody,
+  TableRow,
+  TableCell,
+  EmptyState,
+} from '@/components/ui/table';
+import { formatCurrency } from '@/lib/format';
 
 interface Promotion {
   id: string;
@@ -64,54 +74,51 @@ export default function PromotionsTable({ promotions, onEdit }: PromotionsTableP
 
   if (promotions.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center text-gray-500">
-        <div className="text-center">
-          <p className="text-lg font-medium">No promotions yet</p>
-          <p className="mt-1 text-sm">Create your first promotion to start offering discounts</p>
-        </div>
-      </div>
+      <EmptyState
+        title="No promotions yet"
+        description="Create your first promotion to start offering discounts"
+        className="flex h-64 items-center justify-center"
+      />
     );
   }
 
   return (
-    <div className="overflow-x-auto">
+    <TableContainer>
       <table className="w-full">
-        <thead>
-          <tr className="border-b border-gray-200">
-            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Code</th>
-            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Discount</th>
-            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Usage</th>
-            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-              Valid Period
-            </th>
-            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+        <TableHeader className="border-b border-gray-200 bg-transparent">
+          <tr>
+            <TableHeaderCell className="font-semibold">Code</TableHeaderCell>
+            <TableHeaderCell className="font-semibold">Discount</TableHeaderCell>
+            <TableHeaderCell className="font-semibold">Usage</TableHeaderCell>
+            <TableHeaderCell className="font-semibold">Valid Period</TableHeaderCell>
+            <TableHeaderCell className="font-semibold">Status</TableHeaderCell>
+            <TableHeaderCell className="font-semibold">Actions</TableHeaderCell>
           </tr>
-        </thead>
-        <tbody>
+        </TableHeader>
+        <TableBody className="divide-y-0">
           {promotions.map((promo) => (
-            <tr key={promo.id} className="border-b border-gray-100 hover:bg-gray-50">
-              <td className="px-4 py-4">
+            <TableRow key={promo.id} className="border-b border-gray-100">
+              <TableCell className="py-4">
                 <div>
                   <p className="font-mono font-semibold text-gray-900">{promo.code}</p>
                   <p className="mt-1 text-sm text-gray-600">{promo.description}</p>
                 </div>
-              </td>
-              <td className="px-4 py-4">
+              </TableCell>
+              <TableCell className="py-4">
                 <div>
                   <p className="font-semibold text-gray-900">
                     {promo.discountType === 'PERCENTAGE'
                       ? `${promo.discountValue}% off`
-                      : `$${promo.discountValue.toFixed(2)} off`}
+                      : `${formatCurrency(promo.discountValue)} off`}
                   </p>
                   {promo.minimumPurchase && (
                     <p className="text-sm text-gray-600">
-                      Min: ${promo.minimumPurchase.toFixed(2)}
+                      Min: {formatCurrency(promo.minimumPurchase)}
                     </p>
                   )}
                 </div>
-              </td>
-              <td className="px-4 py-4">
+              </TableCell>
+              <TableCell className="py-4">
                 <div>
                   <p className="font-semibold text-gray-900">
                     {promo.currentUses} {promo.maxUses ? `/ ${promo.maxUses}` : ''}
@@ -127,14 +134,14 @@ export default function PromotionsTable({ promotions, onEdit }: PromotionsTableP
                     </div>
                   )}
                 </div>
-              </td>
-              <td className="px-4 py-4">
+              </TableCell>
+              <TableCell className="py-4">
                 <p className="text-sm text-gray-600">
                   {format(new Date(promo.startDate), 'MMM d')} -{' '}
                   {format(new Date(promo.endDate), 'MMM d, yyyy')}
                 </p>
-              </td>
-              <td className="px-4 py-4">
+              </TableCell>
+              <TableCell className="py-4">
                 {promo.isExpired ? (
                   <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
                     Expired
@@ -148,8 +155,8 @@ export default function PromotionsTable({ promotions, onEdit }: PromotionsTableP
                     Inactive
                   </span>
                 )}
-              </td>
-              <td className="px-4 py-4">
+              </TableCell>
+              <TableCell className="py-4">
                 <div className="relative">
                   <button
                     onClick={() => setActionMenuOpen(actionMenuOpen === promo.id ? null : promo.id)}
@@ -198,11 +205,11 @@ export default function PromotionsTable({ promotions, onEdit }: PromotionsTableP
                     </div>
                   )}
                 </div>
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
+        </TableBody>
       </table>
-    </div>
+    </TableContainer>
   );
 }

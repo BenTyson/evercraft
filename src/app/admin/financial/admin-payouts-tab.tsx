@@ -1,9 +1,19 @@
 'use client';
 
-import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { AvatarWithFallback } from '@/components/ui/avatar-with-fallback';
+import {
+  TableContainer,
+  TableHeader,
+  TableHeaderCell,
+  TableBody,
+  TableRow,
+  TableCell,
+  EmptyState,
+} from '@/components/ui/table';
+import { formatCurrency } from '@/lib/format';
 import { format } from 'date-fns';
 import { Download, ExternalLink } from 'lucide-react';
 
@@ -30,21 +40,6 @@ interface AdminPayoutsTabProps {
 }
 
 export default function AdminPayoutsTab({ payouts }: AdminPayoutsTabProps) {
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'paid':
-        return <Badge variant="default">Paid</Badge>;
-      case 'pending':
-        return <Badge variant="secondary">Pending</Badge>;
-      case 'processing':
-        return <Badge variant="outline">Processing</Badge>;
-      case 'failed':
-        return <Badge variant="destructive">Failed</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
   // Calculate stats
   const stats = {
     total: payouts.length,
@@ -67,7 +62,7 @@ export default function AdminPayoutsTab({ payouts }: AdminPayoutsTabProps) {
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
             <p className="text-muted-foreground mt-1 text-xs">
-              ${stats.totalAmount.toFixed(2)} total
+              {formatCurrency(stats.totalAmount)} total
             </p>
           </CardContent>
         </Card>
@@ -79,7 +74,7 @@ export default function AdminPayoutsTab({ payouts }: AdminPayoutsTabProps) {
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{stats.paid}</div>
             <p className="text-muted-foreground mt-1 text-xs">
-              ${stats.paidAmount.toFixed(2)} paid out
+              {formatCurrency(stats.paidAmount)} paid out
             </p>
           </CardContent>
         </Card>
@@ -125,91 +120,67 @@ export default function AdminPayoutsTab({ payouts }: AdminPayoutsTabProps) {
         </CardHeader>
         <CardContent>
           {payouts.length === 0 ? (
-            <div className="py-12 text-center">
-              <p className="text-gray-500">No payouts yet</p>
-              <p className="mt-2 text-sm text-gray-400">
-                Payouts will appear here once sellers complete their first sales
-              </p>
-            </div>
+            <EmptyState
+              title="No payouts yet"
+              description="Payouts will appear here once sellers complete their first sales"
+            />
           ) : (
-            <div className="overflow-x-auto rounded-md border">
+            <TableContainer>
               <table className="w-full">
-                <thead className="border-b bg-gray-50">
+                <TableHeader>
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Date</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Seller
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Period
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Orders
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Amount
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Status
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Paid On
-                    </th>
-                    <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
-                      Actions
-                    </th>
+                    <TableHeaderCell>Date</TableHeaderCell>
+                    <TableHeaderCell>Seller</TableHeaderCell>
+                    <TableHeaderCell>Period</TableHeaderCell>
+                    <TableHeaderCell>Orders</TableHeaderCell>
+                    <TableHeaderCell>Amount</TableHeaderCell>
+                    <TableHeaderCell>Status</TableHeaderCell>
+                    <TableHeaderCell>Paid On</TableHeaderCell>
+                    <TableHeaderCell align="right">Actions</TableHeaderCell>
                   </tr>
-                </thead>
-                <tbody className="divide-y">
+                </TableHeader>
+                <TableBody>
                   {payouts.map((payout) => (
-                    <tr key={payout.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium">
+                    <TableRow key={payout.id}>
+                      <TableCell className="font-medium">
                         {format(new Date(payout.createdAt), 'MMM d, yyyy')}
-                      </td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell>
                         <div className="flex items-center gap-3">
-                          {payout.shopLogo ? (
-                            <div className="relative h-8 w-8 overflow-hidden rounded-full">
-                              <Image
-                                src={payout.shopLogo}
-                                alt={payout.shopName}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                          ) : (
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
-                              <span className="text-xs font-medium text-gray-600">
-                                {payout.shopName.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                          )}
+                          <AvatarWithFallback
+                            src={payout.shopLogo}
+                            alt={payout.shopName}
+                            name={payout.shopName}
+                            size="sm"
+                          />
                           <div>
                             <p className="font-medium text-gray-900">{payout.shopName}</p>
                             <p className="text-xs text-gray-500">{payout.ownerEmail}</p>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">
                         {format(new Date(payout.periodStart), 'MMM d')} -{' '}
                         {format(new Date(payout.periodEnd), 'MMM d, yyyy')}
-                      </td>
-                      <td className="px-4 py-3">{payout.transactionCount}</td>
-                      <td className="px-4 py-3 font-medium">${payout.amount.toFixed(2)}</td>
-                      <td className="px-4 py-3">{getStatusBadge(payout.status)}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
+                      </TableCell>
+                      <TableCell>{payout.transactionCount}</TableCell>
+                      <TableCell className="font-medium">{formatCurrency(payout.amount)}</TableCell>
+                      <TableCell>
+                        <StatusBadge status={payout.status} />
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">
                         {payout.paidAt ? format(new Date(payout.paidAt), 'MMM d, yyyy') : '-'}
-                      </td>
-                      <td className="px-4 py-3 text-right">
+                      </TableCell>
+                      <TableCell align="right">
                         <Button variant="ghost" size="sm" title="View details">
                           <ExternalLink className="h-4 w-4" />
                         </Button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
+                </TableBody>
               </table>
-            </div>
+            </TableContainer>
           )}
         </CardContent>
       </Card>
