@@ -64,7 +64,10 @@ export async function getAdminProducts() {
 /**
  * Update product status (admin only)
  */
-export async function updateProductStatus(productId: string, status: 'ACTIVE' | 'DRAFT' | 'ARCHIVED') {
+export async function updateProductStatus(
+  productId: string,
+  status: 'ACTIVE' | 'DRAFT' | 'ARCHIVED'
+) {
   try {
     const admin = await isAdmin();
 

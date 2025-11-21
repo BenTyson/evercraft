@@ -1,7 +1,7 @@
 # Evercraft Documentation Router
 
-**Last Updated:** November 18, 2025
-**Total Models:** 38 | **Total Routes:** 31 | **Status:** Session 32 Complete
+**Last Updated:** November 20, 2025 (Session 34)
+**Total Models:** 38 | **Total Routes:** 31 | **Status:** Session 34 Complete
 
 > **DOCUMENTATION POLICY:**
 >
@@ -9,6 +9,13 @@
 > - No new `.md` files may be created without explicit user approval
 > - Documentation must be optimized for Claude agent technical reference (concise, factual, development-focused)
 > - Focus: What exists, where it lives, how it's structured, what it does
+
+> **⚠️ CODE QUALITY (Session 34):**
+>
+> - **Pre-commit hooks enabled:** Husky + lint-staged automatically format code on every commit
+> - **No manual formatting needed:** ESLint and Prettier run automatically when you commit
+> - **Workflow:** Just write code and commit - formatting happens automatically
+> - **Config:** `.lintstagedrc.js` defines what runs, `.husky/pre-commit` triggers it
 
 ---
 

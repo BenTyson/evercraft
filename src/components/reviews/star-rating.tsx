@@ -56,27 +56,18 @@ export function StarRating({
             {isPartial ? (
               // Partial star with gradient
               <div className="relative">
-                <Star
-                  className={cn(sizeClasses[size], 'text-gray-300')}
-                  fill="currentColor"
-                />
+                <Star className={cn(sizeClasses[size], 'text-gray-300')} fill="currentColor" />
                 <div
                   className="absolute inset-0 overflow-hidden"
                   style={{ width: `${fillPercentage}%` }}
                 >
-                  <Star
-                    className={cn(sizeClasses[size], 'text-yellow-400')}
-                    fill="currentColor"
-                  />
+                  <Star className={cn(sizeClasses[size], 'text-yellow-400')} fill="currentColor" />
                 </div>
               </div>
             ) : (
               // Full or empty star
               <Star
-                className={cn(
-                  sizeClasses[size],
-                  isFilled ? 'text-yellow-400' : 'text-gray-300'
-                )}
+                className={cn(sizeClasses[size], isFilled ? 'text-yellow-400' : 'text-gray-300')}
                 fill="currentColor"
               />
             )}
@@ -84,9 +75,7 @@ export function StarRating({
         );
       })}
       {showNumber && (
-        <span className="text-muted-foreground ml-1 text-sm font-medium">
-          {rating.toFixed(1)}
-        </span>
+        <span className="text-muted-foreground ml-1 text-sm font-medium">{rating.toFixed(1)}</span>
       )}
     </div>
   );

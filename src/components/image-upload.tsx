@@ -58,7 +58,7 @@ export function ImageUpload({ value, onChange, maxImages = 4, disabled }: ImageU
               key={url}
               className={cn(
                 'relative aspect-square overflow-hidden rounded-lg border',
-                index === 0 && 'ring-2 ring-eco-dark ring-offset-2'
+                index === 0 && 'ring-eco-dark ring-2 ring-offset-2'
               )}
             >
               <Image src={url} alt={`Product image ${index + 1}`} fill className="object-cover" />
@@ -71,7 +71,7 @@ export function ImageUpload({ value, onChange, maxImages = 4, disabled }: ImageU
                 <X className="size-4" />
               </button>
               {index === 0 && (
-                <div className="absolute bottom-2 left-2 rounded bg-eco-dark px-2 py-1 text-xs font-semibold text-white">
+                <div className="bg-eco-dark absolute bottom-2 left-2 rounded px-2 py-1 text-xs font-semibold text-white">
                   Primary
                 </div>
               )}

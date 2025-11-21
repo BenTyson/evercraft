@@ -1089,7 +1089,9 @@ export async function getCategoryAnalytics() {
 
     orderItems.forEach((item) => {
       const categoryId = item.product.categoryId;
-      const categoryName = categoryId ? categoryMap.get(categoryId) || 'Uncategorized' : 'Uncategorized';
+      const categoryName = categoryId
+        ? categoryMap.get(categoryId) || 'Uncategorized'
+        : 'Uncategorized';
       const existing = revenueByCategory.get(categoryName);
       const itemRevenue = item.subtotal;
 
@@ -1103,7 +1105,9 @@ export async function getCategoryAnalytics() {
 
     // Combine data
     const categoryData = productsByCategory.map((item) => {
-      const categoryName = item.categoryId ? categoryMap.get(item.categoryId) || 'Uncategorized' : 'Uncategorized';
+      const categoryName = item.categoryId
+        ? categoryMap.get(item.categoryId) || 'Uncategorized'
+        : 'Uncategorized';
       const revenueData = revenueByCategory.get(categoryName);
 
       return {

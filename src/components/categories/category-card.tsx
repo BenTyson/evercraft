@@ -60,8 +60,8 @@ export function CategoryCard({ category, showSubcategories = true, className }: 
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
           ) : (
-            <div className="flex h-full items-center justify-center bg-gradient-to-br from-eco-light/30 to-eco-light/10">
-              <Package className="size-16 text-forest-dark/20" />
+            <div className="from-eco-light/30 to-eco-light/10 flex h-full items-center justify-center bg-gradient-to-br">
+              <Package className="text-forest-dark/20 size-16" />
             </div>
           )}
 
@@ -78,7 +78,7 @@ export function CategoryCard({ category, showSubcategories = true, className }: 
 
         {/* Category Name on Image (if image exists) */}
         {hasImage && (
-          <div className="absolute bottom-16 left-0 right-0 p-4">
+          <div className="absolute right-0 bottom-16 left-0 p-4">
             <h3 className="text-xl font-bold text-white drop-shadow-lg">{category.name}</h3>
           </div>
         )}
@@ -89,7 +89,7 @@ export function CategoryCard({ category, showSubcategories = true, className }: 
         {/* Category Name (if no image) */}
         {!hasImage && (
           <Link href={`/browse?categoryIds=${category.id}`}>
-            <h3 className="mb-2 text-xl font-bold text-neutral-900 transition-colors hover:text-forest-dark">
+            <h3 className="hover:text-forest-dark mb-2 text-xl font-bold text-neutral-900 transition-colors">
               {category.name}
             </h3>
           </Link>
@@ -103,7 +103,7 @@ export function CategoryCard({ category, showSubcategories = true, className }: 
         {/* Subcategories */}
         {showSubcategories && hasSubcategories && (
           <div className="mb-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+            <p className="mb-2 text-xs font-semibold tracking-wide text-neutral-500 uppercase">
               Subcategories
             </p>
             <div className="flex flex-wrap gap-1.5">

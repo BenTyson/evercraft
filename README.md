@@ -88,10 +88,17 @@ npm run dev
 
 ### Code Quality
 
+> **⚠️ Pre-Commit Hooks Enabled:** Code is automatically linted and formatted on every commit via Husky + lint-staged. No manual formatting needed!
+
 - `npm run lint` - Run ESLint
 - `npm run lint:fix` - Fix ESLint errors
-- `npm run format` - Format code with Prettier
+- `npm run format` - Format code with Prettier (runs automatically on commit)
 - `npm run format:check` - Check formatting
+
+**What runs on commit:**
+- ESLint auto-fix on staged TypeScript/JavaScript files
+- Prettier formatting on all staged files
+- Only properly formatted code is committed
 
 ### Testing
 

@@ -52,7 +52,9 @@ async function makeAdmin() {
     });
 
     console.log(`\n🎉 Successfully promoted ${email} to ADMIN!`);
-    console.log('\n⚠️  Important: The user must sign out and sign back in for the change to take effect.');
+    console.log(
+      '\n⚠️  Important: The user must sign out and sign back in for the change to take effect.'
+    );
     console.log('\nYou can now access the admin panel at: http://localhost:4000/admin');
   } catch (error) {
     console.error('\n❌ Error:', error);

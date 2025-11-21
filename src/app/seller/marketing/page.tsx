@@ -136,9 +136,8 @@ export default async function SellerMarketingPage() {
 
             <PromotionsTable
               promotions={promotions}
-              onEdit={(promo) => {
+              onEdit={() => {
                 // This will be handled by the wrapper component
-                console.log('Edit promotion:', promo);
               }}
             />
           </div>

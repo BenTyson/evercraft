@@ -1,12 +1,31 @@
+# Build outputs
 .next
-node_modules
 out
 dist
 build
+
+# Dependencies
+node_modules
+
+# Test coverage
 coverage
+
+# Generated files
+src/generated/
+*.d.ts
+next-env.d.ts
+
+# Public assets
 public
+
+# Environment files
 .env
 .env.*
+
+# Lock files
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
+
+# Documentation
+*.md

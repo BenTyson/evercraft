@@ -47,17 +47,12 @@ export function ProductsList({ products: initialProducts }: ProductsListProps) {
   const filteredProducts =
     filter === 'ALL' ? products : products.filter((p) => p.status === filter);
 
-  const handleStatusChange = async (
-    productId: string,
-    status: 'ACTIVE' | 'DRAFT' | 'ARCHIVED'
-  ) => {
+  const handleStatusChange = async (productId: string, status: 'ACTIVE' | 'DRAFT' | 'ARCHIVED') => {
     setProcessingId(productId);
     const result = await updateProductStatus(productId, status);
 
     if (result.success) {
-      setProducts((prev) =>
-        prev.map((p) => (p.id === productId ? { ...p, status } : p))
-      );
+      setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, status } : p)));
       router.refresh();
     } else {
       alert(result.error || 'Failed to update product status');
@@ -105,22 +100,13 @@ export function ProductsList({ products: initialProducts }: ProductsListProps) {
         <FilterButton active={filter === 'ALL'} onClick={() => setFilter('ALL')}>
           All ({products.length})
         </FilterButton>
-        <FilterButton
-          active={filter === 'ACTIVE'}
-          onClick={() => setFilter('ACTIVE')}
-        >
+        <FilterButton active={filter === 'ACTIVE'} onClick={() => setFilter('ACTIVE')}>
           Active ({products.filter((p) => p.status === 'ACTIVE').length})
         </FilterButton>
-        <FilterButton
-          active={filter === 'DRAFT'}
-          onClick={() => setFilter('DRAFT')}
-        >
+        <FilterButton active={filter === 'DRAFT'} onClick={() => setFilter('DRAFT')}>
           Draft ({products.filter((p) => p.status === 'DRAFT').length})
         </FilterButton>
-        <FilterButton
-          active={filter === 'ARCHIVED'}
-          onClick={() => setFilter('ARCHIVED')}
-        >
+        <FilterButton active={filter === 'ARCHIVED'} onClick={() => setFilter('ARCHIVED')}>
           Archived ({products.filter((p) => p.status === 'ARCHIVED').length})
         </FilterButton>
       </div>
@@ -129,14 +115,11 @@ export function ProductsList({ products: initialProducts }: ProductsListProps) {
       <div className="space-y-4">
         {filteredProducts.length > 0 ? (
           filteredProducts.map((product) => (
-            <div
-              key={product.id}
-              className="bg-white rounded-lg border border-gray-200 p-6"
-            >
+            <div key={product.id} className="rounded-lg border border-gray-200 bg-white p-6">
               <div className="flex gap-6">
                 {/* Product Image */}
                 <div className="flex-shrink-0">
-                  <div className="relative w-32 h-32 bg-gray-100 rounded-lg overflow-hidden">
+                  <div className="relative h-32 w-32 overflow-hidden rounded-lg bg-gray-100">
                     {product.images[0] ? (
                       <Image
                         src={product.images[0].url}
@@ -146,7 +129,7 @@ export function ProductsList({ products: initialProducts }: ProductsListProps) {
                         sizes="128px"
                       />
                     ) : (
-                      <div className="flex items-center justify-center h-full text-gray-400">
+                      <div className="flex h-full items-center justify-center text-gray-400">
                         No image
                       </div>
                     )}
@@ -155,9 +138,9 @@ export function ProductsList({ products: initialProducts }: ProductsListProps) {
 
                 {/* Product Info */}
                 <div className="flex-1">
-                  <div className="flex items-start justify-between mb-2">
+                  <div className="mb-2 flex items-start justify-between">
                     <div>
-                      <div className="flex items-center gap-3 mb-1">
+                      <div className="mb-1 flex items-center gap-3">
                         <h3 className="text-lg font-bold">{product.title}</h3>
                         <span
                           className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadge(product.status)}`}
@@ -182,20 +165,16 @@ export function ProductsList({ products: initialProducts }: ProductsListProps) {
                     </Link>
                   </div>
 
-                  <p className="text-sm text-gray-700 mb-4 line-clamp-2">
-                    {product.description}
-                  </p>
+                  <p className="mb-4 line-clamp-2 text-sm text-gray-700">{product.description}</p>
 
                   <div className="flex items-center gap-3 text-sm text-gray-500">
                     <span>{product._count.reviews} reviews</span>
                     <span>•</span>
-                    <span>
-                      Listed {new Date(product.createdAt).toLocaleDateString()}
-                    </span>
+                    <span>Listed {new Date(product.createdAt).toLocaleDateString()}</span>
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-3 mt-4">
+                  <div className="mt-4 flex gap-3">
                     {product.status !== 'ACTIVE' && (
                       <Button
                         size="sm"
@@ -264,9 +243,7 @@ export function ProductsList({ products: initialProducts }: ProductsListProps) {
             </div>
           ))
         ) : (
-          <div className="text-center py-12 text-gray-500">
-            No products found
-          </div>
+          <div className="py-12 text-center text-gray-500">No products found</div>
         )}
       </div>
     </div>
@@ -285,10 +262,10 @@ function FilterButton({
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+      className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
         active
           ? 'bg-[#2D6A4F] text-white hover:bg-[#1B4332]'
-          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+          : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
       }`}
     >
       {children}
