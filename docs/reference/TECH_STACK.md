@@ -1,6 +1,6 @@
 # Technology Stack
 
-**Last Updated:** October 7, 2025
+**Last Updated:** November 23, 2025 (Session 35 - Testing)
 
 ---
 
@@ -79,6 +79,21 @@ Evercraft is built with modern, scalable technologies prioritizing performance, 
 - **React Context** (component state)
   - Built-in, no additional library
   - Good for auth, theme, etc.
+
+### Testing
+
+- **Vitest 3.2.4** ✅ Implemented (Session 35)
+  - Fast, Vite-native test runner
+  - Jest-compatible API
+  - 279 tests across 12 files
+  - Commands: `npm test`, `npm run test:ui`, `npm run test:coverage`
+
+- **React Testing Library 16.3.0**
+  - Component testing with user-centric queries
+  - userEvent for realistic interactions
+
+- **vitest-mock-extended**
+  - Type-safe Prisma mocking for server action tests
 
 ### Utility Libraries
 

@@ -1,7 +1,7 @@
 # Evercraft Documentation Router
 
-**Last Updated:** November 20, 2025 (Session 34)
-**Total Models:** 38 | **Total Routes:** 31 | **Status:** Session 34 Complete
+**Last Updated:** November 23, 2025 (Session 35)
+**Total Models:** 38 | **Total Routes:** 31 | **Tests:** 279 | **Status:** Session 35 Complete
 
 > **DOCUMENTATION POLICY:**
 >
@@ -16,6 +16,14 @@
 > - **No manual formatting needed:** ESLint and Prettier run automatically when you commit
 > - **Workflow:** Just write code and commit - formatting happens automatically
 > - **Config:** `.lintstagedrc.js` defines what runs, `.husky/pre-commit` triggers it
+
+> **🧪 TESTING (Session 35):**
+>
+> - **279 tests** across 12 test files (Vitest + React Testing Library)
+> - **Commands:** `npm test` (run), `npm run test:ui` (interactive), `npm run test:coverage`
+> - **Colocated tests:** `*.test.ts` next to source files
+> - **Mocks:** `src/test/mocks/db.ts` (Prisma), `vitest.setup.ts` (router, Clerk auth)
+> - **Factories:** `src/test/factories.ts` (createMockProduct, createMockShop, etc.)
 
 ---
 
