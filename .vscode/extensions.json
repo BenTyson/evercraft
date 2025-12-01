@@ -1,0 +1,25 @@
+{
+  "recommendations": [
+    // Testing
+    "vitest.explorer", // Vitest test runner with inline results
+    "playwright.playwright", // Playwright E2E test runner
+
+    // Code Quality
+    "dbaeumer.vscode-eslint", // ESLint integration
+    "esbenp.prettier-vscode", // Prettier code formatting
+
+    // React/Next.js Development
+    "dsznajder.es7-react-js-snippets", // React snippets
+    "bradlc.vscode-tailwindcss", // Tailwind CSS IntelliSense
+
+    // TypeScript
+    "yoavbls.pretty-ts-errors", // Better TypeScript error messages
+
+    // Git
+    "eamodio.gitlens", // Enhanced Git integration
+
+    // Prisma
+    "prisma.prisma" // Prisma schema syntax highlighting
+  ],
+  "unwantedRecommendations": []
+}

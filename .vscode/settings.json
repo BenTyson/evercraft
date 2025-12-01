@@ -1,0 +1,30 @@
+{
+  // Vitest Extension Settings
+  "vitest.enable": true,
+  "vitest.commandLine": "npm test --",
+  "vitest.exclude": ["**/node_modules/**", "**/dist/**", "**/.next/**", "**/tests/e2e/**"],
+
+  // Show test results inline in editor
+  "testing.automaticallyOpenPeekView": "failureInVisibleDocument",
+
+  // Auto-run tests when files change
+  "vitest.watchOnStartup": false, // Set to true if you want auto-watch
+
+  // Editor Settings
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // File Associations
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+
+  // TypeScript Settings
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
+  // Recommended Extensions Notifications
+  "extensions.ignoreRecommendations": false
+}

@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🧪 Running all unit tests before push..."
+echo "⏱️  This ensures all tests pass before code reaches remote"
+echo ""
+
+# Run all unit tests (fast - ~3 seconds for 493 tests)
+npm test -- --run
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ Tests failed! Fix failing tests before pushing."
+  echo "💡 Tip: Run 'npm test' to see which tests failed"
+  echo ""
+  exit 1
+fi
+
+echo ""
+echo "✅ All tests passed! Pushing to remote..."
+echo ""
