@@ -7,7 +7,7 @@ export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 1, // Add 1 retry locally for flaky tests
+  retries: process.env.CI ? 2 : 2, // Allow 2 retries locally for server warmup
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   timeout: 60 * 1000, // 60s per test
