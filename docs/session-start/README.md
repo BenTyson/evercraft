@@ -1,7 +1,7 @@
 # Evercraft Documentation Router
 
-**Last Updated:** November 23, 2025 (Session 35)
-**Total Models:** 38 | **Total Routes:** 31 | **Tests:** 279 | **Status:** Session 35 Complete
+**Last Updated:** December 1, 2025 (Session 39)
+**Total Models:** 39 | **Total Routes:** 31 | **Tests:** 901 | **Status:** Session 39 Complete
 
 > **DOCUMENTATION POLICY:**
 >
@@ -17,13 +17,15 @@
 > - **Workflow:** Just write code and commit - formatting happens automatically
 > - **Config:** `.lintstagedrc.js` defines what runs, `.husky/pre-commit` triggers it
 
-> **🧪 TESTING (Session 35):**
+> **🧪 TESTING (Session 39):**
 >
-> - **279 tests** across 12 test files (Vitest + React Testing Library)
+> - **901 tests** across 33 test files (Vitest + React Testing Library)
+> - **72% coverage** of server action files (33/46 files covered)
 > - **Commands:** `npm test` (run), `npm run test:ui` (interactive), `npm run test:coverage`
 > - **Colocated tests:** `*.test.ts` next to source files
 > - **Mocks:** `src/test/mocks/db.ts` (Prisma), `vitest.setup.ts` (router, Clerk auth)
 > - **Factories:** `src/test/factories.ts` (createMockProduct, createMockShop, etc.)
+> - **Pattern:** Dynamic imports (import after mock setup) to prevent module caching issues
 
 ---
 
