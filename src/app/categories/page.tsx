@@ -5,6 +5,9 @@
  * Displays category hierarchy with product counts and subcategories.
  */
 
+// Force dynamic rendering - page fetches from database
+export const dynamic = 'force-dynamic';
+
 import { Metadata } from 'next';
 import { Leaf, Grid3x3 } from 'lucide-react';
 

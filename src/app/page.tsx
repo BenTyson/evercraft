@@ -5,6 +5,9 @@
  * Mission-driven hero + featured products.
  */
 
+// Force dynamic rendering - page fetches from database
+export const dynamic = 'force-dynamic';
+
 import Link from 'next/link';
 import { ArrowRight, Leaf, Heart, TrendingUp } from 'lucide-react';
 
