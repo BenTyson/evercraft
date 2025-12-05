@@ -131,11 +131,30 @@ railway run npm run prisma:migrate deploy
 
 ---
 
-## Step 8: Seed Initial Data (Optional)
+## Step 8: Seed Initial Data
+
+The seed file creates comprehensive demo data for testing:
 
 ```bash
+# Option 1: Use railway shell (recommended - runs inside Railway network)
+railway shell
+npm run prisma:seed
+
+# Option 2: If railway run works with public DB URL
 railway run npm run prisma:seed
 ```
+
+**Note**: `railway run` executes locally and may fail if DATABASE_URL uses internal hostname (`postgres.railway.internal`). Use `railway shell` instead to run commands inside Railway's network.
+
+### Seed Data Created
+- 82 categories (13 top-level + 69 subcategories)
+- 4 nonprofits (Ocean Conservancy, Rainforest Alliance, etc.)
+- 5 users (1 admin, 1 buyer, 3 sellers)
+- 3 verified shops with eco profiles
+- 14 products with images and sustainability scores
+- 7 product variants (napkin colors, coffee sizes)
+- 3 sample orders with payments and donations
+- Reviews and collections
 
 ---
 
@@ -221,4 +240,4 @@ For production, consider Pro plan or dedicated resources.
 
 ---
 
-*Last updated: December 1, 2025*
+*Last updated: December 5, 2025*

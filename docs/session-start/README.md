@@ -1,7 +1,14 @@
 # Evercraft Documentation Router
 
-**Last Updated:** December 1, 2025 (Session 39)
-**Total Models:** 39 | **Total Routes:** 31 | **Tests:** 901 | **Status:** Session 39 Complete
+**Last Updated:** December 5, 2025 (Session 40)
+**Total Models:** 39 | **Total Routes:** 31 | **Tests:** 901 | **Status:** Staging Deployed
+
+> **🚀 STAGING ENVIRONMENT (Session 40):**
+>
+> - **URL:** https://evercraft-production.up.railway.app
+> - **Database:** Seeded with 14 products, 3 shops, 3 sample orders
+> - **Status:** Live and ready for integration testing
+> - **See:** [LAUNCH_READINESS.md](./LAUNCH_READINESS.md) | [RAILWAY_DEPLOYMENT.md](../setup/RAILWAY_DEPLOYMENT.md)
 
 > **DOCUMENTATION POLICY:**
 >
@@ -83,6 +90,7 @@
 - **[Resend Setup](../setup/RESEND_SETUP.md)** - Email service
 - **[UploadThing Setup](../setup/UPLOADTHING_SETUP.md)** - File uploads
 - **[Shipping Calculator](../setup/SHIPPING_CALCULATOR.md)** - Shippo integration
+- **[Railway Deployment](../setup/RAILWAY_DEPLOYMENT.md)** - Staging/production deployment
 
 ### Planning & Design
 
@@ -279,7 +287,8 @@ See [TECH_STACK.md](../reference/TECH_STACK.md) for full details and decision lo
     ├── STRIPE_SETUP.md
     ├── RESEND_SETUP.md
     ├── UPLOADTHING_SETUP.md
-    └── SHIPPING_CALCULATOR.md
+    ├── SHIPPING_CALCULATOR.md
+    └── RAILWAY_DEPLOYMENT.md
 ```
 
 ---
