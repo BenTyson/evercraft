@@ -7,27 +7,41 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Clean up existing data
+  // Clean up existing data (order matters for foreign key constraints)
   await prisma.collectionProduct.deleteMany();
   await prisma.collection.deleteMany();
   await prisma.favorite.deleteMany();
   await prisma.review.deleteMany();
   await prisma.sellerReview.deleteMany();
+  await prisma.analyticsEvent.deleteMany();
+  await prisma.payment.deleteMany();
+  await prisma.donation.deleteMany();
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
-  await prisma.donation.deleteMany();
-  await prisma.payment.deleteMany();
+  await prisma.shopSectionProduct.deleteMany();
+  await prisma.shopSection.deleteMany();
   await prisma.sustainabilityScore.deleteMany();
   await prisma.productImage.deleteMany();
   await prisma.productVariant.deleteMany();
   await prisma.product.deleteMany();
   await prisma.certification.deleteMany();
+  await prisma.promotion.deleteMany();
   await prisma.shippingProfile.deleteMany();
+  await prisma.seller1099Data.deleteMany();
+  await prisma.sellerBalance.deleteMany();
+  await prisma.sellerConnectedAccount.deleteMany();
+  await prisma.sellerPayout.deleteMany();
+  await prisma.shopEcoProfile.deleteMany();
   await prisma.shop.deleteMany();
   await prisma.nonprofit.deleteMany();
   await prisma.category.deleteMany();
   await prisma.address.deleteMany();
   await prisma.sellerApplication.deleteMany();
+  await prisma.message.deleteMany();
+  await prisma.conversation.deleteMany();
+  await prisma.notificationPreference.deleteMany();
+  await prisma.searchHistory.deleteMany();
+  await prisma.supportTicket.deleteMany();
   await prisma.user.deleteMany();
 
   console.log('🗑️  Cleaned up existing data');
@@ -683,7 +697,844 @@ async function main() {
     },
   });
 
-  console.log('✅ Created 4 products with images and sustainability scores');
+  // Additional products for Shop 1 (EcoMaker Studio)
+  const product5 = await prisma.product.create({
+    data: {
+      title: 'Hand-Poured Soy Candle - Lavender Fields',
+      description:
+        'Relaxing lavender scented candle made from 100% natural soy wax. Hand-poured in small batches with cotton wicks. Burns for 45+ hours.',
+      price: 28.0,
+      compareAtPrice: 35.0,
+      shopId: shop1.id,
+      categoryId: categories[0]!.id, // Home & Living > Candles
+      status: ProductStatus.ACTIVE,
+      inventoryQuantity: 40,
+      trackInventory: true,
+      images: {
+        create: [
+          {
+            url: 'https://images.unsplash.com/photo-1602607299837-bdf9f36f0c5f?w=800&q=80',
+            altText: 'Lavender soy candle in glass jar',
+            position: 0,
+            isPrimary: true,
+          },
+          {
+            url: 'https://images.unsplash.com/photo-1603006905003-be475563bc59?w=800&q=80',
+            altText: 'Candle burning with soft glow',
+            position: 1,
+            isPrimary: false,
+          },
+        ],
+      },
+      sustainabilityScore: {
+        create: {
+          totalScore: 88,
+          materialsScore: 90,
+          packagingScore: 85,
+          carbonScore: 85,
+          certificationScore: 92,
+          breakdownJson: {
+            materials: 'Natural soy wax with cotton wicks',
+            packaging: 'Reusable glass jar, recyclable',
+            carbon: 'Local production, minimal transport',
+            certifications: 'Plastic-free certified',
+          },
+        },
+      },
+      ecoProfile: {
+        create: {
+          isOrganic: false,
+          isRecycled: false,
+          isBiodegradable: true,
+          isVegan: true,
+          plasticFreePackaging: true,
+          recyclablePackaging: true,
+          compostablePackaging: false,
+          minimalPackaging: true,
+          madeLocally: true,
+          madeToOrder: true,
+          madeIn: 'USA',
+          isRecyclable: true,
+          isCompostable: false,
+          completenessPercent: 75,
+        },
+      },
+      certifications: {
+        connect: [{ id: plasticFreeCert.id }],
+      },
+    },
+  });
+
+  const product6 = await prisma.product.create({
+    data: {
+      title: 'Ceramic Pour-Over Coffee Dripper',
+      description:
+        'Handmade ceramic coffee dripper for the perfect pour-over brew. Elegant minimalist design, dishwasher safe. Makes 1-2 cups.',
+      price: 42.0,
+      shopId: shop1.id,
+      categoryId: categories[1]!.id, // Kitchen > Dinnerware
+      status: ProductStatus.ACTIVE,
+      inventoryQuantity: 25,
+      trackInventory: true,
+      images: {
+        create: [
+          {
+            url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80',
+            altText: 'White ceramic pour-over coffee dripper',
+            position: 0,
+            isPrimary: true,
+          },
+        ],
+      },
+      sustainabilityScore: {
+        create: {
+          totalScore: 82,
+          materialsScore: 85,
+          packagingScore: 80,
+          carbonScore: 78,
+          certificationScore: 85,
+          breakdownJson: {
+            materials: 'Durable ceramic, locally made',
+            packaging: 'Recyclable cardboard box',
+            carbon: 'Local production, small batch',
+            certifications: 'Artisan made',
+          },
+        },
+      },
+      ecoProfile: {
+        create: {
+          isOrganic: false,
+          isRecycled: false,
+          isBiodegradable: false,
+          isVegan: true,
+          plasticFreePackaging: true,
+          recyclablePackaging: true,
+          minimalPackaging: true,
+          madeLocally: true,
+          madeIn: 'USA',
+          isRecyclable: true,
+          completenessPercent: 65,
+        },
+      },
+    },
+  });
+
+  const product7 = await prisma.product.create({
+    data: {
+      title: 'Linen Napkin Set - Natural',
+      description:
+        'Set of 4 stonewashed linen napkins. Soft, absorbent, and gets better with every wash. OEKO-TEX certified.',
+      price: 36.0,
+      shopId: shop1.id,
+      categoryId: categories[1]!.id,
+      status: ProductStatus.ACTIVE,
+      inventoryQuantity: 60,
+      trackInventory: true,
+      hasVariants: true,
+      variantOptions: { color: ['Natural', 'Sage Green', 'Dusty Rose', 'Charcoal'] },
+      images: {
+        create: [
+          {
+            url: 'https://images.unsplash.com/photo-1563241527-3004b7be0ffd?w=800&q=80',
+            altText: 'Natural linen napkins folded',
+            position: 0,
+            isPrimary: true,
+          },
+        ],
+      },
+      sustainabilityScore: {
+        create: {
+          totalScore: 90,
+          materialsScore: 95,
+          packagingScore: 88,
+          carbonScore: 85,
+          certificationScore: 92,
+          breakdownJson: {
+            materials: 'OEKO-TEX certified linen',
+            packaging: 'Minimal, plastic-free packaging',
+            carbon: 'European production standards',
+            certifications: 'Organic certified',
+          },
+        },
+      },
+      ecoProfile: {
+        create: {
+          isOrganic: true,
+          isBiodegradable: true,
+          plasticFreePackaging: true,
+          recyclablePackaging: true,
+          madeIn: 'Lithuania',
+          isCompostable: true,
+          completenessPercent: 78,
+        },
+      },
+      certifications: {
+        connect: [{ id: organicCert.id }],
+      },
+    },
+  });
+
+  // Create variants for linen napkins
+  await prisma.productVariant.createMany({
+    data: [
+      {
+        productId: product7.id,
+        name: 'Natural',
+        sku: 'LN-NAT-4',
+        price: 36.0,
+        inventoryQuantity: 20,
+      },
+      {
+        productId: product7.id,
+        name: 'Sage Green',
+        sku: 'LN-SGR-4',
+        price: 36.0,
+        inventoryQuantity: 15,
+      },
+      {
+        productId: product7.id,
+        name: 'Dusty Rose',
+        sku: 'LN-DRS-4',
+        price: 36.0,
+        inventoryQuantity: 15,
+      },
+      {
+        productId: product7.id,
+        name: 'Charcoal',
+        sku: 'LN-CHR-4',
+        price: 36.0,
+        inventoryQuantity: 10,
+      },
+    ],
+  });
+
+  // Additional products for Shop 2 (Green Living Co)
+  const product8 = await prisma.product.create({
+    data: {
+      title: 'Natural Loofah Sponge - 3 Pack',
+      description:
+        'Biodegradable loofah sponges grown from natural plant fibers. Perfect for kitchen or bath. Compostable at end of life.',
+      price: 12.99,
+      shopId: shop2.id,
+      categoryId: categories[2]!.id, // Personal Care
+      status: ProductStatus.ACTIVE,
+      inventoryQuantity: 150,
+      trackInventory: true,
+      images: {
+        create: [
+          {
+            url: 'https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=800&q=80',
+            altText: 'Natural loofah sponges',
+            position: 0,
+            isPrimary: true,
+          },
+        ],
+      },
+      sustainabilityScore: {
+        create: {
+          totalScore: 96,
+          materialsScore: 100,
+          packagingScore: 95,
+          carbonScore: 92,
+          certificationScore: 97,
+          breakdownJson: {
+            materials: '100% natural plant fiber',
+            packaging: 'Compostable packaging',
+            carbon: 'Zero manufacturing waste',
+            certifications: 'Plastic-free and zero-waste certified',
+          },
+        },
+      },
+      ecoProfile: {
+        create: {
+          isOrganic: true,
+          isBiodegradable: true,
+          isVegan: true,
+          plasticFreePackaging: true,
+          compostablePackaging: true,
+          minimalPackaging: true,
+          isCompostable: true,
+          completenessPercent: 88,
+        },
+      },
+      certifications: {
+        connect: [{ id: plasticFreeCert.id }, { id: zeroWasteCert.id }],
+      },
+    },
+  });
+
+  const product9 = await prisma.product.create({
+    data: {
+      title: 'Bamboo Toothbrush - Adult 4 Pack',
+      description:
+        'Eco-friendly toothbrushes with biodegradable bamboo handles and BPA-free bristles. Dentist recommended medium bristles.',
+      price: 14.99,
+      shopId: shop2.id,
+      categoryId: categories[2]!.id,
+      status: ProductStatus.ACTIVE,
+      inventoryQuantity: 200,
+      trackInventory: true,
+      images: {
+        create: [
+          {
+            url: 'https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=800&q=80',
+            altText: 'Bamboo toothbrushes in a row',
+            position: 0,
+            isPrimary: true,
+          },
+        ],
+      },
+      sustainabilityScore: {
+        create: {
+          totalScore: 89,
+          materialsScore: 92,
+          packagingScore: 90,
+          carbonScore: 82,
+          certificationScore: 92,
+          breakdownJson: {
+            materials: 'Biodegradable bamboo handles',
+            packaging: 'Plastic-free recyclable cardboard',
+            carbon: 'Sustainable bamboo farming',
+            certifications: 'Plastic-free certified',
+          },
+        },
+      },
+      ecoProfile: {
+        create: {
+          isBiodegradable: true,
+          isVegan: true,
+          plasticFreePackaging: true,
+          recyclablePackaging: true,
+          minimalPackaging: true,
+          isCompostable: true,
+          hasDisposalInfo: true,
+          disposalInstructions: 'Remove bristles and compost bamboo handle. Bristles go in trash.',
+          completenessPercent: 72,
+        },
+      },
+      certifications: {
+        connect: [{ id: plasticFreeCert.id }],
+      },
+    },
+  });
+
+  const product10 = await prisma.product.create({
+    data: {
+      title: 'Reusable Produce Bags - Mesh Set of 6',
+      description:
+        'Washable organic cotton mesh bags for fruits and vegetables. Includes 2 small, 2 medium, and 2 large bags with tare weight tags.',
+      price: 16.99,
+      shopId: shop2.id,
+      categoryId: categories[3]!.id, // Fashion > Bags
+      status: ProductStatus.ACTIVE,
+      inventoryQuantity: 120,
+      trackInventory: true,
+      images: {
+        create: [
+          {
+            url: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80',
+            altText: 'Mesh produce bags with vegetables',
+            position: 0,
+            isPrimary: true,
+          },
+        ],
+      },
+      sustainabilityScore: {
+        create: {
+          totalScore: 94,
+          materialsScore: 96,
+          packagingScore: 95,
+          carbonScore: 90,
+          certificationScore: 95,
+          breakdownJson: {
+            materials: 'Organic cotton mesh',
+            packaging: 'Minimal plastic-free packaging',
+            carbon: 'Durable for years of reuse',
+            certifications: 'Organic and zero-waste certified',
+          },
+        },
+      },
+      ecoProfile: {
+        create: {
+          isOrganic: true,
+          isBiodegradable: true,
+          isVegan: true,
+          plasticFreePackaging: true,
+          minimalPackaging: true,
+          isCompostable: true,
+          completenessPercent: 80,
+        },
+      },
+      certifications: {
+        connect: [{ id: organicCert.id }, { id: zeroWasteCert.id }],
+      },
+    },
+  });
+
+  const product11 = await prisma.product.create({
+    data: {
+      title: 'Stainless Steel Straws - Rainbow Set of 8',
+      description:
+        'Reusable metal straws in assorted rainbow colors. Includes 4 straight, 4 bent, 2 cleaning brushes, and cotton carrying pouch.',
+      price: 11.99,
+      shopId: shop2.id,
+      categoryId: categories[1]!.id,
+      status: ProductStatus.ACTIVE,
+      inventoryQuantity: 180,
+      trackInventory: true,
+      images: {
+        create: [
+          {
+            url: 'https://images.unsplash.com/photo-1572726729207-a78d6feb18d7?w=800&q=80',
+            altText: 'Colorful metal straws in a glass',
+            position: 0,
+            isPrimary: true,
+          },
+        ],
+      },
+      sustainabilityScore: {
+        create: {
+          totalScore: 91,
+          materialsScore: 95,
+          packagingScore: 88,
+          carbonScore: 87,
+          certificationScore: 94,
+          breakdownJson: {
+            materials: 'Recycled stainless steel',
+            packaging: 'Recyclable cardboard and cotton pouch',
+            carbon: 'Long-lasting, replaces disposables',
+            certifications: 'Plastic-free certified',
+          },
+        },
+      },
+      ecoProfile: {
+        create: {
+          isRecycled: true,
+          isVegan: true,
+          plasticFreePackaging: true,
+          recyclablePackaging: true,
+          isRecyclable: true,
+          completenessPercent: 68,
+        },
+      },
+      certifications: {
+        connect: [{ id: plasticFreeCert.id }],
+      },
+    },
+  });
+
+  // Additional products for Shop 3 (Ethical Grounds - Coffee)
+  const product12 = await prisma.product.create({
+    data: {
+      title: 'Fair Trade Coffee Beans - Medium Roast Breakfast Blend',
+      description:
+        'Bright and balanced medium roast. Perfect for your morning cup. Notes of citrus and brown sugar. Ethically sourced from small farms.',
+      price: 15.99,
+      shopId: shop3.id,
+      categoryId: categories[4]!.id,
+      status: ProductStatus.ACTIVE,
+      inventoryQuantity: 180,
+      trackInventory: true,
+      hasVariants: true,
+      variantOptions: { size: ['12oz', '2lb', '5lb'] },
+      images: {
+        create: [
+          {
+            url: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&q=80',
+            altText: 'Medium roast coffee beans',
+            position: 0,
+            isPrimary: true,
+          },
+        ],
+      },
+      sustainabilityScore: {
+        create: {
+          totalScore: 80,
+          materialsScore: 85,
+          packagingScore: 72,
+          carbonScore: 78,
+          certificationScore: 85,
+          breakdownJson: {
+            materials: 'Organic Arabica from small farms',
+            packaging: 'Recyclable aluminum-lined bags',
+            carbon: 'Carbon neutral shipping',
+            certifications: 'Fair Trade and Organic certified',
+          },
+        },
+      },
+      ecoProfile: {
+        create: {
+          isOrganic: true,
+          isFairTrade: true,
+          plasticFreePackaging: true,
+          recyclablePackaging: true,
+          carbonNeutralShipping: true,
+          madeToOrder: true,
+          madeIn: 'Ethiopia',
+          completenessPercent: 62,
+        },
+      },
+      certifications: {
+        connect: [{ id: fairTradeCert.id }, { id: organicCert.id }],
+      },
+    },
+  });
+
+  // Create variants for medium roast
+  await prisma.productVariant.createMany({
+    data: [
+      {
+        productId: product12.id,
+        name: '12oz Bag',
+        sku: 'MR-12OZ',
+        price: 15.99,
+        inventoryQuantity: 100,
+      },
+      {
+        productId: product12.id,
+        name: '2lb Bag',
+        sku: 'MR-2LB',
+        price: 28.99,
+        inventoryQuantity: 50,
+      },
+      {
+        productId: product12.id,
+        name: '5lb Bag',
+        sku: 'MR-5LB',
+        price: 64.99,
+        inventoryQuantity: 30,
+      },
+    ],
+  });
+
+  const product13 = await prisma.product.create({
+    data: {
+      title: 'Organic Loose Leaf Green Tea - Jasmine',
+      description:
+        'Fragrant jasmine green tea with hand-picked tea leaves. Light and refreshing with natural jasmine blossoms. 4oz tin makes 50+ cups.',
+      price: 18.99,
+      shopId: shop3.id,
+      categoryId: categories[4]!.id,
+      status: ProductStatus.ACTIVE,
+      inventoryQuantity: 90,
+      trackInventory: true,
+      images: {
+        create: [
+          {
+            url: 'https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=800&q=80',
+            altText: 'Jasmine green tea in a cup',
+            position: 0,
+            isPrimary: true,
+          },
+        ],
+      },
+      sustainabilityScore: {
+        create: {
+          totalScore: 85,
+          materialsScore: 90,
+          packagingScore: 82,
+          carbonScore: 80,
+          certificationScore: 88,
+          breakdownJson: {
+            materials: 'Hand-picked organic tea leaves',
+            packaging: 'Recyclable metal tin',
+            carbon: 'Traditional farming methods',
+            certifications: 'Organic and Fair Trade certified',
+          },
+        },
+      },
+      ecoProfile: {
+        create: {
+          isOrganic: true,
+          isVegan: true,
+          isFairTrade: true,
+          plasticFreePackaging: true,
+          recyclablePackaging: true,
+          madeIn: 'China',
+          isRecyclable: true,
+          completenessPercent: 70,
+        },
+      },
+      certifications: {
+        connect: [{ id: organicCert.id }, { id: fairTradeCert.id }],
+      },
+    },
+  });
+
+  const product14 = await prisma.product.create({
+    data: {
+      title: 'Cold Brew Coffee Concentrate - 32oz',
+      description:
+        'Ready-to-drink cold brew concentrate. Smooth, low-acid, and perfect over ice. Dilute 1:1 with water or milk. Makes 8 servings.',
+      price: 24.99,
+      shopId: shop3.id,
+      categoryId: categories[4]!.id,
+      status: ProductStatus.ACTIVE,
+      inventoryQuantity: 60,
+      trackInventory: true,
+      images: {
+        create: [
+          {
+            url: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&q=80',
+            altText: 'Cold brew coffee in glass bottle',
+            position: 0,
+            isPrimary: true,
+          },
+        ],
+      },
+      sustainabilityScore: {
+        create: {
+          totalScore: 76,
+          materialsScore: 82,
+          packagingScore: 70,
+          carbonScore: 75,
+          certificationScore: 77,
+          breakdownJson: {
+            materials: 'Organic cold brew coffee',
+            packaging: 'Glass bottle, recyclable',
+            carbon: 'Carbon neutral shipping available',
+            certifications: 'Organic certified',
+          },
+        },
+      },
+      ecoProfile: {
+        create: {
+          isOrganic: true,
+          isVegan: true,
+          recyclablePackaging: true,
+          carbonNeutralShipping: true,
+          madeIn: 'USA',
+          isRecyclable: true,
+          completenessPercent: 55,
+        },
+      },
+      certifications: {
+        connect: [{ id: organicCert.id }],
+      },
+    },
+  });
+
+  console.log('✅ Created 14 products with images and sustainability scores');
+
+  // Create shop sections
+  const shop1Sections = await Promise.all([
+    prisma.shopSection.create({
+      data: {
+        shopId: shop1.id,
+        name: 'Best Sellers',
+        slug: 'best-sellers',
+        description: 'Our most popular eco-friendly products',
+        position: 0,
+        isVisible: true,
+      },
+    }),
+    prisma.shopSection.create({
+      data: {
+        shopId: shop1.id,
+        name: 'Kitchen Essentials',
+        slug: 'kitchen-essentials',
+        description: 'Sustainable solutions for your kitchen',
+        position: 1,
+        isVisible: true,
+      },
+    }),
+  ]);
+
+  // Link products to sections
+  await prisma.shopSectionProduct.createMany({
+    data: [
+      { sectionId: shop1Sections[0].id, productId: product1.id, position: 0 },
+      { sectionId: shop1Sections[0].id, productId: product4.id, position: 1 },
+      { sectionId: shop1Sections[1].id, productId: product4.id, position: 0 },
+      { sectionId: shop1Sections[1].id, productId: product6.id, position: 1 },
+    ],
+  });
+
+  console.log('✅ Created shop sections');
+
+  // Create sample orders with payments and donations
+  const shippingAddressJson = {
+    firstName: 'Sarah',
+    lastName: 'Green',
+    address1: '123 Eco Street',
+    city: 'Portland',
+    state: 'OR',
+    postalCode: '97201',
+    country: 'US',
+  };
+
+  const order1 = await prisma.order.create({
+    data: {
+      buyerId: buyer1.id,
+      orderNumber: 'EC-2024-001',
+      status: 'DELIVERED',
+      paymentStatus: 'PAID',
+      subtotal: 42.99,
+      shippingCost: 5.99,
+      tax: 3.87,
+      total: 52.85,
+      shippingAddress: shippingAddressJson,
+      billingAddress: shippingAddressJson,
+      items: {
+        create: [
+          {
+            productId: product1.id,
+            shopId: shop1.id,
+            quantity: 1,
+            priceAtPurchase: 24.99,
+            subtotal: 24.99,
+          },
+          {
+            productId: product2.id,
+            shopId: shop2.id,
+            quantity: 1,
+            priceAtPurchase: 18.0,
+            subtotal: 18.0,
+          },
+        ],
+      },
+    },
+  });
+
+  // Create payment for order1
+  await prisma.payment.create({
+    data: {
+      orderId: order1.id,
+      shopId: shop1.id,
+      stripePaymentIntentId: 'pi_simulated_001',
+      amount: 52.85,
+      platformFee: 5.29, // 10% platform fee
+      sellerPayout: 45.77,
+      nonprofitDonation: 1.79,
+      status: 'PAID',
+    },
+  });
+
+  // Create donations for order1
+  await prisma.donation.createMany({
+    data: [
+      {
+        orderId: order1.id,
+        shopId: shop1.id,
+        nonprofitId: nonprofits[0].id,
+        amount: 1.25, // 5% of $24.99
+        donorType: 'SELLER_CONTRIBUTION',
+        status: 'PAID',
+      },
+      {
+        orderId: order1.id,
+        shopId: shop2.id,
+        nonprofitId: nonprofits[1].id,
+        amount: 0.54, // 3% of $18.00
+        donorType: 'SELLER_CONTRIBUTION',
+        status: 'PAID',
+      },
+    ],
+  });
+
+  const order2 = await prisma.order.create({
+    data: {
+      buyerId: buyer1.id,
+      orderNumber: 'EC-2024-002',
+      status: 'SHIPPED',
+      paymentStatus: 'PAID',
+      subtotal: 31.98,
+      shippingCost: 6.99,
+      tax: 2.88,
+      total: 41.85,
+      shippingAddress: shippingAddressJson,
+      billingAddress: shippingAddressJson,
+      trackingNumber: '1Z999AA10123456784',
+      trackingCarrier: 'UPS',
+      items: {
+        create: [
+          {
+            productId: product3.id,
+            shopId: shop3.id,
+            quantity: 2,
+            priceAtPurchase: 15.99,
+            subtotal: 31.98,
+          },
+        ],
+      },
+    },
+  });
+
+  await prisma.payment.create({
+    data: {
+      orderId: order2.id,
+      shopId: shop3.id,
+      stripePaymentIntentId: 'pi_simulated_002',
+      amount: 41.85,
+      platformFee: 4.19,
+      sellerPayout: 35.42,
+      nonprofitDonation: 2.24,
+      status: 'PAID',
+    },
+  });
+
+  await prisma.donation.create({
+    data: {
+      orderId: order2.id,
+      shopId: shop3.id,
+      nonprofitId: nonprofits[2].id,
+      amount: 2.24, // 7% of $31.98
+      donorType: 'SELLER_CONTRIBUTION',
+      status: 'PENDING',
+    },
+  });
+
+  const order3 = await prisma.order.create({
+    data: {
+      buyerId: buyer1.id,
+      orderNumber: 'EC-2024-003',
+      status: 'PROCESSING',
+      paymentStatus: 'PAID',
+      subtotal: 28.0,
+      shippingCost: 5.99,
+      tax: 2.52,
+      total: 36.51,
+      shippingAddress: shippingAddressJson,
+      billingAddress: shippingAddressJson,
+      items: {
+        create: [
+          {
+            productId: product5.id,
+            shopId: shop1.id,
+            quantity: 1,
+            priceAtPurchase: 28.0,
+            subtotal: 28.0,
+          },
+        ],
+      },
+    },
+  });
+
+  await prisma.payment.create({
+    data: {
+      orderId: order3.id,
+      shopId: shop1.id,
+      stripePaymentIntentId: 'pi_simulated_003',
+      amount: 36.51,
+      platformFee: 3.65,
+      sellerPayout: 31.46,
+      nonprofitDonation: 1.4,
+      status: 'PAID',
+    },
+  });
+
+  await prisma.donation.create({
+    data: {
+      orderId: order3.id,
+      shopId: shop1.id,
+      nonprofitId: nonprofits[0].id,
+      amount: 1.4, // 5% of $28.00
+      donorType: 'SELLER_CONTRIBUTION',
+      status: 'PENDING',
+    },
+  });
+
+  console.log('✅ Created 3 orders with payments and donations');
 
   // Create reviews
   await prisma.review.create({
@@ -753,7 +1604,10 @@ async function main() {
   console.log(`   - 5 users (1 admin, 1 buyer, 3 sellers)`);
   console.log(`   - 3 shops with ShopEcoProfile`);
   console.log(`   - 5 certifications`);
-  console.log(`   - 4 products with ProductEcoProfile & sustainability scores`);
+  console.log(`   - 14 products with ProductEcoProfile & sustainability scores`);
+  console.log(`   - 7 product variants (4 napkin colors, 3 coffee sizes)`);
+  console.log(`   - 2 shop sections with product links`);
+  console.log(`   - 3 orders with payments and donations`);
   console.log(`   - 3 product reviews`);
   console.log(`   - 1 seller review`);
   console.log(`   - 1 collection`);
